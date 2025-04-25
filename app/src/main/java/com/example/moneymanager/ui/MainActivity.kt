@@ -27,9 +27,9 @@ class MainActivity : AppCompatActivity() {
 
         val noDataText = findViewById<TextView>(R.id.noDataText)
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
-        tabLayout.addTab(tabLayout.newTab()) // Tab 0: Tất cả
-        tabLayout.addTab(tabLayout.newTab()) // Tab 1: Thu
-        tabLayout.addTab(tabLayout.newTab()) // Tab 2: Chi
+        tabLayout.addTab(tabLayout.newTab().setText("Daily"))
+        tabLayout.addTab(tabLayout.newTab().setText("Calender"))
+        tabLayout.addTab(tabLayout.newTab().setText("Monthly"))
 
         val recyclerView = findViewById<RecyclerView>(R.id.transactionList)
         val adapter = TransactionAdapter()
@@ -38,24 +38,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.transactions.observe(this) { transactions ->
             adapter.submitList(transactions)
             noDataText.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
-
-            val incomeList = transactions.filter { it.amount > 0 }
-            val expenseList = transactions.filter { it.amount < 0 }
-            val totalIncome = incomeList.sumOf { it.amount }
-            val totalExpense = expenseList.sumOf { it.amount }
-            val totalAll = transactions.sumOf { it.amount }
-
-            setCustomTab(tabLayout, 0, "Tất cả", totalAll, transactions.size)
-            setCustomTab(tabLayout, 1, "Thu", totalIncome, incomeList.size)
-            setCustomTab(tabLayout, 2, "Chi", totalExpense, expenseList.size)
         }
-    }
-
-    private fun setCustomTab(tabLayout: TabLayout, position: Int, title: String, amount: Double, count: Int) {
-        val tab = tabLayout.getTabAt(position)
-        val view = LayoutInflater.from(this).inflate(R.layout.custom_tab, null)
-        view.findViewById<TextView>(R.id.tabTitle).text = title
-        view.findViewById<TextView>(R.id.tabAmount).text = "₫${amount} (${count})"
-        tab?.customView = view
     }
 }
