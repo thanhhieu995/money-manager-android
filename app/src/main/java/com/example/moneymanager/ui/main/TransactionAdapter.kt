@@ -1,4 +1,4 @@
-package com.example.moneymanager.ui
+package com.example.moneymanager.ui.main
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
 
-class TransactionAdapter : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(DiffCallback()) {
+class TransactionAdapter : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(
+    DiffCallback()
+) {
 
     class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val categoryText: TextView = itemView.findViewById(R.id.transaction_category)
