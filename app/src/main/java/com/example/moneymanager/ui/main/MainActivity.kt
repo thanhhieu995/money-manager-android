@@ -1,16 +1,20 @@
 package com.example.moneymanager.ui.main
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.moneymanager.R
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -27,9 +31,6 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
-        tabLayout.addTab(tabLayout.newTab().setText("Daily"))
-        tabLayout.addTab(tabLayout.newTab().setText("Calender"))
-        tabLayout.addTab(tabLayout.newTab().setText("Monthly"))
 
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
         val adapter = ViewPagerAdapter(this)
@@ -43,6 +44,12 @@ class MainActivity : AppCompatActivity() {
         }.attach()
 
         viewModel.transactions.observe(this) { transactions ->
+        }
+
+        val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)
+        btnAdd.setOnClickListener {
+            val intent = Intent(this, AddTransactionActivity::class.java)
+            startActivity(intent)
         }
     }
 }
