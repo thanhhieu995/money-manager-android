@@ -3,6 +3,7 @@ package com.example.moneymanager.ui.addtransaction
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -13,6 +14,7 @@ import com.example.moneymanager.ui.main.MainActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class AddTransactionActivity : AppCompatActivity() {
+    private lateinit var edtAmount: EditText
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_transaction)
@@ -27,6 +29,14 @@ class AddTransactionActivity : AppCompatActivity() {
         edtCategory.setOnClickListener{
             showCategoryBottomSheet()
         }
+
+//        edtAmount = findViewById(R.id.edtAmount)
+//
+//        // Gọi focus và bật bàn phím ngay
+//        edtAmount.requestFocus()
+//
+//        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+//        imm.showSoftInput(edtAmount, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun showCategoryBottomSheet() {

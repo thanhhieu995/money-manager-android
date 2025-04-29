@@ -68,7 +68,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/edtAmount"
         android:hint="Amount"
-        android:inputType="none"/>
+        android:inputType="numberDecimal" />
 
     <EditText
         android:id="@+id/edtCategory"
