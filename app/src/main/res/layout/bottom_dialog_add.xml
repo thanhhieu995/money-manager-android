@@ -11,7 +11,7 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/tvTitle"
+            android:id="@+id/tvTitleBottom"
             android:text="Category"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -35,7 +35,7 @@
 
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewCategory"
+        android:id="@+id/recyclerViewDialog"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>
