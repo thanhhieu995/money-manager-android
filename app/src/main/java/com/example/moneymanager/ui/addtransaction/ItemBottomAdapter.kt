@@ -7,10 +7,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 
-class CategoryAdapter(
-    private val categories: List<Category>,
-    private val onItemClick: (Category) -> Unit
-) : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>() {
+class ItemBottomAdapter(
+    private val categories: List<ItemBottomDialog>,
+    private val onItemClick: (ItemBottomDialog) -> Unit
+) : RecyclerView.Adapter<ItemBottomAdapter.CategoryViewHolder>() {
 
     inner class CategoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvEmoji: TextView = itemView.findViewById(R.id.tvEmoji)

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
@@ -26,51 +27,66 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         val categories = listOf(
-            Category("🍔", "Food"),
-            Category("🚗", "Transport"),
-            Category("🏠", "Household"),
-            Category("🐶", "Pets"),
-            Category("🎁", "Gift"),
-            Category("📚", "Education"),
-            Category("🏋️‍♂️", "Sport"),
-            Category("💄", "Beauty"),
-            Category("🧘‍♂️", "Health"),
-            Category("💻", "Investment"),
-            Category("🎨", "Culture"),
-            Category("🚲", "Bicycle")
+            ItemBottomDialog("🍔", "Food"),
+            ItemBottomDialog("🚗", "Transport"),
+            ItemBottomDialog("🏠", "Household"),
+            ItemBottomDialog("🐶", "Pets"),
+            ItemBottomDialog("🎁", "Gift"),
+            ItemBottomDialog("📚", "Education"),
+            ItemBottomDialog("🏋️‍♂️", "Sport"),
+            ItemBottomDialog("💄", "Beauty"),
+            ItemBottomDialog("🧘‍♂️", "Health"),
+            ItemBottomDialog("💻", "Investment"),
+            ItemBottomDialog("🎨", "Culture"),
+            ItemBottomDialog("🚲", "Bicycle")
         )
 
         val accounts = listOf(
-            Category("💵", "Cash"),
-            Category("🏦", "Bank Account"),
-            Category("💳", "Credit Card"),
-            Category("📱", "E-Wallet"),
-            Category("🪙", "Crypto"),
-            Category("📦", "Savings"),
-            Category("➕", "Add")
+            ItemBottomDialog("💵", "Cash"),
+            ItemBottomDialog("🏦", "Bank Account"),
+            ItemBottomDialog("💳", "Credit Card"),
+            ItemBottomDialog("📱", "E-Wallet"),
+            ItemBottomDialog("🪙", "Crypto"),
+            ItemBottomDialog("📦", "Savings"),
+            ItemBottomDialog("➕", "Add")
         )
 
         val edtCategory = findViewById<EditText>(R.id.edtCategory)
         edtCategory.setOnClickListener{
-            showBottomDialogAddTransaction("Category", categories)
+            showBottomDialogAddTransaction("Category", categories) {
+
+            }
         }
 
         val edtAccount = findViewById<EditText>(R.id.edtAccount)
         edtAccount.setOnClickListener {
-            showBottomDialogAddTransaction("Account" ,accounts)
+            showBottomDialogAddTransaction("Account" ,accounts) {
+
+            }
         }
     }
 
     @SuppressLint("MissingInflatedId")
-    private fun showBottomDialogAddTransaction(title : String, categories: List<Category>) {
+    private fun showBottomDialogAddTransaction(title : String, itemBottoms: List<ItemBottomDialog>, onEditClick: () -> Unit) {
         val bottomSheetDialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewDialog)
         val titleBottom = view.findViewById<TextView>(R.id.tvTitleBottom)
+        val editButton = view.findViewById<ImageButton>(R.id.btnEdit)
+        val closeButton = view.findViewById<ImageButton>(R.id.btnClose)
         titleBottom.text = title
 
         recyclerView.layoutManager = GridLayoutManager(this, 3)
-        recyclerView.adapter = CategoryAdapter(categories) {
+        recyclerView.adapter = ItemBottomAdapter(itemBottoms) {
+            bottomSheetDialog.dismiss()
+        }
+
+        editButton.setOnClickListener {
+            bottomSheetDialog.dismiss()
+            onEditClick()
+        }
+
+        closeButton.setOnClickListener {
             bottomSheetDialog.dismiss()
         }
 
