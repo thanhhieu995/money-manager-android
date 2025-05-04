@@ -13,14 +13,14 @@
         android:layout_height="wrap_content">
 
         <ImageButton
-            android:id="@+id/btnBack"
+            android:id="@+id/add_transaction_btn_back"
             android:src="@drawable/ic_baseline_navigate_before_24"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <TextView
-            android:id="@+id/tvTitle"
+            android:id="@+id/add_transaction_title"
             android:text="Expense"
             android:textSize="18sp"
             android:layout_marginStart="8dp"
@@ -37,7 +37,7 @@
         android:layout_marginTop="16dp">
 
         <Button
-            android:id="@+id/btnIncome"
+            android:id="@+id/add_transaction_btn_income"
             android:text="Income"
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -45,7 +45,7 @@
             android:layout_height="wrap_content"/>
 
         <Button
-            android:id="@+id/btnExpense"
+            android:id="@+id/add_transaction_btn_expense"
             android:text="Expense"
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -56,7 +56,7 @@
 
     <!-- Date + Fields -->
     <TextView
-        android:id="@+id/tvDate"
+        android:id="@+id/add_transaction_date"
         android:text="26/4/25 (Sat)"
         android:textSize="16sp"
         android:layout_marginTop="16dp"
@@ -66,12 +66,12 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/edtAmount"
+        android:id="@+id/add_transaction_amount"
         android:hint="Amount"
         android:inputType="numberDecimal" />
 
     <EditText
-        android:id="@+id/edtCategory"
+        android:id="@+id/add_transaction_edtCategory"
         android:hint="Category"
         android:focusable="false"
         android:layout_marginTop="8dp"
@@ -79,7 +79,7 @@
         android:layout_height="wrap_content" />
 
     <EditText
-        android:id="@+id/edtAccount"
+        android:id="@+id/add_transaction_edtAccount"
         android:hint="Account"
         android:focusable="false"
         android:layout_marginTop="8dp"
@@ -87,7 +87,7 @@
         android:layout_height="wrap_content" />
 
     <EditText
-        android:id="@+id/edtNote"
+        android:id="@+id/add_transaction_edtNote"
         android:hint="Note"
         android:layout_marginTop="8dp"
         android:layout_width="match_parent"
@@ -103,7 +103,7 @@
         android:layout_height="wrap_content">
 
         <Button
-            android:id="@+id/btnSave"
+            android:id="@+id/add_transaction_btnSave"
             android:text="Save"
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -111,7 +111,7 @@
             android:layout_height="wrap_content" />
 
         <Button
-            android:id="@+id/btnContinue"
+            android:id="@+id/add_transaction_btnContinue"
             android:text="Continue"
             android:layout_weight="1"
             android:layout_width="0dp"

@@ -16,15 +16,18 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class AddTransactionActivity : AppCompatActivity() {
     private lateinit var edtAmount: EditText
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_transaction)
 
-        val btnBack = findViewById<ImageButton>(R.id.btnBack)
+        val btnBack = findViewById<ImageButton>(R.id.add_transaction_btn_back)
         btnBack.setOnClickListener{
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
+
+        val tvTitle = findViewById<TextView>(R.id.add_transaction_title)
 
         val categories = listOf(
             ItemBottomDialog("🍔", "Food"),
@@ -48,36 +51,36 @@ class AddTransactionActivity : AppCompatActivity() {
             ItemBottomDialog("📱", "E-Wallet"),
             ItemBottomDialog("🪙", "Crypto"),
             ItemBottomDialog("📦", "Savings"),
-            ItemBottomDialog("➕", "Add")
         )
 
-        val edtCategory = findViewById<EditText>(R.id.edtCategory)
+        val edtCategory = findViewById<EditText>(R.id.add_transaction_edtCategory)
         edtCategory.setOnClickListener{
-            showBottomDialogAddTransaction("Category", categories) {
+            showBottomDialogAddTransaction("Category", categories, edtCategory) {
 
             }
         }
 
-        val edtAccount = findViewById<EditText>(R.id.edtAccount)
+        val edtAccount = findViewById<EditText>(R.id.add_transaction_edtAccount)
         edtAccount.setOnClickListener {
-            showBottomDialogAddTransaction("Account" ,accounts) {
+            showBottomDialogAddTransaction("Account" ,accounts, edtAccount) {
 
             }
         }
     }
 
     @SuppressLint("MissingInflatedId")
-    private fun showBottomDialogAddTransaction(title : String, itemBottoms: List<ItemBottomDialog>, onEditClick: () -> Unit) {
+    private fun showBottomDialogAddTransaction(title : String, itemBottoms: List<ItemBottomDialog>,targetEditText: EditText , onEditClick: () -> Unit) {
         val bottomSheetDialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewDialog)
-        val titleBottom = view.findViewById<TextView>(R.id.tvTitleBottom)
-        val editButton = view.findViewById<ImageButton>(R.id.btnEdit)
-        val closeButton = view.findViewById<ImageButton>(R.id.btnClose)
+        val recyclerView = view.findViewById<RecyclerView>(R.id.bottom_dialog_add_recyclerView)
+        val titleBottom = view.findViewById<TextView>(R.id.bottom_dialog_add_title)
+        val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
+        val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
 
         recyclerView.layoutManager = GridLayoutManager(this, 3)
-        recyclerView.adapter = ItemBottomAdapter(itemBottoms) {
+        recyclerView.adapter = ItemBottomAdapter(itemBottoms) { selectedItem ->
+            targetEditText.setText("${selectedItem.emoji} ${selectedItem.name}")
             bottomSheetDialog.dismiss()
         }
 
