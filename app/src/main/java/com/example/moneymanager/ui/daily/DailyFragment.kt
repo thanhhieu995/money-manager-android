@@ -1,5 +1,6 @@
 package com.example.moneymanager.ui
 
+import android.app.Application
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -41,7 +42,7 @@ class DailyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val dao = AppDatabase.getInstance(requireContext().applicationContext).transactionDao()
+        val dao = AppDatabase.getDatabase(Application()).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
@@ -49,7 +50,7 @@ class DailyFragment : Fragment() {
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
 
-        viewModel.transactions.observe(viewLifecycleOwner) { transactions ->
+        viewModel.allTransactions.observe(viewLifecycleOwner) { transactions ->
             adapter.submitList(transactions)
             binding.noDataText.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
         }

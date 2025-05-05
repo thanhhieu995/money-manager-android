@@ -9,7 +9,7 @@ data class Transaction(
     val title: String,
     val category: String,
     val content: String,
-    val amount: Double,
+    val amount: String,
     val isIncome: Boolean,
     val date: String
 )

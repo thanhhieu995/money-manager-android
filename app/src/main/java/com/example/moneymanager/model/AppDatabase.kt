@@ -1,6 +1,6 @@
 package com.example.moneymanager.model
 
-import android.content.Context
+import android.app.Application
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -12,12 +12,15 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile private var instance: AppDatabase? = null
 
-        fun getInstance(context: Context): AppDatabase =
-            instance ?: synchronized(this) {
+        fun getDatabase(context: Application): AppDatabase {
+            return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
-                    AppDatabase::class.java, "money_db"
+                    AppDatabase::class.java,
+                    "transactions"
                 ).build().also { instance = it }
             }
+        }
     }
 }
+

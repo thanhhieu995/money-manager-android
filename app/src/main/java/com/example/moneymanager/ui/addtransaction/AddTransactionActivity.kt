@@ -6,17 +6,23 @@ import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.*
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
+import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.MainActivity
+import com.example.moneymanager.viewmodel.TransactionViewModel
+import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.*
 
 class AddTransactionActivity : AppCompatActivity() {
+    private lateinit var viewModel: TransactionViewModel
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,9 +33,15 @@ class AddTransactionActivity : AppCompatActivity() {
         val incomeButton = findViewById<Button>(R.id.add_transaction_btn_income)
         val expenseButton = findViewById<Button>(R.id.add_transaction_btn_expense)
         val titleTransaction = findViewById<TextView>(R.id.add_transaction_title)
-        val saveButton = findViewById<Button>(R.id.add_transaction_btnSave)
+        val edtAmount = findViewById<EditText>(R.id.add_transaction_amount)
         val edtCategory = findViewById<EditText>(R.id.add_transaction_edtCategory)
         val edtAccount = findViewById<EditText>(R.id.add_transaction_edtAccount)
+        val edtNote = findViewById<TextView>(R.id.add_transaction_edtNote)
+        val saveButton = findViewById<Button>(R.id.add_transaction_btnSave)
+
+        val dao = AppDatabase.getDatabase(application).transactionDao()
+        val factory = TransactionViewModelFactory(dao)
+        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
         btnBack.setOnClickListener{
             val intent = Intent(this, MainActivity::class.java)
@@ -118,6 +130,16 @@ class AddTransactionActivity : AppCompatActivity() {
             if (edtCategory.text.isEmpty() || edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập đầy đủ Amount, Category và Account", Toast.LENGTH_SHORT).show()
             } else {
+                val transaction = Transaction(
+                    title = titleTransaction.text.toString(),
+                    category = edtCategory.text.toString(),
+                    content = edtNote.text.toString(),
+                    amount = edtAmount.text.toString(),
+                    isIncome = false,
+                    date = dateTextView.text.toString()
+                )
+                viewModel.insert(transaction)
+
                 // Nếu đủ thông tin thì chuyển sang MainActivity
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)

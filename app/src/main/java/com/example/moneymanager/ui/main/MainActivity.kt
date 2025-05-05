@@ -3,11 +3,8 @@ package com.example.moneymanager.ui.main
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.TextView
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.moneymanager.R
 import com.example.moneymanager.model.AppDatabase
@@ -21,14 +18,16 @@ import com.google.android.material.tabs.TabLayoutMediator
 class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: TransactionViewModel
+    private lateinit var transactionAdapter: TransactionAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val dao = AppDatabase.getInstance(application).transactionDao()
+        val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        transactionAdapter = TransactionAdapter()
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
 
@@ -43,7 +42,8 @@ class MainActivity : AppCompatActivity() {
             }
         }.attach()
 
-        viewModel.transactions.observe(this) { transactions ->
+        viewModel.allTransactions.observe(this) {list ->
+            transactionAdapter.submitList(list)
         }
 
         val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)
