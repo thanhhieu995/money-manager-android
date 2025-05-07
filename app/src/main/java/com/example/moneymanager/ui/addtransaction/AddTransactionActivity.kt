@@ -130,11 +130,12 @@ class AddTransactionActivity : AppCompatActivity() {
             if (edtCategory.text.isEmpty() || edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập đầy đủ Amount, Category và Account", Toast.LENGTH_SHORT).show()
             } else {
+                val amount = edtAmount.text.toString().toDoubleOrNull() ?: 0.0
                 val transaction = Transaction(
                     title = titleTransaction.text.toString(),
                     category = edtCategory.text.toString(),
                     content = edtNote.text.toString(),
-                    amount = edtAmount.text.toString(),
+                    amount = amount,
                     isIncome = false,
                     date = dateTextView.text.toString()
                 )

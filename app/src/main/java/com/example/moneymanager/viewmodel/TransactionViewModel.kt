@@ -8,11 +8,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionDao
+import com.example.moneymanager.model.TransactionGroup
 import kotlinx.coroutines.launch
 
 class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     private val repository = TransactionRepository(dao)
     val allTransactions: LiveData<List<Transaction>> = repository.allTransactions
+    val groupedTransactions: LiveData<List<TransactionGroup>> = repository.getGroupedTransactions()
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)

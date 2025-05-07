@@ -15,7 +15,6 @@ import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentCalendarBinding
 import com.example.moneymanager.databinding.FragmentDailyBinding
 import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.ui.main.TransactionAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 

@@ -18,7 +18,8 @@ import com.google.android.material.tabs.TabLayoutMediator
 class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: TransactionViewModel
-    private lateinit var transactionAdapter: TransactionAdapter
+//    private lateinit var transactionAdapter: TransactionAdapter
+    private lateinit var transactionGroupAdapter: TransactionGroupAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +28,8 @@ class MainActivity : AppCompatActivity() {
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
-        transactionAdapter = TransactionAdapter()
+//        transactionAdapter = TransactionAdapter()
+        transactionGroupAdapter = TransactionGroupAdapter()
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
 
@@ -42,8 +44,12 @@ class MainActivity : AppCompatActivity() {
             }
         }.attach()
 
-        viewModel.allTransactions.observe(this) {list ->
-            transactionAdapter.submitList(list)
+//        viewModel.allTransactions.observe(this) {list ->
+//            transactionAdapter.submitList(list)
+//        }
+
+        viewModel.groupedTransactions.observe(this) {list ->
+            transactionGroupAdapter.submitList(list)
         }
 
         val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)

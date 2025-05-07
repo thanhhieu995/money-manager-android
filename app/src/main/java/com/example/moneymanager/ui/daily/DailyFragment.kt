@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moneymanager.databinding.FragmentDailyBinding
 import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.ui.main.TransactionAdapter
+import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 
@@ -26,7 +26,7 @@ private const val ARG_PARAM2 = "param2"
  */
 class DailyFragment : Fragment() {
     private lateinit var viewModel: TransactionViewModel
-    private lateinit var adapter: TransactionAdapter
+    private lateinit var adapter: TransactionGroupAdapter
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
 
@@ -46,11 +46,11 @@ class DailyFragment : Fragment() {
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
-        adapter = TransactionAdapter()
+        adapter = TransactionGroupAdapter()
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
 
-        viewModel.allTransactions.observe(viewLifecycleOwner) { transactions ->
+        viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
             adapter.submitList(transactions)
             binding.noDataText.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
         }

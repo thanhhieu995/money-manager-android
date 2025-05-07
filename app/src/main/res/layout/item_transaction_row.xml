@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:weightSum="3"
+    android:padding="4dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/transaction_row_category"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Food" />
+
+    <TextView
+        android:id="@+id/transaction_row_content"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Breakfast" />
+
+    <TextView
+        android:id="@+id/transaction_row_amount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="2.000đ"
+        android:textColor="@color/red"
+        android:gravity="center_horizontal" />
+</LinearLayout>
