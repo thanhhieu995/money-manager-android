@@ -79,16 +79,16 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/tv_all"
-                android:text="Tất cả"
+                android:id="@+id/main_tv_income"
+                android:text="Income"
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:gravity="center" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/count_all"
-                android:text="0 giao dịch"
+                android:id="@+id/main_income_count_all"
+                android:text="0 đ"
                 android:textSize="14sp"
                 android:gravity="center" />
         </LinearLayout>
@@ -102,16 +102,16 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/tv_income"
-                android:text="Tất cả"
+                android:id="@+id/main_tv_expense"
+                android:text="Expense"
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:gravity="center" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/count_income"
-                android:text="0 giao dịch"
+                android:id="@+id/main_expense_count_all"
+                android:text="0 đ"
                 android:textSize="14sp"
                 android:gravity="center" />
         </LinearLayout>
@@ -124,16 +124,16 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/tv_expense"
-                android:text="Tất cả"
+                android:id="@+id/main_tv_total"
+                android:text="Total"
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:gravity="center" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/count_expense"
-                android:text="0 giao dịch"
+                android:id="@+id/main_total_count"
+                android:text="0 đ"
                 android:textSize="14sp"
                 android:gravity="center" />
         </LinearLayout>

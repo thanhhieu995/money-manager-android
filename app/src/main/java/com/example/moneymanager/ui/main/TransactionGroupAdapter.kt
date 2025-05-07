@@ -9,11 +9,13 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
+import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.model.TransactionGroup
 
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
     private var groups: List<TransactionGroup> = listOf()
+    private var currency: Currency = Currency()
 
     fun submitList(newList: List<TransactionGroup>) {
         val diffCallback = TransactionGroupDiffCallback(groups, newList)
@@ -39,8 +41,8 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val group = groups[position]
         holder.date.text = group.date
-        holder.income.text = "${group.income}đ"
-        holder.expense.text = "${group.expense}đ"
+        holder.income.text = currency.formatCurrency(group.income)
+        holder.expense.text = currency.formatCurrency(group.expense)
 
         holder.container.removeAllViews()
         for (tx in group.transactions) {
@@ -48,7 +50,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
                 .inflate(R.layout.item_transaction_row, holder.container, false)
             row.findViewById<TextView>(R.id.transaction_row_category).text = tx.category
             row.findViewById<TextView>(R.id.transaction_row_content).text = tx.content
-            row.findViewById<TextView>(R.id.transaction_row_amount).text = "${tx.amount}đ"
+            row.findViewById<TextView>(R.id.transaction_row_amount).text = currency.formatCurrency(tx.amount)
             holder.container.addView(row)
         }
     }
