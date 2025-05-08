@@ -6,22 +6,27 @@ import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
+import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.MainActivity
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
 class AddTransactionActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
+    private var currency = Currency()
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,11 +131,49 @@ class AddTransactionActivity : AppCompatActivity() {
             }
         }
 
+        edtAmount.addTextChangedListener(object : TextWatcher {
+            private var isEditing = false
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                if (isEditing || s == null) return
+
+                isEditing = true
+
+                // Xóa chữ đ nếu có trong chuỗi
+                val clean = s.toString().replace("[^\\d]".toRegex(), "")
+
+                if (clean.isNotEmpty()) {
+                    try {
+                        val parsed = clean.toDouble()
+                        val formatted = NumberFormat.getInstance(Locale("vi", "VN")).format(parsed)
+
+                        val finalText = "$formatted đ"
+
+                        // Cập nhật EditText
+                        edtAmount.setText(finalText)
+                        edtAmount.setSelection(formatted.length) // đặt con trỏ trước chữ đ
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                } else {
+                    edtAmount.setText("")
+                }
+
+                isEditing = false
+            }
+        })
+
         saveButton.setOnClickListener {
-            if (edtCategory.text.isEmpty() || edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
+            if (edtAmount.text.isEmpty() || edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập đầy đủ Amount, Category và Account", Toast.LENGTH_SHORT).show()
             } else {
-                val amount = edtAmount.text.toString().toDoubleOrNull() ?: 0.0
+                val amount = edtAmount.text.toString()
+                    .replace("[^\\d]".toRegex(), "")
+                    .toDoubleOrNull() ?: 0.0
                 val transaction = Transaction(
                     title = titleTransaction.text.toString(),
                     category = edtCategory.text.toString(),

@@ -89,6 +89,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/main_income_count_all"
                 android:text="0 đ"
+                android:textColor="@color/teal_700"
                 android:textSize="14sp"
                 android:gravity="center" />
         </LinearLayout>
@@ -112,6 +113,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/main_expense_count_all"
                 android:text="0 đ"
+                android:textColor="@color/red"
                 android:textSize="14sp"
                 android:gravity="center" />
         </LinearLayout>
