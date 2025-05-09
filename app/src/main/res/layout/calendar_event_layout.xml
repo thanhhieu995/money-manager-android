@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
     android:background="@color/transparent">
@@ -10,7 +10,7 @@
         android:id="@+id/income"
         android:text="↑1k"
         android:textColor="#388E3C"
-        android:textSize="20sp"
+        android:textSize="12sp"
         android:textStyle="bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
@@ -22,7 +22,7 @@
         android:text="↓2k"
         android:textColor="#D32F2F"
         android:textStyle="bold"
-        android:textSize="20sp"/>
+        android:textSize="12sp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -31,5 +31,5 @@
         android:text="-1k"
         android:textColor="#000"
         android:textStyle="bold"
-        android:textSize="20sp"/>
+        android:textSize="12sp"/>
 </LinearLayout>
