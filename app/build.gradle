@@ -55,5 +55,5 @@ dependencies {
     implementation "androidx.room:room-ktx:$room_version"
     // view model
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0"
-    implementation 'com.github.prolificinteractive:material-calendarview:2.0.1'
+    implementation 'com.applandeo:material-calendar-view:1.9.2'
 }
