@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="#F9F9F9">
+
+    <TextView
+        android:id="@+id/monthly_detail_arrange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="11-05 ~ 17-05"
+        android:layout_weight="1"
+        android:textSize="13sp"
+        android:textColor="#444444" />
+
+    <TextView
+        android:id="@+id/monthly_detail_income"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0đ"
+        android:layout_weight="1"
+        android:textColor="#007AFF"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:paddingTop="4dp">
+
+        <TextView
+            android:id="@+id/monthly_detail_expense"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="500.000đ"
+            android:textColor="#FF3B30"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/monthly_detail_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-500.000đ"
+            android:textSize="13sp"
+            android:textColor="#000000" />
+    </LinearLayout>
+</LinearLayout>
