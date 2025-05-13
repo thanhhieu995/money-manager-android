@@ -23,6 +23,7 @@ class MonthlyAdapter(
         val tvIncome: TextView = itemView.findViewById(R.id.monthly_income)
         val tvExpense: TextView = itemView.findViewById(R.id.monthly_expense)
         val tvTotal: TextView = itemView.findViewById(R.id.monthly_total)
+        private val rvWeeks: RecyclerView = itemView.findViewById(R.id.monthly_list_week)
 
         @RequiresApi(Build.VERSION_CODES.M)
         fun bind(data: MonthlyData) {
@@ -39,6 +40,14 @@ class MonthlyAdapter(
                     else -> itemView.context.getColor(R.color.purple_200)               // zero
                 }
             )
+
+            // Gán adapter tuần nếu đang mở rộng
+            if (data.isExpanded) {
+                rvWeeks.visibility = View.VISIBLE
+                rvWeeks.adapter = WeeklyAdapter(data.weeks)
+            } else {
+                rvWeeks.visibility = View.GONE
+            }
 
             itemView.setOnClickListener {
                 onMonthClick(data)

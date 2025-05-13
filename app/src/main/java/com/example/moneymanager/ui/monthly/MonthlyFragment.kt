@@ -1,60 +1,83 @@
 package com.example.moneymanager.ui.monthly
 
+import android.app.Application
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moneymanager.R
+import com.example.moneymanager.databinding.FragmentDailyBinding
+import com.example.moneymanager.databinding.FragmentMonthlyBinding
+import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Transaction
+import com.example.moneymanager.model.TransactionGroup
+import com.example.moneymanager.viewmodel.TransactionViewModel
+import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [MonthlyFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MonthlyFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
-
+    private lateinit var viewModel: TransactionViewModel
+    private var _binding: FragmentMonthlyBinding? = null
+    private val binding get() = _binding!!
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        _binding = FragmentMonthlyBinding.inflate(inflater, container, false)
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_monthly, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MonthlyFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MonthlyFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val dao = AppDatabase.getDatabase(Application()).transactionDao()
+        val factory = TransactionViewModelFactory(dao)
+        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        // Gán layoutManager nếu chưa có
+        binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
+        viewModel.groupedTransactions.observe(viewLifecycleOwner) {list ->
+            val listMonthlyData = groupTransactionsByMonth(list)
+            val adapter = MonthlyAdapter(listMonthlyData) { monthlyData ->
+                // handle onMonthClick ở đây nếu cần
+            }
+            binding.monthlyListSummary.adapter = adapter
+            binding.monthlyNoData.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun groupTransactionsByMonth(transactions: List<TransactionGroup>): List<MonthlyData> {
+        val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+        val outputFormatter = DateTimeFormatter.ofPattern("dd-MM")
+
+        return transactions
+            .groupBy {
+                val rawDate = it.date
+                val cleanedDate = rawDate.substringBefore(" ") // Bỏ phần (Tue)
+                val localDate = LocalDate.parse(cleanedDate, inputFormatter)
+                LocalDate.of(localDate.year, localDate.month, 1)
+            }
+            .map { (monthStart, list) ->
+                val income = list.sumOf { it.income }
+                val expense = list.sumOf { it.expense }
+                val total = income - expense
+
+                val dateRange = "${monthStart.format(outputFormatter)} ~ ${monthStart.withDayOfMonth(monthStart.lengthOfMonth()).format(outputFormatter)}"
+
+                MonthlyData(
+                    monthName = monthStart.month.name.lowercase().replaceFirstChar { it.uppercase() },
+                    dateRange = dateRange,
+                    income = income,
+                    expense = expense,
+                    total = total,
+                    weeks = emptyList()
+                )
             }
     }
 }
