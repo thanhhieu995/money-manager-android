@@ -1,11 +1,14 @@
 package com.example.moneymanager.ui
 
 import android.app.Application
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moneymanager.databinding.FragmentDailyBinding
@@ -13,6 +16,8 @@ import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -39,10 +44,11 @@ class DailyFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val dao = AppDatabase.getDatabase(Application()).transactionDao()
+        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
@@ -51,8 +57,23 @@ class DailyFragment : Fragment() {
         binding.transactionList.adapter = adapter
 
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
-            adapter.submitList(transactions)
-            binding.noDataText.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
+            // Sắp xếp ngày giảm dần
+            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+
+            val now = LocalDate.now()
+            val currentMonth = now.monthValue
+            val currentYear = now.year
+
+            val filteredList = transactions.filter { group ->
+                val cleanedDate = group.date.substringBefore(" ") // bỏ phần (Tue)
+                val localDate = LocalDate.parse(cleanedDate, inputFormatter)
+                localDate.monthValue == currentMonth && localDate.year == currentYear
+            }.sortedByDescending { group ->
+                val cleanedDate = group.date.substringBefore(" ")
+                LocalDate.parse(cleanedDate, inputFormatter)
+            }
+            adapter.submitList(filteredList)
+            binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         }
     }
     override fun onDestroyView() {
