@@ -1,12 +1,14 @@
 package com.example.moneymanager.ui.main
 
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.moneymanager.R
@@ -18,6 +20,8 @@ import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var transactionGroupAdapter: TransactionGroupAdapter
     private var currency = Currency()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -34,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         val totalCount = findViewById<TextView>(R.id.main_total_count)
         val monthBack = findViewById<ImageView>(R.id.main_month_back)
         val monthNext = findViewById<ImageView>(R.id.main_month_next)
+        val monthText = findViewById<TextView>(R.id.main_month_text)
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
@@ -59,6 +65,19 @@ class MainActivity : AppCompatActivity() {
             incomeCountAll.text = currency.formatCurrency(list.sumOf { it.income })
             expenseCountAll.text = currency.formatCurrency(list.sumOf { it.expense })
             totalCount.text = currency.formatCurrency(list.sumOf { it.income } - list.sumOf { it.expense })
+        }
+
+        monthBack.setOnClickListener {
+            viewModel.changeMonth(-1)
+        }
+
+        monthNext.setOnClickListener {
+            viewModel.changeMonth(1)
+        }
+
+        val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+        viewModel.currentMonthYear.observe(this) { selectedMonth ->
+            monthText.text = selectedMonth.format(formatter)
         }
 
         val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)

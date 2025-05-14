@@ -29,7 +29,6 @@ class MonthlyAdapter(
 
         @RequiresApi(Build.VERSION_CODES.M)
         fun bind(data: MonthlyData) {
-            Log.d("hieu", "log bind data: $data")
             tvMonthName.text = data.monthName
             tvDateRange.text = data.dateRange
             tvIncome.text = currency.formatCurrency(data.income)

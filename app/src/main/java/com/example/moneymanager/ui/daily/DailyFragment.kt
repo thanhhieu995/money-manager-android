@@ -52,7 +52,7 @@ class DailyFragment : Fragment() {
 
         val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
 
         adapter = TransactionGroupAdapter()
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
@@ -60,8 +60,6 @@ class DailyFragment : Fragment() {
 
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
             // Sắp xếp ngày giảm dần
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-
             val now = LocalDate.now()
 
             val filteredList = filterTransactions.filterTransactionsByMonth(transactions, now)
@@ -69,6 +67,15 @@ class DailyFragment : Fragment() {
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         }
+
+        viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
+            viewModel.groupedTransactions.value?.let { allTransactions ->
+                val filtered = filterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
+                adapter.submitList(filtered)
+                binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+            }
+        }
+
     }
     override fun onDestroyView() {
         super.onDestroyView()
