@@ -1,17 +1,19 @@
 package com.example.moneymanager.ui.monthly
 
 import android.os.Build
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Currency
 
 class MonthlyAdapter(
-    private val monthlyList: List<MonthlyData>,
+    private var monthlyList: List<MonthlyData>,
     private val onMonthClick: (MonthlyData) -> Unit
 ) : RecyclerView.Adapter<MonthlyAdapter.MonthViewHolder>() {
 
@@ -27,6 +29,7 @@ class MonthlyAdapter(
 
         @RequiresApi(Build.VERSION_CODES.M)
         fun bind(data: MonthlyData) {
+            Log.d("hieu", "log bind data: $data")
             tvMonthName.text = data.monthName
             tvDateRange.text = data.dateRange
             tvIncome.text = currency.formatCurrency(data.income)
@@ -41,6 +44,7 @@ class MonthlyAdapter(
                 }
             )
 
+            rvWeeks.layoutManager = LinearLayoutManager(itemView.context)
             // Gán adapter tuần nếu đang mở rộng
             if (data.isExpanded) {
                 rvWeeks.visibility = View.VISIBLE
@@ -67,4 +71,8 @@ class MonthlyAdapter(
     }
 
     override fun getItemCount(): Int = monthlyList.size
+
+    fun updateData(newList: List<MonthlyData>) {
+        monthlyList = newList
+    }
 }
