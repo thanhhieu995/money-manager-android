@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
@@ -30,6 +32,8 @@ class MainActivity : AppCompatActivity() {
         val incomeCountAll = findViewById<TextView>(R.id.main_income_count_all)
         val expenseCountAll = findViewById<TextView>(R.id.main_expense_count_all)
         val totalCount = findViewById<TextView>(R.id.main_total_count)
+        val monthBack = findViewById<ImageView>(R.id.main_month_back)
+        val monthNext = findViewById<ImageView>(R.id.main_month_next)
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)

@@ -29,12 +29,13 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
+            android:id="@+id/main_month_back"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_baseline_navigate_before_24" />
 
         <TextView
-            android:id="@+id/monthText"
+            android:id="@+id/main_month_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -44,6 +45,7 @@
             android:textSize="18sp" />
 
         <ImageView
+            android:id="@+id/main_month_next"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_baseline_navigate_next_24" />

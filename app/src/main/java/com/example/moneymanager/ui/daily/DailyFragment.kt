@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moneymanager.databinding.FragmentDailyBinding
+import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
@@ -34,6 +35,7 @@ class DailyFragment : Fragment() {
     private lateinit var adapter: TransactionGroupAdapter
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
+    private val filterTransactions = FilterTransactions()
 
 
     override fun onCreateView(
@@ -61,17 +63,9 @@ class DailyFragment : Fragment() {
             val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
 
             val now = LocalDate.now()
-            val currentMonth = now.monthValue
-            val currentYear = now.year
 
-            val filteredList = transactions.filter { group ->
-                val cleanedDate = group.date.substringBefore(" ") // bỏ phần (Tue)
-                val localDate = LocalDate.parse(cleanedDate, inputFormatter)
-                localDate.monthValue == currentMonth && localDate.year == currentYear
-            }.sortedByDescending { group ->
-                val cleanedDate = group.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
-            }
+            val filteredList = filterTransactions.filterTransactionsByMonth(transactions, now)
+
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         }
