@@ -36,7 +36,7 @@ class CalendarFragment : Fragment() {
         val events = mutableListOf<EventDay>()
         val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
         viewModel.groupedTransactions.observe(requireActivity()) { list ->
             for (group in list) {
                 val calendar = Calendar.getInstance()

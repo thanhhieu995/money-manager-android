@@ -13,7 +13,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Currency
+import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
@@ -28,6 +30,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var transactionGroupAdapter: TransactionGroupAdapter
     private var currency = Currency()
+    var listTransactionGroup : List<TransactionGroup> = listOf()
+    private val filterTransactions = FilterTransactions()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +65,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.groupedTransactions.observe(this) {list ->
             transactionGroupAdapter.submitList(list)
-
+            listTransactionGroup = list
             incomeCountAll.text = currency.formatCurrency(list.sumOf { it.income })
             expenseCountAll.text = currency.formatCurrency(list.sumOf { it.expense })
             totalCount.text = currency.formatCurrency(list.sumOf { it.income } - list.sumOf { it.expense })
@@ -78,6 +82,10 @@ class MainActivity : AppCompatActivity() {
         val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         viewModel.currentMonthYear.observe(this) { selectedMonth ->
             monthText.text = selectedMonth.format(formatter)
+            val filtered = filterTransactions.filterTransactionsByMonth(listTransactionGroup, selectedMonth)
+            incomeCountAll.text = currency.formatCurrency(filtered.sumOf { it.income })
+            expenseCountAll.text = currency.formatCurrency(filtered.sumOf { it.expense })
+            totalCount.text = currency.formatCurrency(filtered.sumOf { it.income } - filtered.sumOf { it.expense })
         }
 
         val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)
