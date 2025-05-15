@@ -26,7 +26,7 @@ import java.util.*
 
 class AddTransactionActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
-    private var currency = Currency()
+    private var isIncome: Boolean = false
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +77,7 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         incomeButton.setOnClickListener {
+            isIncome = true
             incomeButton.setBackgroundColor(Color.BLUE)
             incomeButton.setTextColor(Color.WHITE)
             expenseButton.setBackgroundColor(Color.WHITE)
@@ -87,6 +88,7 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         expenseButton.setOnClickListener {
+            isIncome = false
             incomeButton.setBackgroundColor(Color.WHITE)
             incomeButton.setTextColor(Color.BLACK)
             expenseButton.setBackgroundColor(Color.RED)
@@ -179,7 +181,7 @@ class AddTransactionActivity : AppCompatActivity() {
                     category = edtCategory.text.toString(),
                     content = edtNote.text.toString(),
                     amount = amount,
-                    isIncome = false,
+                    isIncome = isIncome,
                     date = dateTextView.text.toString()
                 )
                 viewModel.insert(transaction)

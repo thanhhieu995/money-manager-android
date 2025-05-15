@@ -1,16 +1,23 @@
 package com.example.moneymanager.ui.main
 
 import android.annotation.SuppressLint
+import android.graphics.Color
+import android.os.Build
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.model.TransactionGroup
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
@@ -37,10 +44,15 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         return GroupViewHolder(view)
     }
 
-    @SuppressLint("MissingInflatedId")
+    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("MissingInflatedId", "SetTextI18n")
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val group = groups[position]
-        holder.date.text = group.date
+        val fullDate = group.date // "13/05/25 (Tue)"
+        val dayPart = fullDate.substringBefore("/") // "13"
+        val dayOfWeek = fullDate.substringAfterLast(" ") // "(Tue)"
+
+        holder.date.text = "$dayPart $dayOfWeek"
         holder.income.text = currency.formatCurrency(group.income)
         holder.expense.text = currency.formatCurrency(group.expense)
 
@@ -50,7 +62,13 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
                 .inflate(R.layout.item_transaction_row, holder.container, false)
             row.findViewById<TextView>(R.id.transaction_row_category).text = tx.category
             row.findViewById<TextView>(R.id.transaction_row_content).text = tx.content
-            row.findViewById<TextView>(R.id.transaction_row_amount).text = currency.formatCurrency(tx.amount)
+            val amountTextView = row.findViewById<TextView>(R.id.transaction_row_amount)
+            amountTextView.text = currency.formatCurrency(tx.amount)
+            if (tx.isIncome) {
+                amountTextView.setTextColor(ContextCompat.getColor(row.context, R.color.income))
+            } else {
+                amountTextView.setTextColor(Color.RED)
+            }
             holder.container.addView(row)
         }
     }

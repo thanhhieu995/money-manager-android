@@ -91,7 +91,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/main_income_count_all"
                 android:text="0 đ"
-                android:textColor="@color/teal_700"
+                android:textColor="@color/income"
                 android:textSize="14sp"
                 android:gravity="center" />
         </LinearLayout>

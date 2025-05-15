@@ -37,7 +37,7 @@ class MonthlyAdapter(
 
             tvTotal.setTextColor(
                 when {
-                    data.total > 0 -> itemView.context.getColor(R.color.teal_700) // positive
+                    data.total > 0 -> itemView.context.getColor(R.color.income) // positive
                     data.total < 0 -> itemView.context.getColor(R.color.red)      // negative
                     else -> itemView.context.getColor(R.color.purple_200)               // zero
                 }
