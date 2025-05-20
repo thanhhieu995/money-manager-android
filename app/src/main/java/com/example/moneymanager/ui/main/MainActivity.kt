@@ -4,14 +4,13 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.moneymanager.R
+import com.example.moneymanager.ui.search.SearchActivity
 import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.model.AppDatabase
@@ -38,12 +37,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val search = findViewById<ImageView>(R.id.main_search)
         val incomeCountAll = findViewById<TextView>(R.id.main_income_count_all)
         val expenseCountAll = findViewById<TextView>(R.id.main_expense_count_all)
         val totalCount = findViewById<TextView>(R.id.main_total_count)
         val monthBack = findViewById<ImageView>(R.id.main_month_back)
         val monthNext = findViewById<ImageView>(R.id.main_month_next)
         val monthText = findViewById<TextView>(R.id.main_month_text)
+
+        search.setOnClickListener {
+            val intent = Intent(this, SearchActivity::class.java)
+            startActivity(intent)
+        }
+
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)

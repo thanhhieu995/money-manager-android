@@ -49,8 +49,7 @@ class AddTransactionActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
         btnBack.setOnClickListener{
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            finish()
         }
 
 
