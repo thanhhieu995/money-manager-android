@@ -56,13 +56,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/search_searchView"
+        <AutoCompleteTextView
+            android:id="@+id/search_autoComplete"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Search..."
             android:layout_weight="1"
-            android:iconifiedByDefault="false"
-            android:queryHint="Search" />
+            android:inputType="text"
+            android:padding="12dp"
+            android:drawableStart="@drawable/ic_baseline_search_24"
+            android:drawablePadding="8dp"
+            />
 
         <TextView
             android:id="@+id/search_btnCancel"
