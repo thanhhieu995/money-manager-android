@@ -19,6 +19,16 @@ class TransactionAdapter(
     private var transactions: List<Transaction>,
 ) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>(), Filterable {
 
+    interface OnFilterResultListener {
+        fun onFilterResult(filteredList: List<Transaction>)
+    }
+
+    private var filterResultListener: OnFilterResultListener? = null
+
+    fun setOnFilterResultListener(listener: OnFilterResultListener) {
+        filterResultListener = listener
+    }
+
     private var filteredTransactions: List<Transaction> = transactions
 
     inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -76,13 +86,13 @@ class TransactionAdapter(
 
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
                 filteredTransactions = results?.values as List<Transaction>
-                Log.d("hieu", "result: ${results.values}")
                 notifyDataSetChanged()
+                filterResultListener?.onFilterResult(filteredTransactions)
             }
         }
     }
 
-    private fun formatCurrency(amount: Double): String {
+    fun formatCurrency(amount: Double): String {
         return NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(amount)
     }
 }

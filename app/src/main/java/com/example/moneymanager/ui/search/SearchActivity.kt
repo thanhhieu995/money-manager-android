@@ -28,6 +28,8 @@ class SearchActivity : AppCompatActivity() {
         val btnBack = findViewById<ImageView>(R.id.search_back)
         val btnCancel = findViewById<TextView>(R.id.search_btnCancel)
         val searchView = findViewById<SearchView>(R.id.search_searchView)
+        val incomeCount = findViewById<TextView>(R.id.search_income_count_all)
+        val expenseCount = findViewById<TextView>(R.id.search_expense_count_all)
         val recyclerView = findViewById<RecyclerView>(R.id.search_resultList)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = transactionAdapter
@@ -53,11 +55,32 @@ class SearchActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrEmpty()) {
                     transactionAdapter.updateList(emptyList())
+                    incomeCount.text = "0đ"
+                    expenseCount.text = "0đ"
                 } else {
                     transactionAdapter.filter.filter(newText)
                     transactionAdapter.updateList(transactions)
                 }
                 return true
+            }
+        })
+
+        transactionAdapter.setOnFilterResultListener(object : TransactionAdapter.OnFilterResultListener {
+            override fun onFilterResult(filteredList: List<Transaction>) {
+                // TODO: cập nhật UI khác nếu cần
+                var totalIncome: Double = 0.0
+                var totalExpense: Double = 0.0
+
+                for (tx in filteredList) {
+                    if (tx.isIncome) {
+                        totalIncome += tx.amount
+                    } else {
+                        totalExpense += tx.amount
+                    }
+                }
+
+                incomeCount.text = transactionAdapter.formatCurrency(totalIncome)
+                expenseCount.text = transactionAdapter.formatCurrency(totalExpense)
             }
         })
     }

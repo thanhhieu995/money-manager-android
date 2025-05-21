@@ -94,7 +94,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/main_tv_income"
+                android:id="@+id/search_tv_income"
                 android:text="Income"
                 android:textStyle="bold"
                 android:textSize="16sp"
@@ -102,7 +102,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/main_income_count_all"
+                android:id="@+id/search_income_count_all"
                 android:text="0 đ"
                 android:textColor="@color/income"
                 android:textSize="14sp"
@@ -118,7 +118,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/main_tv_expense"
+                android:id="@+id/search_tv_expense"
                 android:text="Expense"
                 android:textStyle="bold"
                 android:textSize="16sp"
@@ -126,7 +126,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/main_expense_count_all"
+                android:id="@+id/search_expense_count_all"
                 android:text="0 đ"
                 android:textColor="@color/red"
                 android:textSize="14sp"
