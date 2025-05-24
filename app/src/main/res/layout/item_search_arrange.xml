@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Total" />
+            android:text="All" />
 
         <ImageView
             android:id="@+id/search_optionTotalCheck"
@@ -70,6 +70,29 @@
 
         <ImageView
             android:id="@+id/search_optionMonthlyCheck"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_baseline_check_24"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/optionYearlyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/search_optionYearly"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Yearly"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/search_optionYearlyCheck"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_baseline_check_24"

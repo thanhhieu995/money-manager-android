@@ -1,6 +1,7 @@
 package com.example.moneymanager.ui.search
 
 import android.graphics.Color
+import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -8,11 +9,16 @@ import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class TransactionAdapter(
@@ -24,6 +30,7 @@ class TransactionAdapter(
     }
 
     private var filterResultListener: OnFilterResultListener? = null
+    var filterPeriod: FilterPeriod = FilterPeriod.All
 
     fun setOnFilterResultListener(listener: OnFilterResultListener) {
         filterResultListener = listener
@@ -67,16 +74,31 @@ class TransactionAdapter(
     // Filter cho SearchView
     override fun getFilter(): Filter {
         return object : Filter() {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun performFiltering(constraint: CharSequence?): FilterResults {
                 val query = constraint?.toString()?.lowercase()?.trim()
-                val filtered = if (query.isNullOrEmpty()) {
-                    transactions
-                } else {
-                    transactions.filter {
-                        it.content.lowercase().contains(query)
-                                || it.date.contains(query)
-                                || formatCurrency(it.amount).contains(query)
+
+                val filtered = transactions.filter { transaction ->
+                    val cleanedDate = transaction.date.substringBefore(" ") // "24/05/25"
+                    val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+                    val date = LocalDate.parse(cleanedDate, formatter)
+                    val currentDate = LocalDate.now()
+                    val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
+                    val endOfWeek = startOfWeek.plusDays(6)
+                    val currentMonth = currentDate.monthValue     // 1 đến 12
+                    val currentYear = currentDate.year
+                    val matchQuery = query.isNullOrEmpty() || transaction.content.lowercase().contains(query)
+                            || transaction.date.contains(query)
+                            || formatCurrency(transaction.amount).contains(query)
+
+                    val matchPeriod = when (filterPeriod) {
+                        FilterPeriod.All -> true
+                        FilterPeriod.Weekly ->  !date.isBefore(startOfWeek) && !date.isAfter(endOfWeek)
+                        FilterPeriod.Monthly -> date.month.value == currentMonth && date.year == currentYear
+                        FilterPeriod.Yearly -> date.year == currentYear
                     }
+
+                    matchQuery && matchPeriod
                 }
 
                 val results = FilterResults()
