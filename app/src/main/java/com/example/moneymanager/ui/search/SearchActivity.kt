@@ -3,10 +3,8 @@ package com.example.moneymanager.ui.search
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
-import android.widget.ImageView
-import android.widget.TextView
+import android.view.View
+import android.widget.*
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,16 +14,19 @@ import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class SearchActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private var transactions : List<Transaction> = listOf()
     private var transactionAdapter = TransactionAdapter(emptyList())
+    private var selectedOption: String = "Total" // default
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
+        val searchArrange = findViewById<ImageView>(R.id.search_filter)
         val btnBack = findViewById<ImageView>(R.id.search_back)
         val btnCancel = findViewById<TextView>(R.id.search_btnCancel)
         val searchInput = findViewById<AutoCompleteTextView>(R.id.search_autoComplete)
@@ -41,6 +42,10 @@ class SearchActivity : AppCompatActivity() {
 
         btnCancel.setOnClickListener {
             finish()
+        }
+
+        searchArrange.setOnClickListener {
+            searchArrange()
         }
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
@@ -97,5 +102,47 @@ class SearchActivity : AppCompatActivity() {
                 expenseCount.text = transactionAdapter.formatCurrency(totalExpense)
             }
         })
+    }
+
+    private fun searchArrange() {
+        val bottomSheetDialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.item_search_arrange, null)
+        bottomSheetDialog.setContentView(view)
+        // Dấu tick
+        val checkViews = mapOf(
+            "Total" to view.findViewById<ImageView>(R.id.search_optionTotalCheck),
+            "Weekly" to view.findViewById<ImageView>(R.id.search_optionWeeklyCheck),
+            "Monthly" to view.findViewById<ImageView>(R.id.search_optionMonthlyCheck),
+        )
+        // Hiển thị tick đúng vị trí
+        fun updateCheckMarks(selected: String) {
+            checkViews.forEach { (option, imageView) ->
+                imageView.visibility = if (option == selected) View.VISIBLE else View.GONE
+            }
+        }
+
+        updateCheckMarks(selectedOption) // cập nhật ban đầu
+
+        view.findViewById<LinearLayout>(R.id.optionTotalLayout).setOnClickListener {
+            selectedOption = "Total"
+            updateCheckMarks(selectedOption)
+        }
+
+        view.findViewById<LinearLayout>(R.id.optionWeeklyLayout).setOnClickListener {
+            selectedOption = "Weekly"
+            updateCheckMarks(selectedOption)
+        }
+
+        view.findViewById<LinearLayout>(R.id.optionMonthlyLayout).setOnClickListener {
+            selectedOption = "Monthly"
+            updateCheckMarks(selectedOption)
+        }
+
+        // Tương tự với Monthly, Annually, Period...
+
+        view.findViewById<TextView>(R.id.search_optionCancel).setOnClickListener {
+            bottomSheetDialog.dismiss()
+        }
+        bottomSheetDialog.show()
     }
 }
