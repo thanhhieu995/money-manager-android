@@ -5,12 +5,14 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.applandeo.materialcalendarview.EventDay
 import com.example.moneymanager.R
@@ -19,6 +21,8 @@ import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class CalendarFragment : Fragment() {
@@ -28,6 +32,7 @@ class CalendarFragment : Fragment() {
     private lateinit var viewModel: TransactionViewModel
     private var currency = com.example.moneymanager.helper.Currency()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,6 +57,15 @@ class CalendarFragment : Fragment() {
                 events.add(EventDay(calendar, drawable))
             }
             binding.calendarView.setEvents(events)
+        }
+
+        viewModel.currentMonthYear.observe(viewLifecycleOwner) { date ->
+            val calendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, date.year)
+                set(Calendar.MONTH, date.monthValue - 1) // Vì Calendar.MONTH bắt đầu từ 0
+                set(Calendar.DAY_OF_MONTH, 1)
+            }
+            binding.calendarView.setDate(calendar)
         }
         return binding.root
     }
