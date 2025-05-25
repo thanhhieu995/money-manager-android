@@ -8,12 +8,10 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
@@ -24,14 +22,11 @@ import com.applandeo.materialcalendarview.listeners.OnDayClickListener
 import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentCalendarBinding
 import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 class CalendarFragment : Fragment() {
@@ -47,6 +42,12 @@ class CalendarFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentCalendarBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         val events = mutableListOf<EventDay>()
         val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
@@ -77,13 +78,14 @@ class CalendarFragment : Fragment() {
             binding.calendarView.setDate(calendar)
         }
 
+        val header = binding.calendarView.findViewById<View>(com.applandeo.materialcalendarview.R.id.calendarHeader)
+        header?.visibility = View.GONE
+
         binding.calendarView.setOnDayClickListener(object : OnDayClickListener {
             override fun onDayClick(eventDay: EventDay) {
                 showBottomSheetForDate(eventDay.calendar.time)
             }
         })
-
-        return binding.root
     }
 
     private fun createEventDrawable(
