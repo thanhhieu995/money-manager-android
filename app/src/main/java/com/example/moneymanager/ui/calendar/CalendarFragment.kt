@@ -1,5 +1,6 @@
 package com.example.moneymanager.ui.calendar
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -7,19 +8,27 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.applandeo.materialcalendarview.EventDay
+import com.applandeo.materialcalendarview.listeners.OnDayClickListener
 import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentCalendarBinding
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.TransactionGroup
+import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -67,6 +76,13 @@ class CalendarFragment : Fragment() {
             }
             binding.calendarView.setDate(calendar)
         }
+
+        binding.calendarView.setOnDayClickListener(object : OnDayClickListener {
+            override fun onDayClick(eventDay: EventDay) {
+                showBottomSheetForDate(eventDay.calendar.time)
+            }
+        })
+
         return binding.root
     }
 
@@ -91,6 +107,34 @@ class CalendarFragment : Fragment() {
         val canvas = Canvas(bitmap)
         view.draw(canvas)
         return BitmapDrawable(context.resources, bitmap)
+    }
+
+    @SuppressLint("MissingInflatedId")
+    private fun showBottomSheetForDate(date: Date) {
+        val adapter = TransactionGroupAdapter()
+
+        val dialogView = layoutInflater.inflate(R.layout.item_calendar_day_detail, null)
+        val bottomSheet = BottomSheetDialog(requireContext())
+        bottomSheet.setContentView(dialogView)
+
+        val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+        val dateString = sdf.format(date)
+
+        val dayListTransaction = dialogView.findViewById<RecyclerView>(R.id.item_day_calendar_list)
+        dayListTransaction.layoutManager = LinearLayoutManager(requireContext())
+        dayListTransaction.adapter = adapter
+
+        val noDataText = dialogView.findViewById<TextView>(R.id.item_day_calendar_noData)
+
+        val groupTransaction = viewModel.groupedTransactions.value?.filter {
+            val transactionDate = sdf.parse(it.date)
+            sdf.format(transactionDate) == dateString
+        } ?: emptyList()
+
+        adapter.submitList(groupTransaction)
+        noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE
+
+        bottomSheet.show()
     }
 }
 
