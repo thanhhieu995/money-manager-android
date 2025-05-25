@@ -35,6 +35,7 @@ class CalendarFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var viewModel: TransactionViewModel
     private var currency = com.example.moneymanager.helper.Currency()
+    private lateinit var calendarResume: Calendar
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -52,7 +53,7 @@ class CalendarFragment : Fragment() {
         val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
-        viewModel.groupedTransactions.observe(requireActivity()) { list ->
+        viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
             for (group in list) {
                 val calendar = Calendar.getInstance()
                 calendar.time =
@@ -75,17 +76,26 @@ class CalendarFragment : Fragment() {
                 set(Calendar.MONTH, date.monthValue - 1) // Vì Calendar.MONTH bắt đầu từ 0
                 set(Calendar.DAY_OF_MONTH, 1)
             }
+            calendarResume = calendar
             binding.calendarView.setDate(calendar)
         }
+        setupDayClickListener()
 
         val header = binding.calendarView.findViewById<View>(com.applandeo.materialcalendarview.R.id.calendarHeader)
         header?.visibility = View.GONE
+    }
 
+    private fun setupDayClickListener() {
         binding.calendarView.setOnDayClickListener(object : OnDayClickListener {
             override fun onDayClick(eventDay: EventDay) {
                 showBottomSheetForDate(eventDay.calendar.time)
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.calendarView.setDate(calendarResume)
     }
 
     private fun createEventDrawable(
