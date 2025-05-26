@@ -25,6 +25,10 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         repository.insert(transaction)
     }
 
+    fun delete(transaction: Transaction) = viewModelScope.launch {
+        dao.delete(transaction)
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun changeMonth(offset: Long) {
         _currentMonthYear.value = _currentMonthYear.value?.plusMonths(offset)

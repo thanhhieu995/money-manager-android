@@ -8,9 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -47,6 +47,9 @@ class AddTransactionActivity : AppCompatActivity() {
         val saveButton = findViewById<Button>(R.id.add_transaction_btnSave)
         val layoutSave = findViewById<LinearLayout>(R.id.add_transaction_layout_save)
         val layoutEdit = findViewById<LinearLayout>(R.id.add_transaction_layout_edit)
+        val deleteButton = findViewById<Button>(R.id.add_transaction_btnDelete)
+        val copyButton = findViewById<Button>(R.id.add_transaction_btnCopy)
+        val bookMarkButton = findViewById<Button>(R.id.add_transaction_btnBookmark)
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
@@ -54,21 +57,6 @@ class AddTransactionActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener{
             finish()
-        }
-
-        val transaction = intent.getSerializableExtra("transaction") as? Transaction
-        Log.d("hieu", "transaction: $transaction")
-
-        if (transaction == null) {
-            layoutSave.visibility = View.VISIBLE
-            layoutEdit.visibility = View.GONE
-        } else {
-            layoutSave.visibility = View.GONE
-            layoutEdit.visibility = View.VISIBLE
-            edtAmount.setText(currency.formatCurrency(transaction.amount))
-            edtCategory.setText(transaction.category)
-            edtAccount.setText(transaction.account)
-            edtNote.text = transaction.note
         }
 
 // Lấy ngày hiện tại và hiển thị
@@ -102,6 +90,10 @@ class AddTransactionActivity : AppCompatActivity() {
             saveButton.setBackgroundColor(Color.BLUE)
             saveButton.setTextColor(Color.WHITE)
             titleTransaction.text = "Income"
+
+            // xử lý edit layout
+            layoutSave.visibility = View.VISIBLE
+            layoutEdit.visibility = View.GONE
         }
 
         expenseButton.setOnClickListener {
@@ -112,6 +104,10 @@ class AddTransactionActivity : AppCompatActivity() {
             expenseButton.setTextColor(Color.WHITE)
             saveButton.setBackgroundColor(Color.RED)
             titleTransaction.text = "Expense"
+
+            // xử lý edit layout
+            layoutSave.visibility = View.VISIBLE
+            layoutEdit.visibility = View.GONE
         }
 
         val categories = listOf(
@@ -208,6 +204,51 @@ class AddTransactionActivity : AppCompatActivity() {
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
                 finish() // kết thúc activity hiện tại
+            }
+        }
+
+        // nhan vao item transaction
+        val transaction = intent.getSerializableExtra("transaction") as? Transaction
+
+        if (transaction == null) {
+            layoutSave.visibility = View.VISIBLE
+            layoutEdit.visibility = View.GONE
+        } else {
+            layoutSave.visibility = View.GONE
+            layoutEdit.visibility = View.VISIBLE
+            edtAmount.setText(currency.formatCurrency(transaction.amount))
+            edtCategory.setText(transaction.category)
+            edtAccount.setText(transaction.account)
+            edtNote.text = transaction.note
+            dateTextView.text = transaction.date
+
+            // layout edit
+            copyButton.setOnClickListener {
+                layoutSave.visibility = View.VISIBLE
+                layoutEdit.visibility = View.GONE
+                edtAmount.setText(currency.formatCurrency(transaction.amount))
+                edtCategory.setText(transaction.category)
+                edtAccount.setText(transaction.account)
+                edtNote.text = transaction.note
+                dateTextView.text = formattedDate.toString()
+            }
+
+            deleteButton.setOnClickListener {
+                AlertDialog.Builder(this)
+                    .setTitle("Confirm Delete")
+                    .setMessage("Are you sure you want to delete this transaction?")
+                    .setPositiveButton("Yes") { dialog, _ ->
+                        transaction.let { tx ->
+                            viewModel.delete(tx)
+                            Toast.makeText(this, "Transaction deleted", Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("No") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .show()
             }
         }
     }
