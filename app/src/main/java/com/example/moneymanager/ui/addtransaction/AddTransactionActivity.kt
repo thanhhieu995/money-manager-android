@@ -250,6 +250,15 @@ class AddTransactionActivity : AppCompatActivity() {
                     }
                     .show()
             }
+
+            bookMarkButton.setOnClickListener {
+                transaction.let { tx ->
+                    val updated = tx.copy(isBookmarked = true)
+                    viewModel.update(updated)
+                    Toast.makeText(this, "Bookmarked!", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
         }
     }
 

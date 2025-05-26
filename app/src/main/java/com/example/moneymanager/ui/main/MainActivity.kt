@@ -1,5 +1,6 @@
 package com.example.moneymanager.ui.main
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +17,7 @@ import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
+import com.example.moneymanager.ui.bookmark.BookmarkActivity
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -32,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     var listTransactionGroup : List<TransactionGroup> = listOf()
     private val filterTransactions = FilterTransactions()
 
+    @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         val monthBack = findViewById<ImageView>(R.id.main_month_back)
         val monthNext = findViewById<ImageView>(R.id.main_month_next)
         val monthText = findViewById<TextView>(R.id.main_month_text)
+        val bookmark = findViewById<ImageView>(R.id.main_bookmark)
 
         search.setOnClickListener {
             val intent = Intent(this, SearchActivity::class.java)
@@ -97,6 +101,11 @@ class MainActivity : AppCompatActivity() {
         val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)
         btnAdd.setOnClickListener {
             val intent = Intent(this, AddTransactionActivity::class.java)
+            startActivity(intent)
+        }
+
+        bookmark.setOnClickListener {
+            val intent = Intent(this, BookmarkActivity::class.java)
             startActivity(intent)
         }
     }

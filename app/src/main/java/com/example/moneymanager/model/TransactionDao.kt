@@ -11,6 +11,12 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC")
     fun getAll(): LiveData<List<Transaction>>
 
+    @Query("SELECT * FROM transactions WHERE isBookmarked = 1 ORDER BY date DESC")
+    fun getBookmarkedTransactions(): LiveData<List<Transaction>>
+
     @Delete
     suspend fun delete(transaction: Transaction)
+
+    @Update
+    suspend fun update(transaction: Transaction)
 }

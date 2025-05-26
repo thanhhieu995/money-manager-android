@@ -29,6 +29,16 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         dao.delete(transaction)
     }
 
+    fun update(transaction: Transaction) {
+        viewModelScope.launch {
+            dao.update(transaction)
+        }
+    }
+
+    fun getBookmarkedTransactions(): LiveData<List<Transaction>> {
+        return dao.getBookmarkedTransactions()
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun changeMonth(offset: Long) {
         _currentMonthYear.value = _currentMonthYear.value?.plusMonths(offset)

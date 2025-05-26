@@ -12,5 +12,6 @@ data class Transaction(
     val account: String,
     val amount: Double,
     val isIncome: Boolean,
-    val date: String
+    val date: String,
+    val isBookmarked: Boolean = false
 ) : java.io.Serializable
