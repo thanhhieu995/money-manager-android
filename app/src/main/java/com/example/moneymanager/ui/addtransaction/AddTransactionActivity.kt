@@ -8,12 +8,13 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
-import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.MainActivity
@@ -27,6 +28,7 @@ import java.util.*
 class AddTransactionActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private var isIncome: Boolean = false
+    val currency = com.example.moneymanager.helper.Currency()
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +45,8 @@ class AddTransactionActivity : AppCompatActivity() {
         val edtAccount = findViewById<EditText>(R.id.add_transaction_edtAccount)
         val edtNote = findViewById<TextView>(R.id.add_transaction_edtNote)
         val saveButton = findViewById<Button>(R.id.add_transaction_btnSave)
+        val layoutSave = findViewById<LinearLayout>(R.id.add_transaction_layout_save)
+        val layoutEdit = findViewById<LinearLayout>(R.id.add_transaction_layout_edit)
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
@@ -52,6 +56,20 @@ class AddTransactionActivity : AppCompatActivity() {
             finish()
         }
 
+        val transaction = intent.getSerializableExtra("transaction") as? Transaction
+        Log.d("hieu", "transaction: $transaction")
+
+        if (transaction == null) {
+            layoutSave.visibility = View.VISIBLE
+            layoutEdit.visibility = View.GONE
+        } else {
+            layoutSave.visibility = View.GONE
+            layoutEdit.visibility = View.VISIBLE
+            edtAmount.setText(currency.formatCurrency(transaction.amount))
+            edtCategory.setText(transaction.category)
+            edtAccount.setText(transaction.account)
+            edtNote.text = transaction.note
+        }
 
 // Lấy ngày hiện tại và hiển thị
         val currentDate = Calendar.getInstance().time
@@ -178,7 +196,8 @@ class AddTransactionActivity : AppCompatActivity() {
                 val transaction = Transaction(
                     title = titleTransaction.text.toString(),
                     category = edtCategory.text.toString(),
-                    content = edtNote.text.toString(),
+                    note = edtNote.text.toString(),
+                    account = edtAccount.text.toString(),
                     amount = amount,
                     isIncome = isIncome,
                     date = dateTextView.text.toString()

@@ -3,7 +3,6 @@ package com.example.moneymanager.ui.main
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,8 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.model.TransactionGroup
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
@@ -61,13 +58,20 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
             val row = LayoutInflater.from(holder.itemView.context)
                 .inflate(R.layout.item_transaction_row, holder.container, false)
             row.findViewById<TextView>(R.id.transaction_row_category).text = tx.category
-            row.findViewById<TextView>(R.id.transaction_row_content).text = tx.content
+            row.findViewById<TextView>(R.id.transaction_row_content).text = tx.note
             val amountTextView = row.findViewById<TextView>(R.id.transaction_row_amount)
             amountTextView.text = currency.formatCurrency(tx.amount)
             if (tx.isIncome) {
                 amountTextView.setTextColor(ContextCompat.getColor(row.context, R.color.income))
             } else {
                 amountTextView.setTextColor(Color.RED)
+            }
+            // ✅ Thêm xử lý click vào đây
+            row.setOnClickListener {
+                val context = row.context
+                val intent = android.content.Intent(context, com.example.moneymanager.ui.addtransaction.AddTransactionActivity::class.java)
+                intent.putExtra("transaction", tx) // Truyền transactionId
+                context.startActivity(intent)
             }
             holder.container.addView(row)
         }

@@ -8,8 +8,9 @@ data class Transaction(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
     val category: String,
-    val content: String,
+    val note: String,
+    val account: String,
     val amount: Double,
     val isIncome: Boolean,
     val date: String
-)
+) : java.io.Serializable

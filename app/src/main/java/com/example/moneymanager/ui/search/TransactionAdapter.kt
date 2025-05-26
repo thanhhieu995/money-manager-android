@@ -2,7 +2,6 @@ package com.example.moneymanager.ui.search
 
 import android.graphics.Color
 import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -52,7 +50,7 @@ class TransactionAdapter(
 
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val tx = filteredTransactions[position]
-        holder.noteText.text = tx.content
+        holder.noteText.text = tx.note
         holder.amountText.text = formatCurrency(tx.amount)
         holder.dateText.text = tx.date // Có thể định dạng nếu muốn
 
@@ -87,7 +85,7 @@ class TransactionAdapter(
                     val endOfWeek = startOfWeek.plusDays(6)
                     val currentMonth = currentDate.monthValue     // 1 đến 12
                     val currentYear = currentDate.year
-                    val matchQuery = query.isNullOrEmpty() || transaction.content.lowercase().contains(query)
+                    val matchQuery = query.isNullOrEmpty() || transaction.note.lowercase().contains(query)
                             || transaction.date.contains(query)
                             || formatCurrency(transaction.amount).contains(query)
 

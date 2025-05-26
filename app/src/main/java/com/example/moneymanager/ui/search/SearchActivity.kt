@@ -58,7 +58,7 @@ class SearchActivity : AppCompatActivity() {
         viewModel.allTransactions.observe(this) { it ->
             transactions = it
 
-            val contents = transactions.map { it.content }.distinct()
+            val contents = transactions.map { it.note }.distinct()
 
             val adapter = ArrayAdapter(
                 this,
