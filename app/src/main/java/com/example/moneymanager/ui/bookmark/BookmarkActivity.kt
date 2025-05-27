@@ -9,9 +9,26 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
+import com.example.moneymanager.helper.Currency
+import com.example.moneymanager.helper.FilterTransactions
+import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Transaction
+import com.example.moneymanager.model.TransactionGroup
+import com.example.moneymanager.ui.main.TransactionGroupAdapter
+import com.example.moneymanager.ui.search.TransactionAdapter
+import com.example.moneymanager.viewmodel.TransactionViewModel
+import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 
 class BookmarkActivity : AppCompatActivity() {
+    private lateinit var viewModel: TransactionViewModel
+    private lateinit var transactionAdapter: TransactionAdapter
+    private var currency = Currency()
+    var listTransactionGroup : List<TransactionGroup> = listOf()
+    private val filterTransactions = FilterTransactions()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bookmark)
@@ -43,6 +60,18 @@ class BookmarkActivity : AppCompatActivity() {
             }
 
             toolbar.addView(titleText, params)
+        }
+
+        val dao = AppDatabase.getDatabase(application).transactionDao()
+        val factory = TransactionViewModelFactory(dao)
+        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        transactionAdapter = TransactionAdapter(emptyList())
+        val bookmarkList = findViewById<RecyclerView>(R.id.bookmarkRecyclerView)
+        bookmarkList.layoutManager = LinearLayoutManager(this)
+        bookmarkList.adapter = transactionAdapter
+
+        viewModel.getBookmarkedTransactions().observe(this) {
+            transactionAdapter.updateList(it)
         }
     }
 

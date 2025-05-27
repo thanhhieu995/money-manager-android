@@ -1,5 +1,6 @@
 package com.example.moneymanager.ui.search
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.view.LayoutInflater
@@ -13,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
+import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -58,6 +60,12 @@ class TransactionAdapter(
             holder.amountText.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.teal_700))
         } else {
             holder.amountText.setTextColor(Color.RED)
+        }
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, AddTransactionActivity::class.java)
+            intent.putExtra("transaction", tx)
+            context.startActivity(intent)
         }
     }
 

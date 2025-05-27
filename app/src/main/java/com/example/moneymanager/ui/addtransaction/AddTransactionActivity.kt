@@ -82,32 +82,11 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         incomeButton.setOnClickListener {
-            isIncome = true
-            incomeButton.setBackgroundColor(Color.BLUE)
-            incomeButton.setTextColor(Color.WHITE)
-            expenseButton.setBackgroundColor(Color.WHITE)
-            expenseButton.setTextColor(Color.BLACK)
-            saveButton.setBackgroundColor(Color.BLUE)
-            saveButton.setTextColor(Color.WHITE)
-            titleTransaction.text = "Income"
-
-            // xử lý edit layout
-            layoutSave.visibility = View.VISIBLE
-            layoutEdit.visibility = View.GONE
+            setTransactionType(true, incomeButton, expenseButton, saveButton, titleTransaction, layoutSave, layoutEdit, false)
         }
 
         expenseButton.setOnClickListener {
-            isIncome = false
-            incomeButton.setBackgroundColor(Color.WHITE)
-            incomeButton.setTextColor(Color.BLACK)
-            expenseButton.setBackgroundColor(Color.RED)
-            expenseButton.setTextColor(Color.WHITE)
-            saveButton.setBackgroundColor(Color.RED)
-            titleTransaction.text = "Expense"
-
-            // xử lý edit layout
-            layoutSave.visibility = View.VISIBLE
-            layoutEdit.visibility = View.GONE
+            setTransactionType(false, incomeButton, expenseButton, saveButton, titleTransaction, layoutSave, layoutEdit, false)
         }
 
         val categories = listOf(
@@ -222,6 +201,8 @@ class AddTransactionActivity : AppCompatActivity() {
             edtNote.text = transaction.note
             dateTextView.text = transaction.date
 
+            setTransactionType(transaction.isIncome, incomeButton, expenseButton, saveButton, titleTransaction, layoutSave, layoutEdit, true)
+
             // layout edit
             copyButton.setOnClickListener {
                 layoutSave.visibility = View.VISIBLE
@@ -289,5 +270,37 @@ class AddTransactionActivity : AppCompatActivity() {
 
         bottomSheetDialog.setContentView(view)
         bottomSheetDialog.show()
+    }
+
+    private fun setTransactionType(
+        isIncomeType: Boolean,
+        incomeButton: Button,
+        expenseButton: Button,
+        saveButton: Button,
+        titleTransaction: TextView,
+        layoutSave: View,
+        layoutEdit: View,
+        isEdit: Boolean
+    ) {
+        isIncome = isIncomeType
+
+        val activeColor = if (isIncomeType) Color.BLUE else Color.RED
+        val inactiveColor = Color.WHITE
+        val activeTextColor = Color.WHITE
+        val inactiveTextColor = Color.BLACK
+
+        incomeButton.setBackgroundColor(if (isIncomeType) activeColor else inactiveColor)
+        incomeButton.setTextColor(if (isIncomeType) activeTextColor else inactiveTextColor)
+
+        expenseButton.setBackgroundColor(if (isIncomeType) inactiveColor else activeColor)
+        expenseButton.setTextColor(if (isIncomeType) inactiveTextColor else activeTextColor)
+
+        saveButton.setBackgroundColor(activeColor)
+        saveButton.setTextColor(activeTextColor)
+
+        titleTransaction.text = if (isIncomeType) "Income" else "Expense"
+
+        layoutSave.visibility = if (isEdit) View.GONE else View.VISIBLE
+        layoutEdit.visibility = if (isEdit) View.VISIBLE else View.GONE
     }
 }
