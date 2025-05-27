@@ -90,12 +90,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/add_transaction_edtNote"
-        android:hint="Note"
         android:layout_marginTop="8dp"
+        android:hint="Note"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"/>
 
     <!-- Custom Number Pad -->
 

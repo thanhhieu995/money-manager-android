@@ -42,6 +42,8 @@ class TransactionAdapter(
         val noteText: TextView = itemView.findViewById(R.id.item_transaction_content)
         val amountText: TextView = itemView.findViewById(R.id.item_transaction_amount)
         val dateText: TextView = itemView.findViewById(R.id.item_transaction_date)
+        val account: TextView = itemView.findViewById(R.id.item_transaction_account)
+        val category : TextView = itemView.findViewById(R.id.item_transaction_category)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
@@ -55,6 +57,8 @@ class TransactionAdapter(
         holder.noteText.text = tx.note
         holder.amountText.text = formatCurrency(tx.amount)
         holder.dateText.text = tx.date // Có thể định dạng nếu muốn
+        holder.account.text = tx.account
+        holder.category.text = tx.category
 
         if (tx.isIncome) {
             holder.amountText.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.teal_700))

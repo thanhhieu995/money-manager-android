@@ -34,20 +34,29 @@ class MainActivity : AppCompatActivity() {
     var listTransactionGroup : List<TransactionGroup> = listOf()
     private val filterTransactions = FilterTransactions()
 
+    private lateinit var search: ImageView
+    private lateinit var incomeCountAll: TextView
+    private lateinit var expenseCountAll: TextView
+    private lateinit var totalCount: TextView
+    private lateinit var monthBack: ImageView
+    private lateinit var monthNext: ImageView
+    private lateinit var monthText: TextView
+    private lateinit var bookmark: ImageView
+
     @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val search = findViewById<ImageView>(R.id.main_search)
-        val incomeCountAll = findViewById<TextView>(R.id.main_income_count_all)
-        val expenseCountAll = findViewById<TextView>(R.id.main_expense_count_all)
-        val totalCount = findViewById<TextView>(R.id.main_total_count)
-        val monthBack = findViewById<ImageView>(R.id.main_month_back)
-        val monthNext = findViewById<ImageView>(R.id.main_month_next)
-        val monthText = findViewById<TextView>(R.id.main_month_text)
-        val bookmark = findViewById<ImageView>(R.id.main_bookmark)
+         search = findViewById(R.id.main_search)
+         incomeCountAll = findViewById(R.id.main_income_count_all)
+         expenseCountAll = findViewById(R.id.main_expense_count_all)
+         totalCount = findViewById(R.id.main_total_count)
+         monthBack = findViewById(R.id.main_month_back)
+         monthNext = findViewById(R.id.main_month_next)
+         monthText = findViewById(R.id.main_month_text)
+         bookmark = findViewById(R.id.main_bookmark)
 
         search.setOnClickListener {
             val intent = Intent(this, SearchActivity::class.java)

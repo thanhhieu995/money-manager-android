@@ -18,23 +18,26 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class SearchActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
-    private var transactions : List<Transaction> = listOf()
+    private var transactions: List<Transaction> = listOf()
     private var transactionAdapter = TransactionAdapter(emptyList())
     private var selectedOption: String = "All" // default
     var searchQuery = ""
-    @SuppressLint("MissingInflatedId")
+
+    private lateinit var searchTitle: TextView
+    private lateinit var searchArrange: ImageView
+    private lateinit var btnBack: ImageView
+    private lateinit var btnCancel: TextView
+    private lateinit var searchInput: AutoCompleteTextView
+    private lateinit var incomeCount: TextView
+    private lateinit var expenseCount: TextView
+    private lateinit var recyclerView: RecyclerView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
-        val searchTitle = findViewById<TextView>(R.id.search_title)
-        val searchArrange = findViewById<ImageView>(R.id.search_filter)
-        val btnBack = findViewById<ImageView>(R.id.search_back)
-        val btnCancel = findViewById<TextView>(R.id.search_btnCancel)
-        val searchInput = findViewById<AutoCompleteTextView>(R.id.search_autoComplete)
-        val incomeCount = findViewById<TextView>(R.id.search_income_count_all)
-        val expenseCount = findViewById<TextView>(R.id.search_expense_count_all)
-        val recyclerView = findViewById<RecyclerView>(R.id.search_resultList)
+        init()
+
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = transactionAdapter
 
@@ -49,7 +52,7 @@ class SearchActivity : AppCompatActivity() {
         }
 
         searchArrange.setOnClickListener {
-            searchArrange(searchQuery, searchTitle)
+            searchArrange(searchQuery)
         }
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
@@ -89,7 +92,8 @@ class SearchActivity : AppCompatActivity() {
             }
         }
 
-        transactionAdapter.setOnFilterResultListener(object : TransactionAdapter.OnFilterResultListener {
+        transactionAdapter.setOnFilterResultListener(object :
+            TransactionAdapter.OnFilterResultListener {
             override fun onFilterResult(filteredList: List<Transaction>) {
                 // TODO: cập nhật UI khác nếu cần
                 var totalIncome: Double = 0.0
@@ -109,19 +113,36 @@ class SearchActivity : AppCompatActivity() {
         })
     }
 
-    @SuppressLint("MissingInflatedId")
-    private fun searchArrange(query: String, searchTitle: TextView) {
+    private fun init() {
+        searchTitle = findViewById(R.id.search_title)
+        searchArrange = findViewById(R.id.search_filter)
+        btnBack = findViewById(R.id.search_back)
+        btnCancel = findViewById(R.id.search_btnCancel)
+        searchInput = findViewById(R.id.search_autoComplete)
+        incomeCount = findViewById(R.id.search_income_count_all)
+        expenseCount = findViewById(R.id.search_expense_count_all)
+        recyclerView = findViewById(R.id.search_resultList)
+    }
+
+    private fun searchArrange(query: String) {
         val bottomSheetDialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.item_search_arrange, null)
         bottomSheetDialog.setContentView(view)
-        // Dấu tick
+
         val checkViews = mapOf(
             "All" to view.findViewById<ImageView>(R.id.search_optionTotalCheck),
             "Weekly" to view.findViewById<ImageView>(R.id.search_optionWeeklyCheck),
             "Monthly" to view.findViewById<ImageView>(R.id.search_optionMonthlyCheck),
             "Yearly" to view.findViewById<ImageView>(R.id.search_optionYearlyCheck),
         )
-        // Hiển thị tick đúng vị trí
+
+        val optionConfigs = listOf(
+            Triple("All", R.id.optionTotalLayout, FilterPeriod.All),
+            Triple("Weekly", R.id.optionWeeklyLayout, FilterPeriod.Weekly),
+            Triple("Monthly", R.id.optionMonthlyLayout, FilterPeriod.Monthly),
+            Triple("Yearly", R.id.optionYearlyLayout, FilterPeriod.Yearly)
+        )
+
         fun updateCheckMarks(selected: String) {
             searchTitle.text = selected
             checkViews.forEach { (option, imageView) ->
@@ -131,43 +152,20 @@ class SearchActivity : AppCompatActivity() {
 
         updateCheckMarks(selectedOption) // cập nhật ban đầu
 
-        view.findViewById<LinearLayout>(R.id.optionTotalLayout).setOnClickListener {
-            selectedOption = "All"
-            updateCheckMarks(selectedOption)
-            transactionAdapter.filterPeriod = FilterPeriod.All
-            transactionAdapter.filter.filter(query)
-            transactionAdapter.updateList(transactions)
+        optionConfigs.forEach { (optionName, layoutId, filterPeriod) ->
+            view.findViewById<LinearLayout>(layoutId).setOnClickListener {
+                selectedOption = optionName
+                updateCheckMarks(optionName)
+                transactionAdapter.filterPeriod = filterPeriod
+                transactionAdapter.filter.filter(query)
+                transactionAdapter.updateList(transactions)
+            }
         }
-
-        view.findViewById<LinearLayout>(R.id.optionWeeklyLayout).setOnClickListener {
-            selectedOption = "Weekly"
-            updateCheckMarks(selectedOption)
-            transactionAdapter.filterPeriod = FilterPeriod.Weekly
-            transactionAdapter.filter.filter(query)
-            transactionAdapter.updateList(transactions)
-        }
-
-        view.findViewById<LinearLayout>(R.id.optionMonthlyLayout).setOnClickListener {
-            selectedOption = "Monthly"
-            updateCheckMarks(selectedOption)
-            transactionAdapter.filterPeriod = FilterPeriod.Monthly
-            transactionAdapter.filter.filter(query)
-            transactionAdapter.updateList(transactions)
-        }
-
-        view.findViewById<LinearLayout>(R.id.optionYearlyLayout).setOnClickListener {
-            selectedOption = "Yearly"
-            updateCheckMarks(selectedOption)
-            transactionAdapter.filterPeriod = FilterPeriod.Yearly
-            transactionAdapter.filter.filter(query)
-            transactionAdapter.updateList(transactions)
-        }
-
-        // Tương tự với Monthly, Annually, Period...
 
         view.findViewById<TextView>(R.id.search_optionCancel).setOnClickListener {
             bottomSheetDialog.dismiss()
         }
+
         bottomSheetDialog.show()
     }
 }
