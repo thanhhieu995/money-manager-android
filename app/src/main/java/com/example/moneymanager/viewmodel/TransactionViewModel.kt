@@ -1,11 +1,8 @@
 package com.example.moneymanager.viewmodel
 
-import android.app.Application
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
-import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionDao
 import com.example.moneymanager.model.TransactionGroup
@@ -17,9 +14,11 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val allTransactions: LiveData<List<Transaction>> = repository.allTransactions
     val groupedTransactions: LiveData<List<TransactionGroup>> = repository.getGroupedTransactions()
     @RequiresApi(Build.VERSION_CODES.O)
-    val _currentMonthYear = MutableLiveData(LocalDate.now())
+    private val _currentMonthYear = MutableLiveData(LocalDate.now())
     @RequiresApi(Build.VERSION_CODES.O)
     val currentMonthYear: LiveData<LocalDate> = _currentMonthYear
+    private val _currentTabPosition = MutableLiveData<Int>()
+    val currentTabPosition: LiveData<Int> get() = _currentTabPosition
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
@@ -42,5 +41,14 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun changeMonth(offset: Long) {
         _currentMonthYear.value = _currentMonthYear.value?.plusMonths(offset)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun changeYear(offset: Long) {
+        _currentMonthYear.value = _currentMonthYear.value?.plusYears(offset)
+    }
+
+    fun setCurrentTab(position: Int) {
+        _currentTabPosition.value = position
     }
 }

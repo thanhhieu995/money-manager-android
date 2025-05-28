@@ -1,9 +1,7 @@
-package com.example.moneymanager.ui
+package com.example.moneymanager.ui.daily
 
-import android.app.Application
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +16,6 @@ import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -75,7 +72,6 @@ class DailyFragment : Fragment() {
                 binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
             }
         }
-
     }
     override fun onDestroyView() {
         super.onDestroyView()

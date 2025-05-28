@@ -79,6 +79,7 @@ class CalendarFragment : Fragment() {
             calendarResume = calendar
             binding.calendarView.setDate(calendar)
         }
+
         setupDayClickListener()
 
         val header = binding.calendarView.findViewById<View>(com.applandeo.materialcalendarview.R.id.calendarHeader)

@@ -18,6 +18,7 @@ import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
+import com.example.moneymanager.ui.monthly.MonthlyFragment
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -49,25 +50,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-         search = findViewById(R.id.main_search)
-         incomeCountAll = findViewById(R.id.main_income_count_all)
-         expenseCountAll = findViewById(R.id.main_expense_count_all)
-         totalCount = findViewById(R.id.main_total_count)
-         monthBack = findViewById(R.id.main_month_back)
-         monthNext = findViewById(R.id.main_month_next)
-         monthText = findViewById(R.id.main_month_text)
-         bookmark = findViewById(R.id.main_bookmark)
-
-        search.setOnClickListener {
-            val intent = Intent(this, SearchActivity::class.java)
-            startActivity(intent)
-        }
-
+        init()
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
         transactionGroupAdapter = TransactionGroupAdapter()
+
+        val formatterYear = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
+        val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+        var month = viewModel.currentMonthYear.value
+
+        search.setOnClickListener {
+            val intent = Intent(this, SearchActivity::class.java)
+            startActivity(intent)
+        }
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
 
@@ -82,29 +79,85 @@ class MainActivity : AppCompatActivity() {
             }
         }.attach()
 
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                viewModel.setCurrentTab(position)
+            }
+        })
+
+        viewModel.currentTabPosition.observe(this) { position ->
+            val filteredMonth = filterTransactions.filterTransactionsByMonth(listTransactionGroup,
+                month!!
+            )
+            val filteredYear =
+                filterTransactions.filterTransactionsByYear(listTransactionGroup, month!!)
+            when (position) {
+                0 -> {
+                    // Daily tab selected
+                    if (month != null) {
+                        monthText.text = month!!.format(formatterMonth)
+                        handleSummarySection(filteredMonth)
+                    }
+                }
+                1 -> {
+                    // Calendar tab selected
+                    if (month != null) {
+                        monthText.text = month!!.format(formatterMonth)
+                        handleSummarySection(filteredMonth)
+                    }
+                }
+                2 -> {
+                    // Monthly tab selected
+                    if (month != null) {
+                        monthText.text = month!!.format(formatterYear)
+                        handleSummarySection(filteredYear)
+                    }
+                }
+            }
+        }
+
         viewModel.groupedTransactions.observe(this) {list ->
-            transactionGroupAdapter.submitList(list)
             listTransactionGroup = list
-            incomeCountAll.text = currency.formatCurrency(list.sumOf { it.income })
-            expenseCountAll.text = currency.formatCurrency(list.sumOf { it.expense })
-            totalCount.text = currency.formatCurrency(list.sumOf { it.income } - list.sumOf { it.expense })
+            if (month != null) {
+                val filteredListMonth = filterTransactions.filterTransactionsByMonth(list, month!!)
+                transactionGroupAdapter.submitList(filteredListMonth)
+                handleSummarySection(filteredListMonth)
+            }
         }
 
         monthBack.setOnClickListener {
-            viewModel.changeMonth(-1)
+            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
+            if (fragment is MonthlyFragment) {
+                viewModel.changeYear(-1)
+            } else {
+                viewModel.changeMonth(-1)
+            }
         }
 
         monthNext.setOnClickListener {
-            viewModel.changeMonth(1)
+            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
+            if (fragment is MonthlyFragment) {
+                viewModel.changeYear(1)
+            } else {
+                viewModel.changeMonth(1)
+            }
         }
 
-        val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         viewModel.currentMonthYear.observe(this) { selectedMonth ->
-            monthText.text = selectedMonth.format(formatter)
-            val filtered = filterTransactions.filterTransactionsByMonth(listTransactionGroup, selectedMonth)
-            incomeCountAll.text = currency.formatCurrency(filtered.sumOf { it.income })
-            expenseCountAll.text = currency.formatCurrency(filtered.sumOf { it.expense })
-            totalCount.text = currency.formatCurrency(filtered.sumOf { it.income } - filtered.sumOf { it.expense })
+            month = selectedMonth
+            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
+            val isMonthly = fragment is MonthlyFragment
+
+            monthText.text = selectedMonth.format(if (isMonthly) formatterYear else formatterMonth)
+
+            val filtered = if (isMonthly) {
+                filterTransactions.filterTransactionsByYear(listTransactionGroup, selectedMonth)
+            } else {
+                filterTransactions.filterTransactionsByMonth(listTransactionGroup, selectedMonth)
+            }
+
+            handleSummarySection(filtered)
         }
 
         val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)
@@ -117,5 +170,22 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, BookmarkActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun init() {
+        search = findViewById(R.id.main_search)
+        incomeCountAll = findViewById(R.id.main_income_count_all)
+        expenseCountAll = findViewById(R.id.main_expense_count_all)
+        totalCount = findViewById(R.id.main_total_count)
+        monthBack = findViewById(R.id.main_month_back)
+        monthNext = findViewById(R.id.main_month_next)
+        monthText = findViewById(R.id.main_month_text)
+        bookmark = findViewById(R.id.main_bookmark)
+    }
+
+     private fun handleSummarySection(filtered: List<TransactionGroup>) {
+        incomeCountAll.text = currency.formatCurrency(filtered.sumOf { it.income })
+        expenseCountAll.text = currency.formatCurrency(filtered.sumOf { it.expense })
+        totalCount.text = currency.formatCurrency(filtered.sumOf { it.income } - filtered.sumOf { it.expense })
     }
 }
