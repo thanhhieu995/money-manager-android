@@ -11,10 +11,13 @@ import android.widget.Filterable
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
+import com.example.moneymanager.ui.main.TransactionDiffCallback
+import com.example.moneymanager.ui.main.TransactionGroupDiffCallback
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -76,9 +79,11 @@ class TransactionAdapter(
     override fun getItemCount(): Int = filteredTransactions.size
 
     fun updateList(newList: List<Transaction>) {
+        val diffCallback = TransactionDiffCallback(transactions, newList)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
         this.transactions = newList
         this.filteredTransactions = newList
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 
     // Filter cho SearchView
@@ -118,7 +123,7 @@ class TransactionAdapter(
 
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
                 filteredTransactions = results?.values as List<Transaction>
-                notifyDataSetChanged()
+                updateList(filteredTransactions)
                 filterResultListener?.onFilterResult(filteredTransactions)
             }
         }
