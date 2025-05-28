@@ -21,6 +21,7 @@ import com.example.moneymanager.ui.bookmark.BookmarkActivity
 import com.example.moneymanager.ui.monthly.MonthlyFragment
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var monthNext: ImageView
     private lateinit var monthText: TextView
     private lateinit var bookmark: ImageView
+    private lateinit var bottomNav: BottomNavigationView
 
     @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
@@ -66,9 +68,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+        val tabLayout = findViewById<TabLayout>(R.id.main_tabLayout)
 
-        val viewPager = findViewById<ViewPager2>(R.id.viewPager)
+        val viewPager = findViewById<ViewPager2>(R.id.main_viewPager)
         val adapter = ViewPagerAdapter(this)
         viewPager.adapter = adapter
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
@@ -160,7 +162,7 @@ class MainActivity : AppCompatActivity() {
             handleSummarySection(filtered)
         }
 
-        val btnAdd = findViewById<FloatingActionButton>(R.id.btn_add)
+        val btnAdd = findViewById<FloatingActionButton>(R.id.main_btn_add)
         btnAdd.setOnClickListener {
             val intent = Intent(this, AddTransactionActivity::class.java)
             startActivity(intent)
@@ -169,6 +171,24 @@ class MainActivity : AppCompatActivity() {
         bookmark.setOnClickListener {
             val intent = Intent(this, BookmarkActivity::class.java)
             startActivity(intent)
+        }
+
+        bottomNav.setOnClickListener { item ->
+            when(item.id) {
+                R.id.nav_daily -> {
+                    true
+                }
+                R.id.nav_stats -> {
+                    true
+                }
+                R.id.nav_accounts -> {
+                    true
+                }
+                R.id.nav_more -> {
+                    true
+                }
+                else -> false
+            }
         }
     }
 
@@ -181,6 +201,7 @@ class MainActivity : AppCompatActivity() {
         monthNext = findViewById(R.id.main_month_next)
         monthText = findViewById(R.id.main_month_text)
         bookmark = findViewById(R.id.main_bookmark)
+        bottomNav = findViewById(R.id.main_bottomBar)
     }
 
      private fun handleSummarySection(filtered: List<TransactionGroup>) {
