@@ -148,6 +148,8 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.currentMonthYear.observe(this) { selectedMonth ->
             month = selectedMonth
+            // Đổi tiêu đề của item "Daily"
+            bottomNav.menu.findItem(R.id.nav_daily).title = selectedMonth.format(formatterMonth)
             val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
             val isMonthly = fragment is MonthlyFragment
 
