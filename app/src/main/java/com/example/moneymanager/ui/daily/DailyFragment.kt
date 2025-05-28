@@ -57,9 +57,9 @@ class DailyFragment : Fragment() {
 
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
             // Sắp xếp ngày giảm dần
-            val now = LocalDate.now()
-
-            val filteredList = filterTransactions.filterTransactionsByMonth(transactions, now)
+            val month = viewModel.currentMonthYear.value
+            val filteredList =
+                month?.let { filterTransactions.filterTransactionsByMonth(transactions, it) } ?: emptyList()
 
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
