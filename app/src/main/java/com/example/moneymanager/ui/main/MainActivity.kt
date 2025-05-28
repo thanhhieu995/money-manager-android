@@ -5,14 +5,23 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModelProvider
 import com.example.moneymanager.R
+import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.ui.bottomNavigation.DailyNavigateFragment
+import com.example.moneymanager.viewmodel.TransactionViewModel
+import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNav: BottomNavigationView
+    private lateinit var viewModel: TransactionViewModel
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
     @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
@@ -21,6 +30,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         init()
+        val dao = AppDatabase.getDatabase(application).transactionDao()
+        val factory = TransactionViewModelFactory(dao)
+        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+
+        viewModel.currentMonthYear.observe(this) { month ->
+            bottomNav.menu.findItem(R.id.nav_daily).title = month.format(formatterMonth)
+        }
 
         bottomNav.setOnItemSelectedListener { item ->
             when(item.itemId) {
