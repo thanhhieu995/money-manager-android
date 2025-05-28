@@ -10,8 +10,8 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moneymanager.databinding.FragmentMonthlyBinding
+import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
@@ -25,7 +25,7 @@ class MonthlyFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: MonthlyAdapter
     private var listMonthlyData: List<MonthlyData> = emptyList()
-    private var transactions : List<Transaction> = emptyList()
+    private val filterTransactions = FilterTransactions()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -44,11 +44,14 @@ class MonthlyFragment : Fragment() {
         binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
 
         viewModel.currentMonthYear.observe(viewLifecycleOwner) {
-
             val listGroupTransaction = viewModel.groupedTransactions.value ?: emptyList()
-
-            listMonthlyData = groupTransactionsByMonth(listGroupTransaction)
-
+            val currentYear = viewModel.currentMonthYear.value
+            val filterTransactionYear = currentYear?.let { it1 ->
+                filterTransactions.filterTransactionsByYear(listGroupTransaction ,
+                    it1
+                )
+            }
+            listMonthlyData = filterTransactionYear?.let { it1 -> groupTransactionsByMonth(it1) } ?: emptyList()
             adapter = MonthlyAdapter(listMonthlyData) { clickMonth ->
                 clickMonth.isExpanded = !clickMonth.isExpanded
                 val index = listMonthlyData.indexOf(clickMonth)
