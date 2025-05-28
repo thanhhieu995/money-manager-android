@@ -130,8 +130,23 @@ class DailyNavigateFragment : Fragment() {
             }
         }
 
-        monthBack.setOnClickListener { viewModel.changeMonth(-1) }
-        monthNext.setOnClickListener { viewModel.changeMonth(1) }
+        monthBack.setOnClickListener {
+            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
+            if (fragment is MonthlyFragment) {
+                viewModel.changeYear(-1)
+            } else {
+                viewModel.changeMonth(-1)
+            }
+        }
+
+        monthNext.setOnClickListener {
+            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
+            if (fragment is MonthlyFragment) {
+                viewModel.changeYear(1)
+            } else {
+                viewModel.changeMonth(1)
+            }
+        }
 
         search.setOnClickListener {
             startActivity(Intent(requireContext(), SearchActivity::class.java))
@@ -167,6 +182,7 @@ class DailyNavigateFragment : Fragment() {
             month?.let {
                 val filtered = filterTransactions.filterTransactionsByMonth(list, it)
                 handleSummarySection(filtered)
+                transactionGroupAdapter.submitList(filtered)
             }
         }
     }
