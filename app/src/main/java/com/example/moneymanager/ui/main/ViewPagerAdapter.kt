@@ -7,7 +7,7 @@ import com.example.moneymanager.ui.daily.DailyFragment
 import com.example.moneymanager.ui.calendar.CalendarFragment
 import com.example.moneymanager.ui.monthly.MonthlyFragment
 
-class ViewPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
+class ViewPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
     private val fragments = listOf(
         DailyFragment(),

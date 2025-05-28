@@ -1,0 +1,196 @@
+package com.example.moneymanager.ui.bottomNavigation
+
+import android.content.Intent
+import android.os.Build
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModelProvider
+import androidx.viewpager2.widget.ViewPager2
+import com.example.moneymanager.R
+import com.example.moneymanager.databinding.FragmentDailyNavigateBinding
+import com.example.moneymanager.helper.Currency
+import com.example.moneymanager.helper.FilterTransactions
+import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.TransactionGroup
+import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
+import com.example.moneymanager.ui.bookmark.BookmarkActivity
+import com.example.moneymanager.ui.main.TransactionGroupAdapter
+import com.example.moneymanager.ui.main.ViewPagerAdapter
+import com.example.moneymanager.ui.monthly.MonthlyFragment
+import com.example.moneymanager.ui.search.SearchActivity
+import com.example.moneymanager.viewmodel.TransactionViewModel
+import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.*
+
+class DailyNavigateFragment : Fragment() {
+
+    private var _binding: FragmentDailyNavigateBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var transactionGroupAdapter: TransactionGroupAdapter
+
+    private lateinit var viewModel: TransactionViewModel
+    private val filterTransactions = FilterTransactions()
+
+    private lateinit var search: ImageView
+    private lateinit var incomeCountAll: TextView
+    private lateinit var expenseCountAll: TextView
+    private lateinit var totalCount: TextView
+    private lateinit var monthBack: ImageView
+    private lateinit var monthNext: ImageView
+    private lateinit var monthText: TextView
+    private lateinit var bookmark: ImageView
+    private lateinit var btnAdd: FloatingActionButton
+
+    private var month: LocalDate? = null
+    private var listTransactionGroup: List<TransactionGroup> = listOf()
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentDailyNavigateBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        init()
+
+        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
+        val factory = TransactionViewModelFactory(dao)
+        viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
+
+        transactionGroupAdapter = TransactionGroupAdapter()
+        val formatterYear = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
+        val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+        var month = viewModel.currentMonthYear.value
+
+        val tabLayout = view.findViewById<TabLayout>(R.id.fragment_daily_navigate_tabLayout)
+
+        val viewPager = view.findViewById<ViewPager2>(R.id.fragment_daily_navigate_viewPager)
+        val adapter = ViewPagerAdapter(this)
+        viewPager.adapter = adapter
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            when (position) {
+                0 -> tab.text = "Daily"
+                1 -> tab.text = "Calendar"
+                2 -> tab.text = "Monthly"
+            }
+        }.attach()
+
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                viewModel.setCurrentTab(position)
+            }
+        })
+
+        viewModel.currentTabPosition.observe(viewLifecycleOwner) { position ->
+            val filteredMonth = filterTransactions.filterTransactionsByMonth(listTransactionGroup,
+                month!!
+            )
+            val filteredYear =
+                filterTransactions.filterTransactionsByYear(listTransactionGroup, month!!)
+            when (position) {
+                0 -> {
+                    // Daily tab selected
+                    if (month != null) {
+                        monthText.text = month!!.format(formatterMonth)
+                        handleSummarySection(filteredMonth)
+                    }
+                }
+                1 -> {
+                    // Calendar tab selected
+                    if (month != null) {
+                        monthText.text = month!!.format(formatterMonth)
+                        handleSummarySection(filteredMonth)
+                    }
+                }
+                2 -> {
+                    // Monthly tab selected
+                    if (month != null) {
+                        monthText.text = month!!.format(formatterYear)
+                        handleSummarySection(filteredYear)
+                    }
+                }
+            }
+        }
+
+        monthBack.setOnClickListener { viewModel.changeMonth(-1) }
+        monthNext.setOnClickListener { viewModel.changeMonth(1) }
+
+        search.setOnClickListener {
+            startActivity(Intent(requireContext(), SearchActivity::class.java))
+        }
+
+        bookmark.setOnClickListener {
+            startActivity(Intent(requireContext(), BookmarkActivity::class.java))
+        }
+
+        btnAdd.setOnClickListener {
+            startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
+        }
+
+        viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
+            month = selectedMonth
+            // Đổi tiêu đề của item "Daily"
+            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
+            val isMonthly = fragment is MonthlyFragment
+
+            monthText.text = selectedMonth.format(if (isMonthly) formatterYear else formatterMonth)
+
+            val filtered = if (isMonthly) {
+                filterTransactions.filterTransactionsByYear(listTransactionGroup, selectedMonth)
+            } else {
+                filterTransactions.filterTransactionsByMonth(listTransactionGroup, selectedMonth)
+            }
+
+            handleSummarySection(filtered)
+        }
+
+        viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
+            listTransactionGroup = list
+            month?.let {
+                val filtered = filterTransactions.filterTransactionsByMonth(list, it)
+                handleSummarySection(filtered)
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun handleSummarySection(filtered: List<TransactionGroup>) {
+        incomeCountAll.text = Currency().formatCurrency(filtered.sumOf { it.income })
+        expenseCountAll.text = Currency().formatCurrency(filtered.sumOf { it.expense })
+        totalCount.text = Currency().formatCurrency(filtered.sumOf { it.income - it.expense })
+    }
+
+    private fun init() {
+        search = binding.fragmentDailyNavigateSearch
+        incomeCountAll = binding.fragmentDailyNavigateIncomeCountAll
+        expenseCountAll = binding.fragmentDailyNavigateExpenseCountAll
+        totalCount = binding.fragmentDailyNavigateTotalCount
+        monthBack = binding.fragmentDailyNavigateMonthBack
+        monthNext = binding.fragmentDailyNavigateMonthNext
+        monthText = binding.fragmentDailyNavigateMonthText
+        bookmark = binding.fragmentDailyNavigateBookmark
+        btnAdd = binding.fragmentDailyNavigateBtnAdd
+    }
+}
