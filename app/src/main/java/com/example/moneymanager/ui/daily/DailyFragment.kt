@@ -6,16 +6,19 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentDailyBinding
+import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.ui.main.StickyHeaderItemDecoration
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
-import java.time.LocalDate
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -33,6 +36,7 @@ class DailyFragment : Fragment() {
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
     private val filterTransactions = FilterTransactions()
+    private val currency = Currency()
 
 
     override fun onCreateView(
@@ -54,6 +58,26 @@ class DailyFragment : Fragment() {
         adapter = TransactionGroupAdapter()
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
+
+        val decoration = StickyHeaderItemDecoration(
+            isHeader = { position -> true }, // mọi item đều có header riêng
+            createHeaderView = {
+                LayoutInflater.from(requireContext()).inflate(R.layout.item_transaction_header, binding.transactionList, false)
+            },
+            bindHeader = { header, position ->
+                val group = adapter.getGroupAt(position)
+                val headerText = header.findViewById<TextView>(R.id.item_transaction_header_date)
+                val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
+                val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
+                val dayPart = group.date.substringBefore("/") // "13"
+                val dayOfWeek = group.date.substringAfterLast(" ") // "(Tue)"
+                headerText.text = "$dayPart $dayOfWeek"
+                headerIncome.text = currency.formatCurrency(group.income)
+                headerExpense.text = currency.formatCurrency(group.expense)
+            }
+        )
+
+        binding.transactionList.addItemDecoration(decoration)
 
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
             // Sắp xếp ngày giảm dần
