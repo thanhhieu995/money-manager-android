@@ -5,69 +5,164 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Copy các View từ search đến btn_add ở đây -->
-    <ImageView
-        android:id="@+id/fragment_daily_navigate_search"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:src="@drawable/ic_baseline_search_24"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/fragment_daily_navigate_bookmark"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:src="@drawable/ic_baseline_star_border_24"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <LinearLayout
-        android:id="@+id/fragment_daily_navigate_topBar"
-        android:layout_width="0dp"
+        android:id="@+id/fragment_daily_navigate_layout_edit"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="16dp"
-        app:layout_constraintTop_toBottomOf="@id/fragment_daily_navigate_search"
+        android:background="?attr/colorSurface"
+        android:elevation="4dp"
+        android:orientation="vertical"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent">
+        <!-- Hàng đầu tiên -->
 
-        <ImageView
-            android:id="@+id/fragment_daily_navigate_month_back"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_baseline_navigate_before_24" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/fragment_daily_navigate_layout_edit_line_one"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:padding="8dp"
+            android:layout_weight="3">
 
-        <TextView
-            android:id="@+id/fragment_daily_navigate_month_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Apr 2025"
-            android:textStyle="bold"
-            android:textSize="18sp" />
+            <ImageView
+                android:id="@+id/fragment_daily_navigate_layout_edit_line_one_btn_close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_baseline_close_24"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/fragment_daily_navigate_layout_edit_line_one_btn_delete"
+                />
 
-        <ImageView
-            android:id="@+id/fragment_daily_navigate_month_next"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_baseline_navigate_next_24" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/fragment_daily_navigate_layout_edit_line_one_btn_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Delete"
+                android:src="@drawable/ic_baseline_delete_outline_24"
+                app:layout_constraintEnd_toStartOf="@+id/fragment_daily_navigate_layout_edit_line_one_btn_more"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/fragment_daily_navigate_layout_edit_line_one_btn_more"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="More"
+                android:src="@drawable/ic_baseline_more_vert_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Hàng thứ hai -->
+        <LinearLayout
+            android:id="@+id/fragment_daily_navigate_layout_edit_line_two"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/fragment_daily_navigate_layout_edit_line_two_selected_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0 items selected" />
+
+            <TextView
+                android:id="@+id/fragment_daily_navigate_layout_edit_line_two_selected_total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total: 0" />
+        </LinearLayout>
     </LinearLayout>
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/fragment_daily_navigate_tabLayout"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/fragment_daily_navigate_layout_function_control"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:tabIndicatorColor="@color/teal_700"
-        app:tabMode="fixed"
-        app:tabGravity="fill"
-        app:layout_constraintTop_toBottomOf="@id/fragment_daily_navigate_topBar"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/fragment_daily_navigate_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="4dp"
+                android:src="@drawable/ic_baseline_search_24"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/fragment_daily_navigate_bookmark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="4dp"
+                android:src="@drawable/ic_baseline_star_border_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:id="@+id/fragment_daily_navigate_topBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/fragment_daily_navigate_search">
+
+            <ImageView
+                android:id="@+id/fragment_daily_navigate_month_back"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_baseline_navigate_before_24" />
+
+            <TextView
+                android:id="@+id/fragment_daily_navigate_month_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Apr 2025"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/fragment_daily_navigate_month_next"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_baseline_navigate_next_24" />
+        </LinearLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/fragment_daily_navigate_tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/fragment_daily_navigate_topBar"
+            app:tabGravity="fill"
+            app:tabIndicatorColor="@color/teal_700"
+            app:tabMode="fixed" />
+    </LinearLayout>
+    <!-- Copy các View từ search đến btn_add ở đây -->
 
     <LinearLayout
         android:id="@+id/fragment_daily_navigate_summarySection"
@@ -75,8 +170,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="12dp"
-        app:layout_constraintTop_toBottomOf="@+id/fragment_daily_navigate_tabLayout"
+        android:padding="4dp"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_daily_navigate_layout_function_control"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
         <LinearLayout

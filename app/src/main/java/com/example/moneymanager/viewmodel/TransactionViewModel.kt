@@ -19,6 +19,12 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val currentMonthYear: LiveData<LocalDate> = _currentMonthYear
     private val _currentTabPosition = MutableLiveData<Int>()
     val currentTabPosition: LiveData<Int> get() = _currentTabPosition
+    private val _selectedTransactionIds = MutableLiveData<Set<Int>>(emptySet())
+    val selectedTransactionIds: LiveData<Set<Int>> = _selectedTransactionIds
+    private val _selectionMode = MutableLiveData<Boolean>(false)
+    val selectionMode: LiveData<Boolean> = _selectionMode
+    private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
+    val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
@@ -51,4 +57,31 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     fun setCurrentTab(position: Int) {
         _currentTabPosition.value = position
     }
+
+    fun toggleTransactionSelection(transactionId: Int) {
+        val current = _selectedTransactionIds.value ?: emptySet()
+        _selectedTransactionIds.value = if (current.contains(transactionId)) {
+            current - transactionId
+        } else {
+            current + transactionId
+        }
+    }
+
+    private fun clearSelection() {
+        _selectedTransactionIds.value = emptySet()
+    }
+
+    fun enterSelectionMode() {
+        _selectionMode.value = true
+    }
+
+    fun exitSelectionMode() {
+        _selectionMode.value = false
+        clearSelection()
+    }
+
+//    fun updateSelection(list: List<Transaction>) {
+//        _selectedTransactions.value = list
+//        _selectionMode.value = list.isNotEmpty()
+//    }
 }

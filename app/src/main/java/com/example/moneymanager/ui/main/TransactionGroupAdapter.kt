@@ -14,12 +14,18 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Currency
+import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
 
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
     private var groups: List<TransactionGroup> = listOf()
     private var currency: Currency = Currency()
+
+    private val selectedIds = mutableSetOf<Int>()
+    var selectionMode = false
+    var onItemLongClickListener: ((Int) -> Unit)? = null
+    var onSelectionChanged: ((List<Transaction>) -> Unit)? = null
 
     fun submitList(newList: List<TransactionGroup>) {
         val diffCallback = TransactionGroupDiffCallback(groups, newList)
@@ -54,6 +60,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         holder.expense.text = currency.formatCurrency(group.expense)
 
         holder.container.removeAllViews()
+
         for (tx in group.transactions) {
             val row = LayoutInflater.from(holder.itemView.context)
                 .inflate(R.layout.item_transaction_row, holder.container, false)
@@ -66,12 +73,31 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
             } else {
                 amountTextView.setTextColor(Color.RED)
             }
+
+            row.setOnLongClickListener {
+                selectionMode = true
+                toggleSelection(tx.id)
+                onItemLongClickListener?.invoke(tx.id)
+                true
+            }
+
             // ✅ Thêm xử lý click vào đây
             row.setOnClickListener {
-                val context = row.context
-                val intent = android.content.Intent(context, com.example.moneymanager.ui.addtransaction.AddTransactionActivity::class.java)
-                intent.putExtra("transaction", tx) // Truyền transactionId
-                context.startActivity(intent)
+                if (selectionMode) {
+                    toggleSelection(tx.id)
+                    onSelectionChanged?.invoke(getSelectedTransactions())
+                } else {
+                    val context = row.context
+                    val intent = android.content.Intent(context, com.example.moneymanager.ui.addtransaction.AddTransactionActivity::class.java)
+                    intent.putExtra("transaction", tx) // Truyền transactionId
+                    context.startActivity(intent)
+                }
+            }
+
+            if (selectedIds.contains(tx.id)) {
+                row.setBackgroundColor(ContextCompat.getColor(row.context, R.color.purple_200))
+            } else {
+                row.setBackgroundColor(Color.TRANSPARENT)
             }
             holder.container.addView(row)
         }
@@ -80,4 +106,23 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
     override fun getItemCount(): Int = groups.size
 
     fun getGroupAt(position: Int): TransactionGroup = groups[position]
+
+    private fun toggleSelection(transactionId: Int) {
+        if (selectedIds.contains(transactionId)) {
+            selectedIds.remove(transactionId)
+            if (selectedIds.isEmpty()) selectionMode = false
+        } else {
+            selectedIds.add(transactionId)
+        }
+        notifyDataSetChanged()
+    }
+
+    fun clearSelection() {
+        selectedIds.clear()
+        selectionMode = false
+    }
+
+    fun getSelectedTransactions(): List<Transaction> {
+        return groups.flatMap { it.transactions }.filter { selectedIds.contains(it.id) }
+    }
 }

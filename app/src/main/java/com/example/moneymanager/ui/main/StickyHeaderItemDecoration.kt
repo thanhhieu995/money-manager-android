@@ -43,7 +43,7 @@ class StickyHeaderItemDecoration(
     ) {
         val position = parent.getChildAdapterPosition(view)
         if (position == 0) {
-            outRect.top = -20 // Ví dụ: 100
+            outRect.top = 40 // Ví dụ: 100
         }
     }
 

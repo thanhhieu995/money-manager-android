@@ -7,7 +7,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
@@ -51,6 +53,9 @@ class DailyNavigateFragment : Fragment() {
     private lateinit var monthText: TextView
     private lateinit var bookmark: ImageView
     private lateinit var btnAdd: FloatingActionButton
+    private lateinit var btnEditClose: ImageView
+    private lateinit var layoutFunctionControl: LinearLayout
+    private lateinit var layoutEdit: LinearLayout
 
     private var month: LocalDate? = null
     private var listTransactionGroup: List<TransactionGroup> = listOf()
@@ -73,8 +78,8 @@ class DailyNavigateFragment : Fragment() {
         val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
-
         transactionGroupAdapter = TransactionGroupAdapter()
+
         val formatterYear = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
         val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         var month = viewModel.currentMonthYear.value
@@ -82,8 +87,8 @@ class DailyNavigateFragment : Fragment() {
         val tabLayout = view.findViewById<TabLayout>(R.id.fragment_daily_navigate_tabLayout)
 
         val viewPager = view.findViewById<ViewPager2>(R.id.fragment_daily_navigate_viewPager)
-        val adapter = ViewPagerAdapter(this)
-        viewPager.adapter = adapter
+        val viewPagerAdapter = ViewPagerAdapter(this)
+        viewPager.adapter = viewPagerAdapter
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
                 0 -> tab.text = "Daily"
@@ -185,11 +190,54 @@ class DailyNavigateFragment : Fragment() {
                 transactionGroupAdapter.submitList(filtered)
             }
         }
+
+        // observe selectionMode && id
+        viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
+            binding.fragmentDailyNavigateLayoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
+        }
+
+        viewModel.selectedTransactionIds.observe(viewLifecycleOwner) { selectedIds ->
+            // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
+            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
+                "${selectedIds.size} selected"
+
+            val transactions = viewModel.allTransactions.value
+            val selectedTransactions = transactions?.filter { selectedIds.contains(it.id) } ?: emptyList()
+            val totalAmount = selectedTransactions.sumOf {
+                if (it.isIncome) it.amount else -it.amount
+            }
+            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
+                "Total: ${Currency().formatCurrency(totalAmount)}"
+        }
+
+        btnEditClose.setOnClickListener {
+            viewModel.exitSelectionMode()
+            transactionGroupAdapter.clearSelection()
+        }
+
+        layoutFunctionControl.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener{
+            override fun onGlobalLayout() {
+                layoutFunctionControl.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                val height = layoutFunctionControl.height
+                // Gán chiều cao cho layoutEdit
+                val params = layoutEdit.layoutParams
+                params.height = height
+                layoutEdit.layoutParams = params
+            }
+        })
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun updateSelectionSummary() {
+        val selected = transactionGroupAdapter.getSelectedTransactions()
+        val count = selected.size
+        val total = selected.sumOf { if (it.isIncome) it.amount else -it.amount }
+        binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text = "$count items selected"
+        binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text = "Total: ${Currency().formatCurrency(total)}"
     }
 
     private fun handleSummarySection(filtered: List<TransactionGroup>) {
@@ -208,5 +256,8 @@ class DailyNavigateFragment : Fragment() {
         monthText = binding.fragmentDailyNavigateMonthText
         bookmark = binding.fragmentDailyNavigateBookmark
         btnAdd = binding.fragmentDailyNavigateBtnAdd
+        btnEditClose = binding.fragmentDailyNavigateLayoutEditLineOneBtnClose
+        layoutFunctionControl = binding.fragmentDailyNavigateLayoutFunctionControl
+        layoutEdit = binding.fragmentDailyNavigateLayoutEdit
     }
 }

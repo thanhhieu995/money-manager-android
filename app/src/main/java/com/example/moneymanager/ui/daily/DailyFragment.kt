@@ -96,6 +96,15 @@ class DailyFragment : Fragment() {
                 binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
             }
         }
+
+        adapter.onItemLongClickListener = { id ->
+            viewModel.enterSelectionMode()
+            viewModel.toggleTransactionSelection(id) // hoặc cập nhật danh sách chọn
+        }
+
+//        adapter.onSelectionChanged = { selectedTransactions ->
+//            viewModel.updateSelection(selectedTransactions)
+//        }
     }
     override fun onDestroyView() {
         super.onDestroyView()
