@@ -1,8 +1,8 @@
 package com.example.moneymanager.ui.search
 
-import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,9 +15,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
-import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.main.TransactionDiffCallback
-import com.example.moneymanager.ui.main.TransactionGroupDiffCallback
+import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -28,25 +27,36 @@ class TransactionAdapter(
     private var transactions: List<Transaction>,
 ) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>(), Filterable {
 
+    private var filterResultListener: OnFilterResultListener? = null
+    var filterPeriod: FilterPeriod = FilterPeriod.All
+    var isSelected: ((Transaction) -> Boolean)? = null
+
+    private var filteredTransactions: List<Transaction> = transactions
     interface OnFilterResultListener {
         fun onFilterResult(filteredList: List<Transaction>)
     }
-
-    private var filterResultListener: OnFilterResultListener? = null
-    var filterPeriod: FilterPeriod = FilterPeriod.All
 
     fun setOnFilterResultListener(listener: OnFilterResultListener) {
         filterResultListener = listener
     }
 
-    private var filteredTransactions: List<Transaction> = transactions
+    interface OnTransactionLongClickListener {
+        fun onTransactionLongClick(transaction: Transaction) : Boolean
+    }
+
+    interface OnTransactionClickListener {
+        fun onTransactionClick(transaction: Transaction) : Boolean
+    }
+
+    var longClickListener: OnTransactionLongClickListener? = null
+    var clickListener : OnTransactionClickListener? = null
 
     inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val noteText: TextView = itemView.findViewById(R.id.item_transaction_content)
         val amountText: TextView = itemView.findViewById(R.id.item_transaction_amount)
         val dateText: TextView = itemView.findViewById(R.id.item_transaction_date)
         val account: TextView = itemView.findViewById(R.id.item_transaction_account)
-        val category : TextView = itemView.findViewById(R.id.item_transaction_category)
+        val category: TextView = itemView.findViewById(R.id.item_transaction_category)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
@@ -57,74 +67,89 @@ class TransactionAdapter(
 
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val tx = filteredTransactions[position]
+
         holder.noteText.text = tx.note
         holder.amountText.text = formatCurrency(tx.amount)
-        holder.dateText.text = tx.date // Có thể định dạng nếu muốn
+        holder.dateText.text = tx.date
         holder.account.text = tx.account
         holder.category.text = tx.category
 
-        if (tx.isIncome) {
-            holder.amountText.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.teal_700))
-        } else {
-            holder.amountText.setTextColor(Color.RED)
-        }
+        holder.amountText.setTextColor(
+            if (tx.isIncome)
+                ContextCompat.getColor(holder.itemView.context, R.color.teal_700)
+            else
+                Color.RED
+        )
+
         holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = Intent(context, AddTransactionActivity::class.java)
-            intent.putExtra("transaction", tx)
-            context.startActivity(intent)
+            clickListener?.onTransactionClick(tx)
         }
+
+        holder.itemView.setOnLongClickListener {
+            longClickListener?.onTransactionLongClick(tx) ?: false
+        }
+
+        val selected = isSelected?.invoke(tx) == true
+        holder.itemView.setBackgroundColor(
+            if (selected)
+                ContextCompat.getColor(holder.itemView.context, R.color.purple_200)
+            else
+                Color.TRANSPARENT
+        )
     }
 
     override fun getItemCount(): Int = filteredTransactions.size
 
     fun updateList(newList: List<Transaction>) {
-        val diffCallback = TransactionDiffCallback(transactions, newList)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
         this.transactions = newList
-        this.filteredTransactions = newList
+        updateFilteredList(newList)
+    }
+
+    private fun updateFilteredList(newFiltered: List<Transaction>) {
+        val diffCallback = TransactionDiffCallback(this.filteredTransactions, newFiltered)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+        this.filteredTransactions = newFiltered
         diffResult.dispatchUpdatesTo(this)
     }
 
-    // Filter cho SearchView
     override fun getFilter(): Filter {
         return object : Filter() {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun performFiltering(constraint: CharSequence?): FilterResults {
                 val query = constraint?.toString()?.lowercase()?.trim()
+                val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+                val currentDate = LocalDate.now()
+                val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
+                val endOfWeek = startOfWeek.plusDays(6)
+                val currentMonth = currentDate.monthValue
+                val currentYear = currentDate.year
 
-                val filtered = transactions.filter { transaction ->
-                    val cleanedDate = transaction.date.substringBefore(" ") // "24/05/25"
-                    val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-                    val date = LocalDate.parse(cleanedDate, formatter)
-                    val currentDate = LocalDate.now()
-                    val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
-                    val endOfWeek = startOfWeek.plusDays(6)
-                    val currentMonth = currentDate.monthValue     // 1 đến 12
-                    val currentYear = currentDate.year
-                    val matchQuery = query.isNullOrEmpty() || transaction.note.lowercase().contains(query)
-                            || transaction.date.contains(query)
-                            || formatCurrency(transaction.amount).contains(query)
+                val filtered = transactions.filter { tx ->
+                    val txDate = LocalDate.parse(tx.date.substringBefore(" "), formatter)
+                    val matchQuery = query.isNullOrEmpty()
+                            || tx.note.lowercase().contains(query)
+                            || tx.date.contains(query)
+                            || formatCurrency(tx.amount).contains(query)
 
                     val matchPeriod = when (filterPeriod) {
                         FilterPeriod.All -> true
-                        FilterPeriod.Weekly ->  !date.isBefore(startOfWeek) && !date.isAfter(endOfWeek)
-                        FilterPeriod.Monthly -> date.month.value == currentMonth && date.year == currentYear
-                        FilterPeriod.Yearly -> date.year == currentYear
+                        FilterPeriod.Weekly -> !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
+                        FilterPeriod.Monthly -> txDate.monthValue == currentMonth && txDate.year == currentYear
+                        FilterPeriod.Yearly -> txDate.year == currentYear
                     }
 
                     matchQuery && matchPeriod
                 }
 
-                val results = FilterResults()
-                results.values = filtered
-                return results
+                return FilterResults().apply {
+                    values = filtered
+                }
             }
 
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                filteredTransactions = results?.values as List<Transaction>
-                updateList(filteredTransactions)
-                filterResultListener?.onFilterResult(filteredTransactions)
+                val newFiltered = results?.values as? List<Transaction> ?: listOf()
+                updateFilteredList(newFiltered)
+                filterResultListener?.onFilterResult(newFiltered)
             }
         }
     }

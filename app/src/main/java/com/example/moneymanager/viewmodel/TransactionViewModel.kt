@@ -23,8 +23,8 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val selectedTransactionIds: LiveData<Set<Int>> = _selectedTransactionIds
     private val _selectionMode = MutableLiveData<Boolean>(false)
     val selectionMode: LiveData<Boolean> = _selectionMode
-    private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
-    val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
+//    private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
+//    val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
@@ -65,6 +65,7 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         } else {
             current + transactionId
         }
+        _selectionMode.value = _selectedTransactionIds.value?.isNotEmpty()
     }
 
     private fun clearSelection() {
@@ -79,7 +80,7 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         _selectionMode.value = false
         clearSelection()
     }
-
+//
 //    fun updateSelection(list: List<Transaction>) {
 //        _selectedTransactions.value = list
 //        _selectionMode.value = list.isNotEmpty()

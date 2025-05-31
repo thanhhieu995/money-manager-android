@@ -1,31 +1,30 @@
 package com.example.moneymanager.ui.main
 
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
+import com.example.moneymanager.ui.search.TransactionAdapter
 
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
     private var groups: List<TransactionGroup> = listOf()
     private var currency: Currency = Currency()
 
-    private val selectedIds = mutableSetOf<Int>()
-    var selectionMode = false
-    var onItemLongClickListener: ((Int) -> Unit)? = null
-    var onSelectionChanged: ((List<Transaction>) -> Unit)? = null
+    var isTransactionSelected: ((Transaction) -> Boolean)? = null
+
+    var onTransactionLongClick: ((Transaction) -> Boolean)? = null
+    var onTransactionClick: ((Transaction) -> Boolean)? = null
 
     fun submitList(newList: List<TransactionGroup>) {
         val diffCallback = TransactionGroupDiffCallback(groups, newList)
@@ -38,7 +37,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         val date: TextView = view.findViewById(R.id.transaction_date)
         val income: TextView = view.findViewById(R.id.transaction_income)
         val expense: TextView = view.findViewById(R.id.transaction_total_expense)
-        val container: LinearLayout = view.findViewById(R.id.transaction_container)
+        val container: RecyclerView = view.findViewById(R.id.transaction_container)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
@@ -59,70 +58,29 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         holder.income.text = currency.formatCurrency(group.income)
         holder.expense.text = currency.formatCurrency(group.expense)
 
-        holder.container.removeAllViews()
-
-        for (tx in group.transactions) {
-            val row = LayoutInflater.from(holder.itemView.context)
-                .inflate(R.layout.item_transaction_row, holder.container, false)
-            row.findViewById<TextView>(R.id.transaction_row_category).text = tx.category
-            row.findViewById<TextView>(R.id.transaction_row_content).text = tx.note
-            val amountTextView = row.findViewById<TextView>(R.id.transaction_row_amount)
-            amountTextView.text = currency.formatCurrency(tx.amount)
-            if (tx.isIncome) {
-                amountTextView.setTextColor(ContextCompat.getColor(row.context, R.color.income))
-            } else {
-                amountTextView.setTextColor(Color.RED)
-            }
-
-            row.setOnLongClickListener {
-                selectionMode = true
-                toggleSelection(tx.id)
-                onItemLongClickListener?.invoke(tx.id)
-                true
-            }
-
-            // ✅ Thêm xử lý click vào đây
-            row.setOnClickListener {
-                if (selectionMode) {
-                    toggleSelection(tx.id)
-                    onSelectionChanged?.invoke(getSelectedTransactions())
-                } else {
-                    val context = row.context
-                    val intent = android.content.Intent(context, com.example.moneymanager.ui.addtransaction.AddTransactionActivity::class.java)
-                    intent.putExtra("transaction", tx) // Truyền transactionId
-                    context.startActivity(intent)
+        // Setup RecyclerView con
+        val childRecyclerView = holder.container
+        childRecyclerView.layoutManager = LinearLayoutManager(holder.itemView.context)
+        childRecyclerView.setHasFixedSize(false)
+        childRecyclerView.isNestedScrollingEnabled = false
+        val adapter = TransactionAdapter(group.transactions).apply {
+            longClickListener = object : TransactionAdapter.OnTransactionLongClickListener{
+                override fun onTransactionLongClick(transaction: Transaction): Boolean {
+                    return onTransactionLongClick?.invoke(transaction) ?: false
                 }
             }
-
-            if (selectedIds.contains(tx.id)) {
-                row.setBackgroundColor(ContextCompat.getColor(row.context, R.color.purple_200))
-            } else {
-                row.setBackgroundColor(Color.TRANSPARENT)
+            clickListener = object : TransactionAdapter.OnTransactionClickListener {
+                override fun onTransactionClick(transaction: Transaction): Boolean {
+                    return  onTransactionClick?.invoke(transaction) ?: false
+                }
             }
-            holder.container.addView(row)
         }
+        adapter.isSelected = isTransactionSelected
+        childRecyclerView.adapter = adapter
+        adapter.updateList(group.transactions)
     }
 
     override fun getItemCount(): Int = groups.size
 
     fun getGroupAt(position: Int): TransactionGroup = groups[position]
-
-    private fun toggleSelection(transactionId: Int) {
-        if (selectedIds.contains(transactionId)) {
-            selectedIds.remove(transactionId)
-            if (selectedIds.isEmpty()) selectionMode = false
-        } else {
-            selectedIds.add(transactionId)
-        }
-        notifyDataSetChanged()
-    }
-
-    fun clearSelection() {
-        selectedIds.clear()
-        selectionMode = false
-    }
-
-    fun getSelectedTransactions(): List<Transaction> {
-        return groups.flatMap { it.transactions }.filter { selectedIds.contains(it.id) }
-    }
 }

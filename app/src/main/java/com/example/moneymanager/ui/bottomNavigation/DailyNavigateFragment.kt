@@ -212,7 +212,6 @@ class DailyNavigateFragment : Fragment() {
 
         btnEditClose.setOnClickListener {
             viewModel.exitSelectionMode()
-            transactionGroupAdapter.clearSelection()
         }
 
         layoutFunctionControl.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener{
@@ -230,14 +229,6 @@ class DailyNavigateFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun updateSelectionSummary() {
-        val selected = transactionGroupAdapter.getSelectedTransactions()
-        val count = selected.size
-        val total = selected.sumOf { if (it.isIncome) it.amount else -it.amount }
-        binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text = "$count items selected"
-        binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text = "Total: ${Currency().formatCurrency(total)}"
     }
 
     private fun handleSummarySection(filtered: List<TransactionGroup>) {

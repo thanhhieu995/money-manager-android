@@ -1,5 +1,6 @@
 package com.example.moneymanager.ui.daily
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -15,21 +16,12 @@ import com.example.moneymanager.databinding.FragmentDailyBinding
 import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.main.StickyHeaderItemDecoration
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [DailyFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class DailyFragment : Fragment() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var adapter: TransactionGroupAdapter
@@ -37,7 +29,6 @@ class DailyFragment : Fragment() {
     private val binding get() = _binding!!
     private val filterTransactions = FilterTransactions()
     private val currency = Currency()
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -97,14 +88,36 @@ class DailyFragment : Fragment() {
             }
         }
 
-        adapter.onItemLongClickListener = { id ->
+        adapter.onTransactionLongClick = { transaction ->
             viewModel.enterSelectionMode()
-            viewModel.toggleTransactionSelection(id) // hoặc cập nhật danh sách chọn
+            viewModel.toggleTransactionSelection(transaction.id)
+            adapter.notifyDataSetChanged()
+            true
         }
 
-//        adapter.onSelectionChanged = { selectedTransactions ->
-//            viewModel.updateSelection(selectedTransactions)
-//        }
+        adapter.onTransactionClick = { transaction ->
+            if (viewModel.selectionMode.value == true) {
+                viewModel.toggleTransactionSelection(transaction.id)
+                adapter.notifyDataSetChanged()
+            } else {
+                // Mở màn hình sửa
+                val intent = Intent(requireContext(), AddTransactionActivity::class.java)
+                intent.putExtra("transaction", transaction)
+                startActivity(intent)
+            }
+            true
+        }
+
+        adapter.isTransactionSelected = { transaction ->
+            viewModel.selectionMode.value == true &&
+            viewModel.selectedTransactionIds.value?.contains(transaction.id) == true
+        }
+
+        viewModel.selectionMode.observe(viewLifecycleOwner) { mode ->
+            if (!mode) {
+                adapter.notifyDataSetChanged()
+            }
+        }
     }
     override fun onDestroyView() {
         super.onDestroyView()

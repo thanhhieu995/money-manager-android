@@ -39,7 +39,7 @@
     </LinearLayout>
 
     <!-- Container để thêm các dòng giao dịch con -->
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/transaction_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
