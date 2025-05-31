@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp"
+    android:layout_marginTop="4dp"
     android:background="?attr/selectableItemBackground">
 
     <!-- Left: Date and Category -->
@@ -34,7 +34,7 @@
     <LinearLayout
         android:layout_weight="1"
         android:orientation="vertical"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content">
 
         <TextView
@@ -55,8 +55,9 @@
     <!-- Right: Amount -->
     <TextView
         android:id="@+id/item_transaction_amount"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:text="40.000đ"
         android:textColor="#FF3B30"
         android:textSize="16sp"

@@ -93,8 +93,6 @@ class AddTransactionActivity : AppCompatActivity() {
             finish()
         }
 
-        dateTextView.text = formattedDate
-
         dateTextView.setOnClickListener {
             val calendar = Calendar.getInstance()
             val year = calendar.get(Calendar.YEAR)
@@ -333,6 +331,7 @@ class AddTransactionActivity : AppCompatActivity() {
         layoutSave.visibility = View.VISIBLE
         layoutEdit.visibility = View.GONE
         continueButton.visibility = View.VISIBLE
+        dateTextView.text = formattedDate
     }
 
     private fun showEditMode(transaction: Transaction) {
@@ -347,7 +346,7 @@ class AddTransactionActivity : AppCompatActivity() {
             layoutSave.visibility = View.VISIBLE
             layoutEdit.visibility = View.GONE
             populateTransactionFields(transaction)
-            dateTextView.text = formattedDate.toString()
+            dateTextView.text = formattedDate
         }
 
         deleteButton.setOnClickListener {

@@ -22,6 +22,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
     private var currency: Currency = Currency()
 
     var isTransactionSelected: ((Transaction) -> Boolean)? = null
+    private val childAdapters = mutableMapOf<String, TransactionAdapter>() // key = group.date
 
     var onTransactionLongClick: ((Transaction) -> Boolean)? = null
     var onTransactionClick: ((Transaction) -> Boolean)? = null
@@ -63,15 +64,17 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         childRecyclerView.layoutManager = LinearLayoutManager(holder.itemView.context)
         childRecyclerView.setHasFixedSize(false)
         childRecyclerView.isNestedScrollingEnabled = false
-        val adapter = TransactionAdapter(group.transactions).apply {
-            longClickListener = object : TransactionAdapter.OnTransactionLongClickListener{
-                override fun onTransactionLongClick(transaction: Transaction): Boolean {
-                    return onTransactionLongClick?.invoke(transaction) ?: false
+        val adapter = childAdapters.getOrPut(group.date) {
+            TransactionAdapter(group.transactions).apply {
+                longClickListener = object : TransactionAdapter.OnTransactionLongClickListener {
+                    override fun onTransactionLongClick(transaction: Transaction): Boolean {
+                        return onTransactionLongClick?.invoke(transaction) ?: false
+                    }
                 }
-            }
-            clickListener = object : TransactionAdapter.OnTransactionClickListener {
-                override fun onTransactionClick(transaction: Transaction): Boolean {
-                    return  onTransactionClick?.invoke(transaction) ?: false
+                clickListener = object : TransactionAdapter.OnTransactionClickListener {
+                    override fun onTransactionClick(transaction: Transaction): Boolean {
+                        return onTransactionClick?.invoke(transaction) ?: false
+                    }
                 }
             }
         }

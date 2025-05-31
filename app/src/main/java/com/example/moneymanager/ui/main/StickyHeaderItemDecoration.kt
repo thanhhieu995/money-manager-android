@@ -43,7 +43,7 @@ class StickyHeaderItemDecoration(
     ) {
         val position = parent.getChildAdapterPosition(view)
         if (position == 0) {
-            outRect.top = 40 // Ví dụ: 100
+            outRect.top = 20 // Ví dụ: 100
         }
     }
 
@@ -84,12 +84,12 @@ class StickyHeaderItemDecoration(
 
         val childWidth = ViewGroup.getChildMeasureSpec(
             widthSpec,
-            parent.paddingLeft + parent.paddingRight,
+            0,
             view.layoutParams.width
         )
         val childHeight = ViewGroup.getChildMeasureSpec(
             heightSpec,
-            parent.paddingTop + parent.paddingBottom,
+            0,
             view.layoutParams.height
         )
 
