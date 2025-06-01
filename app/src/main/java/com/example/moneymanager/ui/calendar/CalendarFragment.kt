@@ -21,6 +21,7 @@ import com.applandeo.materialcalendarview.EventDay
 import com.applandeo.materialcalendarview.listeners.OnDayClickListener
 import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentCalendarBinding
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
@@ -34,7 +35,6 @@ class CalendarFragment : Fragment() {
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
     private lateinit var viewModel: TransactionViewModel
-    private var currency = com.example.moneymanager.helper.Currency()
     private lateinit var calendarResume: Calendar
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -106,9 +106,9 @@ class CalendarFragment : Fragment() {
         total: Double
     ): Drawable {
         val view = LayoutInflater.from(context).inflate(R.layout.calendar_event_layout, null)
-        view.findViewById<TextView>(R.id.income).text = currency.formatCurrency(income)
-        view.findViewById<TextView>(R.id.expense).text = currency.formatCurrency(expense)
-        view.findViewById<TextView>(R.id.total).text = currency.formatCurrency(total)
+        view.findViewById<TextView>(R.id.income).text = Helper.formatCurrency(income)
+        view.findViewById<TextView>(R.id.expense).text = Helper.formatCurrency(expense)
+        view.findViewById<TextView>(R.id.total).text = Helper.formatCurrency(total)
 
         view.measure(
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),

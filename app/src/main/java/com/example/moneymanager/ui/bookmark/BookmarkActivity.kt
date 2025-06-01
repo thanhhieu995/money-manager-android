@@ -13,12 +13,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
-import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.helper.FilterTransactions
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
-import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.ui.search.TransactionAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
@@ -26,7 +25,6 @@ import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 class BookmarkActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var transactionAdapter: TransactionAdapter
-    private var currency = Currency()
     var listTransactionGroup : List<TransactionGroup> = listOf()
     private val filterTransactions = FilterTransactions()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +70,13 @@ class BookmarkActivity : AppCompatActivity() {
 
         viewModel.getBookmarkedTransactions().observe(this) {
             transactionAdapter.updateList(it)
+        }
+
+        transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
+            override fun onTransactionClick(transaction: Transaction): Boolean {
+                Helper.openTransactionDetail(this@BookmarkActivity, transaction)
+                return  true
+            }
         }
     }
 

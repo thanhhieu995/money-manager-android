@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
-import com.example.moneymanager.helper.Currency
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.search.TransactionAdapter
@@ -19,7 +19,6 @@ import com.example.moneymanager.ui.search.TransactionAdapter
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
     private var groups: List<TransactionGroup> = listOf()
-    private var currency: Currency = Currency()
 
     var isTransactionSelected: ((Transaction) -> Boolean)? = null
     private val childAdapters = mutableMapOf<String, TransactionAdapter>() // key = group.date
@@ -56,8 +55,8 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         val dayOfWeek = fullDate.substringAfterLast(" ") // "(Tue)"
 
         holder.date.text = "$dayPart $dayOfWeek"
-        holder.income.text = currency.formatCurrency(group.income)
-        holder.expense.text = currency.formatCurrency(group.expense)
+        holder.income.text = Helper.formatCurrency(group.income)
+        holder.expense.text = Helper.formatCurrency(group.expense)
 
         // Setup RecyclerView con
         val childRecyclerView = holder.container

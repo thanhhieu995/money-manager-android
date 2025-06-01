@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.MainActivity
@@ -28,7 +29,6 @@ import java.util.*
 class AddTransactionActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private var isIncome: Boolean = false
-    val currency = com.example.moneymanager.helper.Currency()
     private var transactions: List<Transaction> = listOf()
     private lateinit var btnBack: ImageView
     private lateinit var dateTextView: TextView
@@ -372,7 +372,7 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     private fun populateTransactionFields(transaction: Transaction) {
-        edtAmount.setText(currency.formatCurrency(transaction.amount))
+        edtAmount.setText(Helper.formatCurrency(transaction.amount))
         edtCategory.setText(transaction.category)
         edtAccount.setText(transaction.account)
         edtNote.setText(transaction.note)

@@ -16,8 +16,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentDailyNavigateBinding
-import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.helper.FilterTransactions
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
@@ -207,7 +207,7 @@ class DailyNavigateFragment : Fragment() {
                 if (it.isIncome) it.amount else -it.amount
             }
             binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
-                "Total: ${Currency().formatCurrency(totalAmount)}"
+                "Total: ${Helper.formatCurrency(totalAmount)}"
         }
 
         btnEditClose.setOnClickListener {
@@ -232,9 +232,9 @@ class DailyNavigateFragment : Fragment() {
     }
 
     private fun handleSummarySection(filtered: List<TransactionGroup>) {
-        incomeCountAll.text = Currency().formatCurrency(filtered.sumOf { it.income })
-        expenseCountAll.text = Currency().formatCurrency(filtered.sumOf { it.expense })
-        totalCount.text = Currency().formatCurrency(filtered.sumOf { it.income - it.expense })
+        incomeCountAll.text = Helper.formatCurrency(filtered.sumOf { it.income })
+        expenseCountAll.text = Helper.formatCurrency(filtered.sumOf { it.expense })
+        totalCount.text = Helper.formatCurrency(filtered.sumOf { it.income - it.expense })
     }
 
     private fun init() {

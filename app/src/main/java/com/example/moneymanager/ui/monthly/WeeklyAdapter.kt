@@ -8,13 +8,11 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
-import com.example.moneymanager.helper.Currency
+import com.example.moneymanager.helper.Helper
 
 class WeeklyAdapter(
     private val weeklyList: List<WeeklyData>
 ) : RecyclerView.Adapter<WeeklyAdapter.WeekViewHolder>() {
-
-    private val currency = Currency() // formatter tiền
 
     inner class WeekViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val tvWeekRange: TextView = view.findViewById(R.id.monthly_detail_arrange)
@@ -25,9 +23,9 @@ class WeeklyAdapter(
         @RequiresApi(Build.VERSION_CODES.M)
         fun bind(data: WeeklyData) {
             tvWeekRange.text = data.weekRange
-            tvIncome.text = currency.formatCurrency(data.income)
-            tvExpense.text = currency.formatCurrency(data.expense)
-            tvTotal.text = currency.formatCurrency(data.total)
+            tvIncome.text = Helper.formatCurrency(data.income)
+            tvExpense.text = Helper.formatCurrency(data.expense)
+            tvTotal.text = Helper.formatCurrency(data.total)
 
             tvTotal.setTextColor(
                 when {

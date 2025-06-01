@@ -1,7 +1,6 @@
 package com.example.moneymanager.ui.monthly
 
 import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,14 +9,12 @@ import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
-import com.example.moneymanager.helper.Currency
+import com.example.moneymanager.helper.Helper
 
 class MonthlyAdapter(
     private var monthlyList: List<MonthlyData>,
     private val onMonthClick: (MonthlyData) -> Unit
 ) : RecyclerView.Adapter<MonthlyAdapter.MonthViewHolder>() {
-
-    private val currency = Currency() // Your formatter
 
     inner class MonthViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvMonthName: TextView = itemView.findViewById(R.id.monthly_name)
@@ -31,9 +28,9 @@ class MonthlyAdapter(
         fun bind(data: MonthlyData) {
             tvMonthName.text = data.monthName
             tvDateRange.text = data.dateRange
-            tvIncome.text = currency.formatCurrency(data.income)
-            tvExpense.text = currency.formatCurrency(data.expense)
-            tvTotal.text = currency.formatCurrency(data.total)
+            tvIncome.text = Helper.formatCurrency(data.income)
+            tvExpense.text = Helper.formatCurrency(data.expense)
+            tvTotal.text = Helper.formatCurrency(data.total)
 
             tvTotal.setTextColor(
                 when {

@@ -1,6 +1,5 @@
 package com.example.moneymanager.ui.daily
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -13,10 +12,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentDailyBinding
-import com.example.moneymanager.helper.Currency
 import com.example.moneymanager.helper.FilterTransactions
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.main.StickyHeaderItemDecoration
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
@@ -28,7 +26,6 @@ class DailyFragment : Fragment() {
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
     private val filterTransactions = FilterTransactions()
-    private val currency = Currency()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,8 +60,8 @@ class DailyFragment : Fragment() {
                 val dayPart = group.date.substringBefore("/") // "13"
                 val dayOfWeek = group.date.substringAfterLast(" ") // "(Tue)"
                 headerText.text = "$dayPart $dayOfWeek"
-                headerIncome.text = currency.formatCurrency(group.income)
-                headerExpense.text = currency.formatCurrency(group.expense)
+                headerIncome.text = Helper.formatCurrency(group.income)
+                headerExpense.text = Helper.formatCurrency(group.expense)
             }
         )
 
@@ -101,9 +98,7 @@ class DailyFragment : Fragment() {
                 adapter.notifyDataSetChanged()
             } else {
                 // Mở màn hình sửa
-                val intent = Intent(requireContext(), AddTransactionActivity::class.java)
-                intent.putExtra("transaction", transaction)
-                startActivity(intent)
+                Helper.openTransactionDetail(requireContext(), transaction)
             }
             true
         }

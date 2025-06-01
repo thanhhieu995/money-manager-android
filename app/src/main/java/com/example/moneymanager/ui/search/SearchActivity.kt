@@ -1,6 +1,6 @@
 package com.example.moneymanager.ui.search
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -10,8 +10,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
+import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -19,7 +21,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 class SearchActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private var transactions: List<Transaction> = listOf()
-    private var transactionAdapter = TransactionAdapter(emptyList())
+    private lateinit var transactionAdapter : TransactionAdapter
     private var selectedOption: String = "All" // default
     var searchQuery = ""
 
@@ -38,6 +40,8 @@ class SearchActivity : AppCompatActivity() {
 
         init()
 
+        transactionAdapter = TransactionAdapter(transactions)
+
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = transactionAdapter
 
@@ -53,6 +57,13 @@ class SearchActivity : AppCompatActivity() {
 
         searchArrange.setOnClickListener {
             searchArrange(searchQuery)
+        }
+
+        transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
+            override fun onTransactionClick(transaction: Transaction): Boolean {
+                Helper.openTransactionDetail(this@SearchActivity, transaction)
+                return true
+            }
         }
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
