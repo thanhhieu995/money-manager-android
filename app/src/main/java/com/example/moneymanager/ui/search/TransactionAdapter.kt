@@ -14,14 +14,17 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
+import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.TransactionDiffCallback
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
+import java.text.Normalizer
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.regex.Pattern
 
 class TransactionAdapter(
     private var transactions: List<Transaction>,
@@ -69,7 +72,7 @@ class TransactionAdapter(
         val tx = filteredTransactions[position]
 
         holder.noteText.text = tx.note
-        holder.amountText.text = formatCurrency(tx.amount)
+        holder.amountText.text = Helper.formatCurrency(tx.amount)
         holder.dateText.text = tx.date
         holder.account.text = tx.account
         holder.category.text = tx.category
@@ -116,7 +119,37 @@ class TransactionAdapter(
         return object : Filter() {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val query = constraint?.toString()?.lowercase()?.trim()
+                val queryRaw = constraint?.toString()?.lowercase()?.trim()
+                if (queryRaw?.isEmpty() == true) {
+                    // Nếu người dùng không nhập gì (hoặc chỉ nhập khoảng trắng), trả về toàn bộ hoặc rỗng tùy ý
+                    val filtered = when (filterPeriod) {
+                        FilterPeriod.All -> transactions
+                        else -> transactions.filter { tx ->
+                            val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+                            val txDate = LocalDate.parse(tx.date.substringBefore(" "), formatter)
+                            when (filterPeriod) {
+                                FilterPeriod.Weekly -> {
+                                    val now = LocalDate.now()
+                                    val startOfWeek = now.with(DayOfWeek.MONDAY)
+                                    val endOfWeek = startOfWeek.plusDays(6)
+                                    !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
+                                }
+                                FilterPeriod.Monthly -> {
+                                    val now = LocalDate.now()
+                                    txDate.monthValue == now.monthValue && txDate.year == now.year
+                                }
+                                FilterPeriod.Yearly -> {
+                                    val now = LocalDate.now()
+                                    txDate.year == now.year
+                                }
+                                else -> true
+                            }
+                        }
+                    }
+
+                    return FilterResults().apply { values = filtered }
+                }
+                val query = queryRaw?.removeVietnameseDiacritics()
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
                 val currentDate = LocalDate.now()
                 val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
@@ -126,10 +159,15 @@ class TransactionAdapter(
 
                 val filtered = transactions.filter { tx ->
                     val txDate = LocalDate.parse(tx.date.substringBefore(" "), formatter)
+
+                    val note = tx.note.lowercase().removeVietnameseDiacritics()
+                    val date = tx.date.lowercase().removeVietnameseDiacritics()
+                    val amount = Helper.formatCurrency(tx.amount).lowercase()
+
                     val matchQuery = query.isNullOrEmpty()
-                            || tx.note.lowercase().contains(query)
-                            || tx.date.contains(query)
-                            || formatCurrency(tx.amount).contains(query)
+                            || note.contains(query)
+                            || date.contains(query)
+                            || amount.contains(query)
 
                     val matchPeriod = when (filterPeriod) {
                         FilterPeriod.All -> true
@@ -154,7 +192,8 @@ class TransactionAdapter(
         }
     }
 
-    fun formatCurrency(amount: Double): String {
-        return NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(amount)
+    fun String.removeVietnameseDiacritics(): String {
+        val normalized = Normalizer.normalize(this, Normalizer.Form.NFD)
+        return Pattern.compile("\\p{InCombiningDiacriticalMarks}+").matcher(normalized).replaceAll("")
     }
 }

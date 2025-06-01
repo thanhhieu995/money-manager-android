@@ -23,7 +23,9 @@ import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentCalendarBinding
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
+import com.example.moneymanager.ui.search.TransactionAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -146,6 +148,10 @@ class CalendarFragment : Fragment() {
 
         adapter.submitList(groupTransaction)
         noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE
+        adapter.onTransactionClick = {transaction ->
+            Helper.openTransactionDetail(requireContext(), transaction)
+            true
+        }
 
         bottomSheet.show()
     }

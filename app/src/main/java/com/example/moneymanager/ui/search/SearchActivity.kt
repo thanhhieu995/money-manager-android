@@ -1,6 +1,5 @@
 package com.example.moneymanager.ui.search
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -13,7 +12,6 @@ import com.example.moneymanager.R
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Transaction
-import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -74,16 +72,16 @@ class SearchActivity : AppCompatActivity() {
 
             val contents = transactions.map { it.note }.distinct()
 
-            val adapter = ArrayAdapter(
+            val arrayAdapter = ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
                 contents
             )
-            searchInput.setAdapter(adapter)
+            searchInput.setAdapter(arrayAdapter)
 
             // Khi người dùng chọn 1 gợi ý
             searchInput.setOnItemClickListener { _, _, position, _ ->
-                val selected = adapter.getItem(position)
+                val selected = arrayAdapter.getItem(position)
                 searchInput.setText(selected)
                 searchInput.setSelection(selected?.length ?: 0)
                 transactionAdapter.filter.filter(selected)
@@ -118,8 +116,8 @@ class SearchActivity : AppCompatActivity() {
                     }
                 }
 
-                incomeCount.text = transactionAdapter.formatCurrency(totalIncome)
-                expenseCount.text = transactionAdapter.formatCurrency(totalExpense)
+                incomeCount.text = Helper.formatCurrency(totalIncome)
+                expenseCount.text = Helper.formatCurrency(totalExpense)
             }
         })
     }
