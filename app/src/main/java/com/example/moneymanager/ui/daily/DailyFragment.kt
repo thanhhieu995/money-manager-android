@@ -15,17 +15,20 @@ import com.example.moneymanager.databinding.FragmentDailyBinding
 import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.main.StickyHeaderItemDecoration
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class DailyFragment : Fragment() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var adapter: TransactionGroupAdapter
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
-    private val filterTransactions = FilterTransactions()
+    private var transactionGroupListFilter: List<TransactionGroup> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,15 +74,15 @@ class DailyFragment : Fragment() {
             // Sắp xếp ngày giảm dần
             val month = viewModel.currentMonthYear.value
             val filteredList =
-                month?.let { filterTransactions.filterTransactionsByMonth(transactions, it) } ?: emptyList()
-
+                month?.let { FilterTransactions.filterTransactionsByMonth(transactions, it) } ?: emptyList()
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         }
 
         viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
             viewModel.groupedTransactions.value?.let { allTransactions ->
-                val filtered = filterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
+                val filtered = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
+                transactionGroupListFilter = filtered
                 adapter.submitList(filtered)
                 binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
             }
@@ -114,6 +117,21 @@ class DailyFragment : Fragment() {
             }
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun scrollToWeek(weekStart: LocalDate) {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+        val weekDates = (0..6).map { weekStart.plusDays(it.toLong()).format(formatter) }
+
+        val matchedIndex = transactionGroupListFilter.indexOfFirst { group ->
+            weekDates.contains(group.date.substringBefore(" "))
+        }
+
+        if (matchedIndex != -1) {
+            binding.transactionList.scrollToPosition(matchedIndex)
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

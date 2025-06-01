@@ -13,7 +13,8 @@ import com.example.moneymanager.helper.Helper
 
 class MonthlyAdapter(
     private var monthlyList: List<MonthlyData>,
-    private val onMonthClick: (MonthlyData) -> Unit
+    private val onMonthClick: (MonthlyData) -> Unit,
+    private val onWeekClick: (WeeklyData) -> Unit
 ) : RecyclerView.Adapter<MonthlyAdapter.MonthViewHolder>() {
 
     inner class MonthViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -44,7 +45,7 @@ class MonthlyAdapter(
             // Gán adapter tuần nếu đang mở rộng
             if (data.isExpanded) {
                 rvWeeks.visibility = View.VISIBLE
-                rvWeeks.adapter = WeeklyAdapter(data.weeks)
+                rvWeeks.adapter = WeeklyAdapter(data.weeks, onWeekClick)
             } else {
                 rvWeeks.visibility = View.GONE
             }

@@ -11,7 +11,8 @@ import com.example.moneymanager.R
 import com.example.moneymanager.helper.Helper
 
 class WeeklyAdapter(
-    private val weeklyList: List<WeeklyData>
+    private val weeklyList: List<WeeklyData>,
+    private val onWeekClick: (WeeklyData) -> Unit
 ) : RecyclerView.Adapter<WeeklyAdapter.WeekViewHolder>() {
 
     inner class WeekViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -34,6 +35,9 @@ class WeeklyAdapter(
                     else -> itemView.context.getColor(R.color.purple_200)
                 }
             )
+            itemView.setOnClickListener {
+                onWeekClick(data)
+            }
         }
     }
 

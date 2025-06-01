@@ -25,7 +25,7 @@ class MonthlyFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: MonthlyAdapter
     private var listMonthlyData: List<MonthlyData> = emptyList()
-    private val filterTransactions = FilterTransactions()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -47,16 +47,23 @@ class MonthlyFragment : Fragment() {
             val listGroupTransaction = viewModel.groupedTransactions.value ?: emptyList()
             val currentYear = viewModel.currentMonthYear.value
             val filterTransactionYear = currentYear?.let { it1 ->
-                filterTransactions.filterTransactionsByYear(listGroupTransaction ,
+                FilterTransactions.filterTransactionsByYear(listGroupTransaction ,
                     it1
                 )
             }
             listMonthlyData = filterTransactionYear?.let { it1 -> groupTransactionsByMonth(it1) } ?: emptyList()
-            adapter = MonthlyAdapter(listMonthlyData) { clickMonth ->
-                clickMonth.isExpanded = !clickMonth.isExpanded
-                val index = listMonthlyData.indexOf(clickMonth)
-                adapter.notifyItemChanged(index)
-            }
+
+            adapter = MonthlyAdapter(listMonthlyData,
+                onMonthClick = { month ->
+                    month.isExpanded = !month.isExpanded
+                    val index = listMonthlyData.indexOf(month)
+                    adapter.notifyItemChanged(index)
+                },
+                onWeekClick = { weekData ->
+                    viewModel.navigateToWeekFromMonthly(weekData.weekStart)
+                }
+            )
+
             adapter.updateData(listMonthlyData)
             binding.monthlyListSummary.adapter = adapter
             binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
@@ -99,6 +106,7 @@ class MonthlyFragment : Fragment() {
                     val weekTotal = weekIncome - weekExpense
 
                     WeeklyData(
+                        weekStart = weekStart,
                         weekRange = "${weekStart.format(outputFormatter)} ~ ${weekStart.plusDays(6).format(outputFormatter)}",
                         income = weekIncome,
                         expense = weekExpense,

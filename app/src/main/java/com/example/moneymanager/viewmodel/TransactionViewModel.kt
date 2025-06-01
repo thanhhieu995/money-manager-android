@@ -25,6 +25,8 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val selectionMode: LiveData<Boolean> = _selectionMode
 //    private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
 //    val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
+    private val _navigateToWeekFromMonthly = MutableLiveData<LocalDate?>(null)
+    val navigateToWeekFromMonthly: LiveData<LocalDate?> = _navigateToWeekFromMonthly
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
@@ -80,7 +82,13 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         _selectionMode.value = false
         clearSelection()
     }
-//
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun navigateToWeekFromMonthly(date: LocalDate) {
+        _currentMonthYear.value = date.withDayOfMonth(1)
+        _navigateToWeekFromMonthly.value = date // Dùng để scroll sau khi cập nhật
+    }
+
 //    fun updateSelection(list: List<Transaction>) {
 //        _selectedTransactions.value = list
 //        _selectionMode.value = list.isNotEmpty()

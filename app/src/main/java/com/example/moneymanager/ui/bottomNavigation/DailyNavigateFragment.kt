@@ -22,6 +22,7 @@ import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
+import com.example.moneymanager.ui.daily.DailyFragment
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.ui.main.ViewPagerAdapter
 import com.example.moneymanager.ui.monthly.MonthlyFragment
@@ -42,7 +43,6 @@ class DailyNavigateFragment : Fragment() {
     private lateinit var transactionGroupAdapter: TransactionGroupAdapter
 
     private lateinit var viewModel: TransactionViewModel
-    private val filterTransactions = FilterTransactions()
 
     private lateinit var search: ImageView
     private lateinit var incomeCountAll: TextView
@@ -105,11 +105,11 @@ class DailyNavigateFragment : Fragment() {
         })
 
         viewModel.currentTabPosition.observe(viewLifecycleOwner) { position ->
-            val filteredMonth = filterTransactions.filterTransactionsByMonth(listTransactionGroup,
+            val filteredMonth = FilterTransactions.filterTransactionsByMonth(listTransactionGroup,
                 month!!
             )
             val filteredYear =
-                filterTransactions.filterTransactionsByYear(listTransactionGroup, month!!)
+                FilterTransactions.filterTransactionsByYear(listTransactionGroup, month!!)
             when (position) {
                 0 -> {
                     // Daily tab selected
@@ -174,9 +174,9 @@ class DailyNavigateFragment : Fragment() {
             monthText.text = selectedMonth.format(if (isMonthly) formatterYear else formatterMonth)
 
             val filtered = if (isMonthly) {
-                filterTransactions.filterTransactionsByYear(listTransactionGroup, selectedMonth)
+                FilterTransactions.filterTransactionsByYear(listTransactionGroup, selectedMonth)
             } else {
-                filterTransactions.filterTransactionsByMonth(listTransactionGroup, selectedMonth)
+                FilterTransactions.filterTransactionsByMonth(listTransactionGroup, selectedMonth)
             }
 
             handleSummarySection(filtered)
@@ -185,7 +185,7 @@ class DailyNavigateFragment : Fragment() {
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
             listTransactionGroup = list
             month?.let {
-                val filtered = filterTransactions.filterTransactionsByMonth(list, it)
+                val filtered = FilterTransactions.filterTransactionsByMonth(list, it)
                 handleSummarySection(filtered)
                 transactionGroupAdapter.submitList(filtered)
             }
@@ -224,6 +224,13 @@ class DailyNavigateFragment : Fragment() {
                 layoutEdit.layoutParams = params
             }
         })
+
+        viewModel.navigateToWeekFromMonthly.observe(viewLifecycleOwner) { date ->
+            if (date != null) {
+                // Gọi scroll đến tuần tương ứng
+                navigateToDailyTabAndScrollToWeek(date)
+            }
+        }
     }
 
     override fun onDestroyView() {
@@ -235,6 +242,20 @@ class DailyNavigateFragment : Fragment() {
         incomeCountAll.text = Helper.formatCurrency(filtered.sumOf { it.income })
         expenseCountAll.text = Helper.formatCurrency(filtered.sumOf { it.expense })
         totalCount.text = Helper.formatCurrency(filtered.sumOf { it.income - it.expense })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun navigateToDailyTabAndScrollToWeek(weekStart: LocalDate) {
+        val viewPager = binding.fragmentDailyNavigateViewPager
+        viewPager.setCurrentItem(0, true) // 0 là tab "Daily"
+
+        // Delay nhẹ để đợi Fragment trong ViewPager khởi tạo xong
+        viewPager.postDelayed({
+            val dailyFragment = (viewPager.adapter as ViewPagerAdapter)
+                .getCurrentFragment(0) as? DailyFragment
+
+            dailyFragment?.scrollToWeek(weekStart)
+        }, 100)
     }
 
     private fun init() {
