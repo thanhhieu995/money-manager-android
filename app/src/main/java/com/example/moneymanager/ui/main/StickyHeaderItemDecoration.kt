@@ -19,6 +19,11 @@ class StickyHeaderItemDecoration(
         val topChildPosition = parent.getChildAdapterPosition(topChild)
         if (topChildPosition == RecyclerView.NO_POSITION) return
 
+        // Nếu topChild chính là header và vẫn đang hiển thị: KHÔNG vẽ sticky header
+        if (isHeader(topChildPosition) && topChild.top >= 0) {
+            return
+        }
+
         val header = getHeaderView(parent, topChildPosition)
         bindHeader(header, topChildPosition)
         fixLayoutSize(parent, header)
@@ -43,7 +48,7 @@ class StickyHeaderItemDecoration(
     ) {
         val position = parent.getChildAdapterPosition(view)
         if (position == 0) {
-            outRect.top = 20 // Ví dụ: 100
+            outRect.top = 0 // Ví dụ: 100
         }
     }
 
