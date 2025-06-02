@@ -60,7 +60,5 @@
         android:layout_weight="1"
         android:text="40.000đ"
         android:textColor="#FF3B30"
-        android:textSize="16sp"
-        android:textStyle="bold"
         android:gravity="end"/>
 </LinearLayout>

@@ -44,7 +44,7 @@ class BookmarkActivity : AppCompatActivity() {
             val titleText = TextView(this).apply {
                 text = "Bookmark"
                 textSize = 18f
-                setTextColor(Color.BLACK)
+                setTextColor(Color.WHITE)
                 typeface = Typeface.DEFAULT_BOLD
             }
 

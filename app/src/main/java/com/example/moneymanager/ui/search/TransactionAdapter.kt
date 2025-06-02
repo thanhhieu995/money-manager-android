@@ -95,7 +95,7 @@ class TransactionAdapter(
         val selected = isSelected?.invoke(tx) == true
         holder.itemView.setBackgroundColor(
             if (selected)
-                ContextCompat.getColor(holder.itemView.context, R.color.purple_200)
+                ContextCompat.getColor(holder.itemView.context, R.color.rose)
             else
                 Color.TRANSPARENT
         )

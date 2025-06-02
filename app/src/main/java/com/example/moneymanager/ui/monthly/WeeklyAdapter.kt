@@ -30,7 +30,7 @@ class WeeklyAdapter(
 
             tvTotal.setTextColor(
                 when {
-                    data.total > 0 -> itemView.context.getColor(R.color.teal_700)
+                    data.total > 0 -> itemView.context.getColor(R.color.income)
                     data.total < 0 -> itemView.context.getColor(R.color.red)
                     else -> itemView.context.getColor(R.color.purple_200)
                 }

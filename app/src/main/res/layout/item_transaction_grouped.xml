@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
+    android:layout_marginBottom="10dp"
+    android:background="@color/white_smoke"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -36,6 +38,12 @@
             android:textColor="@color/red"
             android:gravity="end" />
     </LinearLayout>
+
+    <!-- Gạch mờ phân cách -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#22000000" /> <!-- Màu đen mờ 13% -->
 
     <!-- Container để thêm các dòng giao dịch con -->
     <androidx.recyclerview.widget.RecyclerView

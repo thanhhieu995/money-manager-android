@@ -9,7 +9,7 @@
     <TextView
         android:id="@+id/income"
         android:text="↑1k"
-        android:textColor="#388E3C"
+        android:textColor="@color/income"
         android:textSize="12sp"
         android:textStyle="bold"
         android:layout_width="wrap_content"
