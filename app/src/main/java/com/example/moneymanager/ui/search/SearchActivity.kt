@@ -3,7 +3,9 @@ package com.example.moneymanager.ui.search
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.*
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,6 +33,11 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var incomeCount: TextView
     private lateinit var expenseCount: TextView
     private lateinit var recyclerView: RecyclerView
+    private lateinit var layoutEdit: LinearLayout
+    private lateinit var layoutControl: ConstraintLayout
+    private lateinit var btnCloseLayoutEdit: ImageView
+    private lateinit var tvSelectedEdit: TextView
+    private lateinit var tvTotalAmountEdit: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +49,10 @@ class SearchActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = transactionAdapter
+
+        val dao = AppDatabase.getDatabase(application).transactionDao()
+        val factory = TransactionViewModelFactory(dao)
+        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
         searchTitle.text = "All"
 
@@ -59,14 +70,49 @@ class SearchActivity : AppCompatActivity() {
 
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             override fun onTransactionClick(transaction: Transaction): Boolean {
-                Helper.openTransactionDetail(this@SearchActivity, transaction)
+                if (viewModel.selectionMode.value == true) {
+                    viewModel.toggleTransactionSelection(transaction.id)
+                    transactionAdapter.notifyDataSetChanged()
+                } else {
+                    Helper.openTransactionDetail(this@SearchActivity, transaction)
+                }
                 return true
             }
         }
 
-        val dao = AppDatabase.getDatabase(application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        transactionAdapter.longClickListener = object: TransactionAdapter.OnTransactionLongClickListener{
+            override fun onTransactionLongClick(transaction: Transaction): Boolean {
+                viewModel.enterSelectionMode()
+                viewModel.toggleTransactionSelection(transaction.id)
+                transactionAdapter.notifyDataSetChanged()
+                return true
+            }
+        }
+
+        viewModel.selectionMode.observe(this) { enable ->
+            layoutEdit.visibility = if (enable) View.VISIBLE else View.GONE
+        }
+
+        viewModel.selectedTransactionIds.observe(this) { selectedIds ->
+            tvSelectedEdit.text = "${selectedIds.size} selected"
+            val transactions = viewModel.allTransactions.value
+            val selectedTransactions = transactions?.filter { selectedIds.contains(it.id) } ?: emptyList()
+            val totalAmount = selectedTransactions.sumOf {
+                if (it.isIncome) it.amount else -it.amount
+            }
+            tvTotalAmountEdit.text = "Total: ${Helper.formatCurrency(totalAmount)}"
+        }
+
+        transactionAdapter.isSelected = {transaction ->
+            viewModel.selectionMode.value == true &&
+                    viewModel.selectedTransactionIds.value?.contains(transaction.id) == true
+        }
+
+        btnCloseLayoutEdit.setOnClickListener {
+            viewModel.exitSelectionMode()
+            transactionAdapter.notifyDataSetChanged()
+        }
+
         viewModel.allTransactions.observe(this) { it ->
             transactions = it
 
@@ -120,6 +166,16 @@ class SearchActivity : AppCompatActivity() {
                 expenseCount.text = Helper.formatCurrency(totalExpense)
             }
         })
+
+        layoutControl.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener{
+            override fun onGlobalLayout() {
+                layoutControl.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                val height = layoutControl.height
+                val params = layoutEdit.layoutParams
+                params.height = height
+                layoutEdit.layoutParams = params
+            }
+        })
     }
 
     private fun init() {
@@ -131,6 +187,11 @@ class SearchActivity : AppCompatActivity() {
         incomeCount = findViewById(R.id.search_income_count_all)
         expenseCount = findViewById(R.id.search_expense_count_all)
         recyclerView = findViewById(R.id.search_resultList)
+        layoutEdit = findViewById(R.id.search_layout_edit)
+        layoutControl = findViewById(R.id.search_layout_function)
+        btnCloseLayoutEdit = findViewById(R.id.search_layout_edit_line_one_btn_close)
+        tvSelectedEdit = findViewById(R.id.search_layout_edit_line_two_selected_count)
+        tvTotalAmountEdit = findViewById(R.id.search_layout_edit_line_two_selected_total)
     }
 
     private fun searchArrange(query: String) {

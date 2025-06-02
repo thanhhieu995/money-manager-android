@@ -5,78 +5,166 @@
     android:layout_height="match_parent"
     android:background="@android:color/white">
 
-    <!-- Back Button -->
-    <ImageView
-        android:id="@+id/search_back"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/ic_baseline_navigate_before_24"
-        android:contentDescription="Back"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Title -->
-    <TextView
-        android:id="@+id/search_title"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/search_layout_function"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="All"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/search_back"
-        app:layout_constraintEnd_toStartOf="@id/search_filter"
-        app:layout_constraintHorizontal_bias="0.5" />
-
-    <!-- Filter Icon -->
-    <ImageView
-        android:id="@+id/search_filter"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/ic_baseline_filter_alt_24"
-        android:contentDescription="Filter"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- SearchView & Cancel -->
-    <LinearLayout
-        android:id="@+id/search_searchBar"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:orientation="horizontal"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/search_title"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent">
+        <!-- Back Button -->
+        <ImageView
+            android:id="@+id/search_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="Back"
+            android:src="@drawable/ic_baseline_navigate_before_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <AutoCompleteTextView
-            android:id="@+id/search_autoComplete"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="Search..."
-            android:layout_weight="1"
-            android:inputType="text"
-            android:padding="12dp"
-            android:drawableStart="@drawable/ic_baseline_search_24"
-            android:drawablePadding="8dp"
-            />
-
+        <!-- Title -->
         <TextView
-            android:id="@+id/search_btnCancel"
+            android:id="@+id/search_title"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="Cancel"
-            android:gravity="center_vertical"
-            android:paddingStart="12dp"
-            android:textColor="@android:color/black"
-            android:textSize="14sp"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="All"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/search_filter"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@id/search_back"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Filter Icon -->
+        <ImageView
+            android:id="@+id/search_filter"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Filter"
+            android:src="@drawable/ic_baseline_filter_alt_24"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- SearchView & Cancel -->
+        <LinearLayout
+            android:id="@+id/search_searchBar"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/search_title">
+
+            <AutoCompleteTextView
+                android:id="@+id/search_autoComplete"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:drawableStart="@drawable/ic_baseline_search_24"
+                android:drawablePadding="8dp"
+                android:hint="Search..."
+                android:inputType="text"
+                android:padding="12dp" />
+
+            <TextView
+                android:id="@+id/search_btnCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:paddingStart="12dp"
+                android:text="Cancel"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/search_layout_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        android:clickable="true"
+        android:elevation="4dp"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <!-- Hàng đầu tiên -->
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/search_layout_edit_line_one"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/search_layout_edit_line_one_btn_close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_baseline_close_24"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/search_layout_edit_line_one_btn_delete" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/search_layout_edit_line_one_btn_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Delete"
+                android:src="@drawable/ic_baseline_delete_outline_24"
+                app:layout_constraintEnd_toStartOf="@+id/search_layout_edit_line_one_btn_more"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/search_layout_edit_line_one_btn_more"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="More"
+                android:src="@drawable/ic_baseline_more_vert_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Hàng thứ hai -->
+        <LinearLayout
+            android:id="@+id/search_layout_edit_line_two"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/search_layout_edit_line_two_selected_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0 items selected" />
+
+            <TextView
+                android:id="@+id/search_layout_edit_line_two_selected_total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total: 0" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -86,7 +174,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="4dp"
-        app:layout_constraintTop_toBottomOf="@+id/search_searchBar"
+        app:layout_constraintTop_toBottomOf="@+id/search_layout_function"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
         <LinearLayout

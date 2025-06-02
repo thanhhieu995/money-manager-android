@@ -79,7 +79,7 @@ class TransactionAdapter(
 
         holder.amountText.setTextColor(
             if (tx.isIncome)
-                ContextCompat.getColor(holder.itemView.context, R.color.teal_700)
+                ContextCompat.getColor(holder.itemView.context, R.color.income)
             else
                 Color.RED
         )
