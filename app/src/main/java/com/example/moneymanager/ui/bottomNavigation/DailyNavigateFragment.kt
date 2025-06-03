@@ -19,6 +19,7 @@ import com.example.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
@@ -54,11 +55,13 @@ class DailyNavigateFragment : Fragment() {
     private lateinit var bookmark: ImageView
     private lateinit var btnAdd: FloatingActionButton
     private lateinit var btnEditClose: ImageView
+    private lateinit var btnEditDelete: ImageView
     private lateinit var layoutFunctionControl: LinearLayout
     private lateinit var layoutEdit: LinearLayout
 
     private var month: LocalDate? = null
     private var listTransactionGroup: List<TransactionGroup> = listOf()
+    private var selectedTransactionList: List<Transaction> = emptyList()
     @RequiresApi(Build.VERSION_CODES.O)
     private val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
@@ -196,13 +199,14 @@ class DailyNavigateFragment : Fragment() {
             binding.fragmentDailyNavigateLayoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
         }
 
-        viewModel.selectedTransactionIds.observe(viewLifecycleOwner) { selectedIds ->
+        viewModel.selectedTransactions.observe(viewLifecycleOwner) { transactionList ->
+            selectedTransactionList = transactionList
             // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
             binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
-                "${selectedIds.size} selected"
+                "${transactionList.size} selected"
 
             val transactions = viewModel.allTransactions.value
-            val selectedTransactions = transactions?.filter { selectedIds.contains(it.id) } ?: emptyList()
+            val selectedTransactions = transactions?.filter { transactionList.contains(it) } ?: emptyList()
             val totalAmount = selectedTransactions.sumOf {
                 if (it.isIncome) it.amount else -it.amount
             }
@@ -212,6 +216,13 @@ class DailyNavigateFragment : Fragment() {
 
         btnEditClose.setOnClickListener {
             viewModel.exitSelectionMode()
+        }
+
+        btnEditDelete.setOnClickListener {
+            if (selectedTransactionList.isNotEmpty()) {
+                viewModel.deleteAll(selectedTransactionList)
+                viewModel.exitSelectionMode()
+            }
         }
 
         layoutFunctionControl.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener{
@@ -269,6 +280,7 @@ class DailyNavigateFragment : Fragment() {
         bookmark = binding.fragmentDailyNavigateBookmark
         btnAdd = binding.fragmentDailyNavigateBtnAdd
         btnEditClose = binding.fragmentDailyNavigateLayoutEditLineOneBtnClose
+        btnEditDelete = binding.fragmentDailyNavigateLayoutEditLineOneBtnDelete
         layoutFunctionControl = binding.fragmentDailyNavigateLayoutFunctionControl
         layoutEdit = binding.fragmentDailyNavigateLayoutEdit
     }

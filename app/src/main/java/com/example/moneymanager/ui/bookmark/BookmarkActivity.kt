@@ -1,5 +1,6 @@
 package com.example.moneymanager.ui.bookmark
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
@@ -7,6 +8,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
@@ -25,10 +27,13 @@ class BookmarkActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var transactionAdapter: TransactionAdapter
     var listTransactionGroup : List<TransactionGroup> = listOf()
+    private lateinit var tvNoData: TextView
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bookmark)
 
+        tvNoData = findViewById(R.id.bookmark_noData)
         val toolbar = findViewById<Toolbar>(R.id.bookmark_toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
@@ -68,6 +73,7 @@ class BookmarkActivity : AppCompatActivity() {
 
         viewModel.getBookmarkedTransactions().observe(this) {
             transactionAdapter.updateList(it)
+            tvNoData.visibility = if (it.isEmpty()) View.VISIBLE else View.GONE
         }
 
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{

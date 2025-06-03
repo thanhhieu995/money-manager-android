@@ -19,12 +19,10 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val currentMonthYear: LiveData<LocalDate> = _currentMonthYear
     private val _currentTabPosition = MutableLiveData<Int>()
     val currentTabPosition: LiveData<Int> get() = _currentTabPosition
-    private val _selectedTransactionIds = MutableLiveData<Set<Int>>(emptySet())
-    val selectedTransactionIds: LiveData<Set<Int>> = _selectedTransactionIds
     private val _selectionMode = MutableLiveData<Boolean>(false)
     val selectionMode: LiveData<Boolean> = _selectionMode
-//    private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
-//    val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
+    private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
+    val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
     private val _navigateToWeekFromMonthly = MutableLiveData<LocalDate?>(null)
     val navigateToWeekFromMonthly: LiveData<LocalDate?> = _navigateToWeekFromMonthly
 
@@ -34,6 +32,10 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
 
     fun delete(transaction: Transaction) = viewModelScope.launch {
         dao.delete(transaction)
+    }
+
+    fun deleteAll(transactionList: List<Transaction>) = viewModelScope.launch {
+        dao.deleteAll(transactionList)
     }
 
     fun update(transaction: Transaction) {
@@ -60,18 +62,18 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         _currentTabPosition.value = position
     }
 
-    fun toggleTransactionSelection(transactionId: Int) {
-        val current = _selectedTransactionIds.value ?: emptySet()
-        _selectedTransactionIds.value = if (current.contains(transactionId)) {
-            current - transactionId
+    fun toggleTransactionSelection(transaction: Transaction) {
+        val currentTransaction = _selectedTransactions.value ?: emptyList()
+        _selectedTransactions.value = if (currentTransaction.contains(transaction)) {
+            currentTransaction - transaction
         } else {
-            current + transactionId
+            currentTransaction + transaction
         }
-        _selectionMode.value = _selectedTransactionIds.value?.isNotEmpty()
+        _selectionMode.value = _selectedTransactions.value?.isNotEmpty()
     }
 
     private fun clearSelection() {
-        _selectedTransactionIds.value = emptySet()
+        _selectedTransactions.value = emptyList()
     }
 
     fun enterSelectionMode() {
@@ -88,9 +90,4 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         _currentMonthYear.value = date.withDayOfMonth(1)
         _navigateToWeekFromMonthly.value = date // Dùng để scroll sau khi cập nhật
     }
-
-//    fun updateSelection(list: List<Transaction>) {
-//        _selectedTransactions.value = list
-//        _selectionMode.value = list.isNotEmpty()
-//    }
 }

@@ -2,6 +2,8 @@ package com.example.moneymanager.ui.search
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.*
@@ -21,9 +23,10 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 class SearchActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private var transactions: List<Transaction> = listOf()
-    private lateinit var transactionAdapter : TransactionAdapter
+    private lateinit var transactionAdapter: TransactionAdapter
     private var selectedOption: String = "All" // default
-    var searchQuery = ""
+    private var searchQuery = ""
+    private var allSelectedTransactions: List<Transaction> = emptyList()
 
     private lateinit var searchTitle: TextView
     private lateinit var searchArrange: ImageView
@@ -36,8 +39,10 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var layoutEdit: LinearLayout
     private lateinit var layoutControl: ConstraintLayout
     private lateinit var btnCloseLayoutEdit: ImageView
+    private lateinit var btnDeleteLayoutEdit: ImageView
     private lateinit var tvSelectedEdit: TextView
     private lateinit var tvTotalAmountEdit: TextView
+    private lateinit var tvNoData: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +76,7 @@ class SearchActivity : AppCompatActivity() {
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             override fun onTransactionClick(transaction: Transaction): Boolean {
                 if (viewModel.selectionMode.value == true) {
-                    viewModel.toggleTransactionSelection(transaction.id)
+                    viewModel.toggleTransactionSelection(transaction)
                     transactionAdapter.notifyDataSetChanged()
                 } else {
                     Helper.openTransactionDetail(this@SearchActivity, transaction)
@@ -83,7 +88,7 @@ class SearchActivity : AppCompatActivity() {
         transactionAdapter.longClickListener = object: TransactionAdapter.OnTransactionLongClickListener{
             override fun onTransactionLongClick(transaction: Transaction): Boolean {
                 viewModel.enterSelectionMode()
-                viewModel.toggleTransactionSelection(transaction.id)
+                viewModel.toggleTransactionSelection(transaction)
                 transactionAdapter.notifyDataSetChanged()
                 return true
             }
@@ -93,10 +98,11 @@ class SearchActivity : AppCompatActivity() {
             layoutEdit.visibility = if (enable) View.VISIBLE else View.GONE
         }
 
-        viewModel.selectedTransactionIds.observe(this) { selectedIds ->
-            tvSelectedEdit.text = "${selectedIds.size} selected"
+        viewModel.selectedTransactions.observe(this) {selectedTransactionList ->
+            allSelectedTransactions = selectedTransactionList
+            tvSelectedEdit.text = "${selectedTransactionList.size} selected"
             val transactions = viewModel.allTransactions.value
-            val selectedTransactions = transactions?.filter { selectedIds.contains(it.id) } ?: emptyList()
+            val selectedTransactions = transactions?.filter { selectedTransactionList.contains(it) } ?: emptyList()
             val totalAmount = selectedTransactions.sumOf {
                 if (it.isIncome) it.amount else -it.amount
             }
@@ -105,7 +111,7 @@ class SearchActivity : AppCompatActivity() {
 
         transactionAdapter.isSelected = {transaction ->
             viewModel.selectionMode.value == true &&
-                    viewModel.selectedTransactionIds.value?.contains(transaction.id) == true
+                    viewModel.selectedTransactions.value?.contains(transaction) == true
         }
 
         btnCloseLayoutEdit.setOnClickListener {
@@ -113,9 +119,19 @@ class SearchActivity : AppCompatActivity() {
             transactionAdapter.notifyDataSetChanged()
         }
 
+        btnDeleteLayoutEdit.setOnClickListener {
+            if (allSelectedTransactions.isNotEmpty()) {
+                viewModel.deleteAll(allSelectedTransactions)
+                viewModel.exitSelectionMode()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    transactionAdapter.updateList(transactions)
+                    transactionAdapter.filter.filter(searchQuery)
+                }, 100)
+            }
+        }
+
         viewModel.allTransactions.observe(this) { it ->
             transactions = it
-
             val contents = transactions.map { it.note }.distinct()
 
             val arrayAdapter = ArrayAdapter(
@@ -145,6 +161,7 @@ class SearchActivity : AppCompatActivity() {
                     transactionAdapter.updateList(transactions)
                 }
             }
+            tvNoData.visibility = if(it.isEmpty()) View.VISIBLE else View.GONE
         }
 
         transactionAdapter.setOnFilterResultListener(object :
@@ -164,6 +181,8 @@ class SearchActivity : AppCompatActivity() {
 
                 incomeCount.text = Helper.formatCurrency(totalIncome)
                 expenseCount.text = Helper.formatCurrency(totalExpense)
+
+                tvNoData.visibility = if(filteredList.isEmpty()) View.VISIBLE else View.GONE
             }
         })
 
@@ -192,6 +211,8 @@ class SearchActivity : AppCompatActivity() {
         btnCloseLayoutEdit = findViewById(R.id.search_layout_edit_line_one_btn_close)
         tvSelectedEdit = findViewById(R.id.search_layout_edit_line_two_selected_count)
         tvTotalAmountEdit = findViewById(R.id.search_layout_edit_line_two_selected_total)
+        btnDeleteLayoutEdit = findViewById(R.id.search_layout_edit_line_one_btn_delete)
+        tvNoData = findViewById(R.id.search_no_data)
     }
 
     private fun searchArrange(query: String) {

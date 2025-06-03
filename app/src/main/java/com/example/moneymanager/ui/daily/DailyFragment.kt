@@ -90,14 +90,14 @@ class DailyFragment : Fragment() {
 
         adapter.onTransactionLongClick = { transaction ->
             viewModel.enterSelectionMode()
-            viewModel.toggleTransactionSelection(transaction.id)
+            viewModel.toggleTransactionSelection(transaction)
             adapter.notifyDataSetChanged()
             true
         }
 
         adapter.onTransactionClick = { transaction ->
             if (viewModel.selectionMode.value == true) {
-                viewModel.toggleTransactionSelection(transaction.id)
+                viewModel.toggleTransactionSelection(transaction)
                 adapter.notifyDataSetChanged()
             } else {
                 // Mở màn hình sửa
@@ -108,7 +108,7 @@ class DailyFragment : Fragment() {
 
         adapter.isTransactionSelected = { transaction ->
             viewModel.selectionMode.value == true &&
-            viewModel.selectedTransactionIds.value?.contains(transaction.id) == true
+            viewModel.selectedTransactions.value?.contains(transaction) == true
         }
 
         viewModel.selectionMode.observe(viewLifecycleOwner) { mode ->
