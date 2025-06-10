@@ -158,14 +158,17 @@ class DailyNavigateFragment : Fragment() {
 
         search.setOnClickListener {
             startActivity(Intent(requireContext(), SearchActivity::class.java))
+            requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
         }
 
         bookmark.setOnClickListener {
             startActivity(Intent(requireContext(), BookmarkActivity::class.java))
+            requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
         }
 
         btnAdd.setOnClickListener {
             startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
         }
 
         viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->

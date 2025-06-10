@@ -1,6 +1,7 @@
 package com.example.moneymanager.ui.bookmark
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -8,6 +9,7 @@ import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.*
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
@@ -28,14 +30,14 @@ class BookmarkActivity : AppCompatActivity() {
     private lateinit var toolbar: Toolbar
 
     private var isEditMode = false
+    private var shouldAnimateExit = false
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bookmark)
 
-        tvNoData = findViewById(R.id.bookmark_noData)
-        toolbar = findViewById(R.id.bookmark_toolbar)
+        init()
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
@@ -45,6 +47,7 @@ class BookmarkActivity : AppCompatActivity() {
             if (isEditMode) {
                 toggleEditMode()
             } else {
+                shouldAnimateExit = true
                 finish()
             }
         }
@@ -99,6 +102,14 @@ class BookmarkActivity : AppCompatActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        if (shouldAnimateExit) {
+            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+            shouldAnimateExit = false
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_bookmark, menu)
         return true
@@ -106,14 +117,17 @@ class BookmarkActivity : AppCompatActivity() {
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         // Ẩn hiện icon tuỳ theo chế độ
-        menu.findItem(R.id.action_edit)?.isVisible = !isEditMode
+        menu.findItem(R.id.menu_bookmark_edit)?.isVisible = !isEditMode
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_edit -> {
+            R.id.menu_bookmark_edit -> {
                 toggleEditMode()
+                true
+            }
+            R.id.menu_bookmark_add -> {
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -162,29 +176,31 @@ class BookmarkActivity : AppCompatActivity() {
 
             val itemView = viewHolder.itemView
 
-            // Vẽ nền đỏ khi vuốt trái
-            val paint = Paint().apply { color = Color.parseColor("#F44336") }
-            c.drawRect(
-                itemView.right.toFloat() + dX, // trái bắt đầu từ dX
-                itemView.top.toFloat(),
-                itemView.right.toFloat(),
-                itemView.bottom.toFloat(),
-                paint
-            )
+            if (dX < 0) {
+                // Vẽ nền đỏ khi vuốt trái
+                val paint = Paint().apply { color = Color.parseColor("#F44336") }
+                c.drawRect(
+                    itemView.right.toFloat() + dX, // trái bắt đầu từ dX
+                    itemView.top.toFloat(),
+                    itemView.right.toFloat(),
+                    itemView.bottom.toFloat(),
+                    paint
+                )
 
-            // Vẽ chữ "Delete"
-            val text = "Delete"
-            val textPaint = Paint().apply {
-                color = Color.WHITE
-                textSize = 48f
-                typeface = Typeface.DEFAULT_BOLD
-                textAlign = Paint.Align.RIGHT
+                // Vẽ chữ "Delete"
+                val text = "Delete"
+                val textPaint = Paint().apply {
+                    color = Color.WHITE
+                    textSize = 48f
+                    typeface = Typeface.DEFAULT_BOLD
+                    textAlign = Paint.Align.RIGHT
+                }
+
+                val textMargin = 40f
+                val textX = itemView.right.toFloat() - textMargin
+                val textY = itemView.top + itemView.height / 2f + 20f
+                c.drawText(text, textX, textY, textPaint)
             }
-
-            val textMargin = 40f
-            val textX = itemView.right.toFloat() - textMargin
-            val textY = itemView.top + itemView.height / 2f + 20f
-            c.drawText(text, textX, textY, textPaint)
 
             // Kéo item đi theo dX
             viewHolder.itemView.translationX = dX
@@ -195,5 +211,10 @@ class BookmarkActivity : AppCompatActivity() {
             val foreground = viewHolder.itemView.findViewById<View>(R.id.item_bookmark_foreground)
             foreground.animate().translationX(0f).start()
         }
+    }
+
+    private fun init() {
+        tvNoData = findViewById(R.id.bookmark_noData)
+        toolbar = findViewById(R.id.bookmark_toolbar)
     }
 }

@@ -48,6 +48,8 @@ class AddTransactionActivity : AppCompatActivity() {
     private lateinit var bookMarkButton: Button
     private lateinit var formattedDate: String
 
+    private var shouldAnimateExit = false
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,6 +92,7 @@ class AddTransactionActivity : AppCompatActivity() {
         handleToAddTransaction()
 
         btnBack.setOnClickListener {
+            shouldAnimateExit = true
             finish()
         }
 
@@ -207,6 +210,14 @@ class AddTransactionActivity : AppCompatActivity() {
             )
 
             edtNote.setAdapter(adapter)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (shouldAnimateExit) {
+            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
+            shouldAnimateExit = false
         }
     }
 

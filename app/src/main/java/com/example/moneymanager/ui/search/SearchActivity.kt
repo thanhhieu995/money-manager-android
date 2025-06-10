@@ -44,6 +44,8 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var tvTotalAmountEdit: TextView
     private lateinit var tvNoData: TextView
 
+    private var shouldAnimateExit = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
@@ -62,10 +64,12 @@ class SearchActivity : AppCompatActivity() {
         searchTitle.text = "All"
 
         btnBack.setOnClickListener {
+            shouldAnimateExit = true
             finish()
         }
 
         btnCancel.setOnClickListener {
+            shouldAnimateExit = true
             finish()
         }
 
@@ -195,6 +199,14 @@ class SearchActivity : AppCompatActivity() {
                 layoutEdit.layoutParams = params
             }
         })
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (shouldAnimateExit) {
+            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+            shouldAnimateExit = false
+        }
     }
 
     private fun init() {
