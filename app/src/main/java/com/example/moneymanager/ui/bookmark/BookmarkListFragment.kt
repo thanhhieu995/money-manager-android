@@ -45,7 +45,9 @@ class BookmarkListFragment : Fragment() {
 
         adapter = BookmarkAdapter(
             items = emptyList(),
-            onDeleteClick = { transaction -> viewModel.delete(transaction) }
+            onDeleteClick = { transaction ->
+                viewModel.update(transaction.copy(isBookmarked = false))
+            }
         )
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -75,7 +77,7 @@ class BookmarkListFragment : Fragment() {
 
         override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {
             val item = adapter.items[vh.adapterPosition]
-            viewModel.delete(item)
+            viewModel.update(item.copy(isBookmarked = false))
         }
 
         override fun getSwipeEscapeVelocity(defaultValue: Float): Float = 0.5f

@@ -1,11 +1,13 @@
 package com.example.moneymanager.ui.bookmark
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.*
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import com.example.moneymanager.R
@@ -16,6 +18,8 @@ class BookmarkActivity : AppCompatActivity() {
     private var isEditMode = false
     private var shouldAnimateExit = false
     private lateinit var bookmarkListFragment: BookmarkListFragment
+    private lateinit var addBookmarkFragment: AddBookmarkFragment
+    private lateinit var bookmarkTitleView: TextView
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,20 +30,9 @@ class BookmarkActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        // Nút đóng
-        toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
-        toolbar.setNavigationOnClickListener {
-            if (isEditMode) {
-                toggleEditMode()
-            } else {
-                shouldAnimateExit = true
-                finish()
-            }
-        }
-
         // Set tiêu đề giữa
         toolbar.post {
-            val titleText = TextView(this).apply {
+            bookmarkTitleView = TextView(this).apply {
                 text = "Bookmark"
                 textSize = 18f
                 setTextColor(Color.WHITE)
@@ -53,12 +46,29 @@ class BookmarkActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
             }
 
-            toolbar.addView(titleText, params)
+            toolbar.addView(bookmarkTitleView, params)
+            setUpToolBarBookmarkListFragment()
         }
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container_bookmark, bookmarkListFragment)
             .commit()
+
+        supportFragmentManager.addOnBackStackChangedListener {
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_bookmark)
+            if (currentFragment is AddBookmarkFragment) {
+                toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_ios_24)
+                toolbar.setNavigationOnClickListener {
+                    supportFragmentManager.popBackStack()
+                }
+                toolbar.post {
+                    animateTitleToLeftOfIcon()
+                }
+            } else {
+               setUpToolBarBookmarkListFragment()
+            }
+            invalidateOptionsMenu()
+        }
     }
 
     override fun onPause() {
@@ -75,8 +85,12 @@ class BookmarkActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        // Ẩn hiện icon tuỳ theo chế độ
-        menu.findItem(R.id.menu_bookmark_edit)?.isVisible = !isEditMode
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_bookmark)
+        val isAddBookmark = currentFragment is AddBookmarkFragment
+
+        // Ẩn hiện menu tùy theo fragment
+        menu.findItem(R.id.menu_bookmark_edit)?.isVisible = !isAddBookmark && !isEditMode
+        menu.findItem(R.id.menu_bookmark_add)?.isVisible = !isAddBookmark
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -87,6 +101,20 @@ class BookmarkActivity : AppCompatActivity() {
                 true
             }
             R.id.menu_bookmark_add -> {
+                supportFragmentManager
+                    .beginTransaction()
+                    .setCustomAnimations(
+                        R.anim.slide_in_right, // vào
+                        R.anim.slide_out_left, // ra khi bị replace
+                        R.anim.slide_in_left,  // vào lại khi popBackStack
+                        R.anim.slide_out_right // ra khi popBackStack
+                    )
+                    .replace(R.id.fragment_container_bookmark, addBookmarkFragment)
+                    .addToBackStack(null)
+                    .commit()
+                toolbar.post {
+                    invalidateOptionsMenu()
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -108,6 +136,44 @@ class BookmarkActivity : AppCompatActivity() {
 
     private fun init() {
         bookmarkListFragment = BookmarkListFragment()
+        addBookmarkFragment = AddBookmarkFragment()
         toolbar = findViewById(R.id.bookmark_toolbar)
+    }
+
+    private fun animateTitleToLeftOfIcon() {
+        // Kích thước icon back
+        val iconWidth = toolbar.navigationIcon?.intrinsicWidth ?: 0
+
+        // Padding mặc định icon bên trái
+        val iconMargin = (toolbar.contentInsetStartWithNavigation)
+
+        // Tổng khoảng trống cần dịch tiêu đề sang trái
+        val targetTranslationX = -(toolbar.width / 2f) + iconWidth + iconMargin + 8f // 16dp padding tùy chỉnh
+
+        bookmarkTitleView.animate()
+            .translationX(targetTranslationX)
+            .setDuration(300L)
+            .start()
+    }
+
+    private fun animateTitleToCenter() {
+        val animator = ObjectAnimator.ofFloat(bookmarkTitleView, "translationX", bookmarkTitleView.translationX, 0f)
+        animator.duration = 300
+        animator.interpolator = AccelerateDecelerateInterpolator()
+        animator.start()
+    }
+
+    private fun setUpToolBarBookmarkListFragment() {
+        toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
+        toolbar.setNavigationOnClickListener {
+            if (isEditMode) {
+                toggleEditMode()
+            } else {
+                shouldAnimateExit = true
+                finish()
+            }
+        }
+        isEditMode = false
+        animateTitleToCenter()
     }
 }
