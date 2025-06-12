@@ -8,7 +8,11 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.example.moneymanager.R
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Category
+import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.ui.bottomNavigation.DailyNavigateFragment
+import com.example.moneymanager.viewmodel.CategoryViewModel
+import com.example.moneymanager.viewmodel.CategoryViewModelFactory
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -30,6 +34,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         init()
+        defaultCategory()
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
@@ -63,5 +68,37 @@ class MainActivity : AppCompatActivity() {
 
     private fun init() {
         bottomNav = findViewById(R.id.main_bottomBar)
+    }
+
+    private fun defaultCategory() {
+        val daoCategory = AppDatabase.getDatabase(application).categoryDao()
+        val factoryCategory = CategoryViewModelFactory(daoCategory)
+        val categoryViewModel = ViewModelProvider(this, factoryCategory)[CategoryViewModel::class.java]
+        val typeIncome = CategoryType.INCOME
+        val typeExpense = CategoryType.EXPENSE
+        categoryViewModel.getAll().observe(this) { listCategory ->
+            if (listCategory.isEmpty()) {
+                val defaultCategories = listOf(
+                    // expense
+                    Category(emoji = "🍔", name = "Food", type = typeExpense),
+                    Category(emoji = "🚗", name = "Transport", type = typeExpense),
+                    Category(emoji = "🏠", name = "Household", type = typeExpense),
+                    Category(emoji = "🐶", name = "Pets", type = typeExpense),
+                    Category(emoji = "🎁", name = "Gift", type = typeExpense),
+                    Category(emoji = "📚", name = "Education", type = typeExpense),
+                    Category(emoji = "🏋️‍♂️", name = "Sport", type = typeExpense),
+                    Category(emoji = "💄", name = "Beauty", type = typeExpense),
+                    Category(emoji = "🧘‍♂️", name = "Health", type = typeExpense),
+                    Category(emoji = "💻", name = "Investment", type = typeExpense),
+                    Category(emoji = "🎨", name = "Culture", type = typeExpense),
+                    Category(emoji = "🚲", name = "Bicycle", type = typeExpense),
+                    // income
+                    Category(emoji = "💸", name = "Allowance", type = typeIncome),
+                    Category(emoji = "💼", name = "Salary", type = typeIncome),
+                    Category(emoji = "🎁", name = "Bonus", type = typeIncome),
+                )
+                defaultCategories.forEach { categoryViewModel.insert(it) }
+            }
+        }
     }
 }

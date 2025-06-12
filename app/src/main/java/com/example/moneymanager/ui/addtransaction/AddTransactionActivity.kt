@@ -17,8 +17,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.MainActivity
+import com.example.moneymanager.viewmodel.CategoryViewModel
+import com.example.moneymanager.viewmodel.CategoryViewModelFactory
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -61,21 +64,6 @@ class AddTransactionActivity : AppCompatActivity() {
         val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Locale.getDefault())
         formattedDate = dateFormat.format(currentDate)
 
-        val categories = listOf(
-            ItemBottomDialog("🍔", "Food"),
-            ItemBottomDialog("🚗", "Transport"),
-            ItemBottomDialog("🏠", "Household"),
-            ItemBottomDialog("🐶", "Pets"),
-            ItemBottomDialog("🎁", "Gift"),
-            ItemBottomDialog("📚", "Education"),
-            ItemBottomDialog("🏋️‍♂️", "Sport"),
-            ItemBottomDialog("💄", "Beauty"),
-            ItemBottomDialog("🧘‍♂️", "Health"),
-            ItemBottomDialog("💻", "Investment"),
-            ItemBottomDialog("🎨", "Culture"),
-            ItemBottomDialog("🚲", "Bicycle")
-        )
-
         val accounts = listOf(
             ItemBottomDialog("💵", "Cash"),
             ItemBottomDialog("🏦", "Bank Account"),
@@ -88,6 +76,10 @@ class AddTransactionActivity : AppCompatActivity() {
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+
+        val daoCategory = AppDatabase.getDatabase(application).categoryDao()
+        val factoryCategory = CategoryViewModelFactory(daoCategory)
+        val categoryViewModel = ViewModelProvider(this, factoryCategory)[CategoryViewModel::class.java]
 
         handleToAddTransaction()
 
@@ -114,27 +106,29 @@ class AddTransactionActivity : AppCompatActivity() {
 
         incomeButton.setOnClickListener {
             setTransactionType(
-                true,
-                false
+                isIncomeType = true,
+                isEdit = false
             )
         }
 
         expenseButton.setOnClickListener {
             setTransactionType(
-                false,
-                false
+                isIncomeType = false,
+                isEdit = false
             )
         }
 
         edtCategory.setOnClickListener {
-            showBottomDialogAddTransaction("Category", categories, edtCategory) {
-
+            val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
+            categoryViewModel.getCategoriesByType(selectedType).observe(this) { list ->
+                val itemBottoms = list.map { ItemBottomDialog(it) }
+                showBottomDialogAddTransaction("Category", itemBottoms, edtCategory) {
+                }
             }
         }
 
         edtAccount.setOnClickListener {
             showBottomDialogAddTransaction("Account", accounts, edtAccount) {
-
             }
         }
 
