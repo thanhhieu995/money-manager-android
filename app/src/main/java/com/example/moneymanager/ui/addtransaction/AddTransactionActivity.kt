@@ -2,15 +2,22 @@ package com.example.moneymanager.ui.addtransaction
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.PorterDuff
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +26,7 @@ import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.model.Transaction
+import com.example.moneymanager.ui.bookmark.BookmarkActivity
 import com.example.moneymanager.ui.main.MainActivity
 import com.example.moneymanager.viewmodel.CategoryViewModel
 import com.example.moneymanager.viewmodel.CategoryViewModelFactory
@@ -31,6 +39,7 @@ import java.util.*
 
 class AddTransactionActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
+    private lateinit var categoryViewModel: CategoryViewModel
     private var isIncome: Boolean = false
     private var transactions: List<Transaction> = listOf()
     private lateinit var btnBack: ImageView
@@ -49,6 +58,7 @@ class AddTransactionActivity : AppCompatActivity() {
     private lateinit var deleteButton: Button
     private lateinit var copyButton: Button
     private lateinit var bookMarkButton: Button
+    private lateinit var iconBookmark: ImageView
     private lateinit var formattedDate: String
 
     private var shouldAnimateExit = false
@@ -79,7 +89,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
         val daoCategory = AppDatabase.getDatabase(application).categoryDao()
         val factoryCategory = CategoryViewModelFactory(daoCategory)
-        val categoryViewModel = ViewModelProvider(this, factoryCategory)[CategoryViewModel::class.java]
+        categoryViewModel = ViewModelProvider(this, factoryCategory)[CategoryViewModel::class.java]
 
         handleToAddTransaction()
 
@@ -104,11 +114,20 @@ class AddTransactionActivity : AppCompatActivity() {
             datePicker.show()
         }
 
+        iconBookmark.setOnClickListener {
+            startActivity(Intent(this, BookmarkActivity::class.java))
+            overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
+        }
+
         incomeButton.setOnClickListener {
             setTransactionType(
                 isIncomeType = true,
                 isEdit = false
             )
+            Handler(Looper.getMainLooper()).postDelayed({
+                edtCategory.setText("")
+                edtCategory.performClick()
+            }, 200)
         }
 
         expenseButton.setOnClickListener {
@@ -116,57 +135,20 @@ class AddTransactionActivity : AppCompatActivity() {
                 isIncomeType = false,
                 isEdit = false
             )
+            Handler(Looper.getMainLooper()).postDelayed({
+                edtCategory.setText("")
+                edtCategory.performClick()
+            }, 200)
         }
 
-        edtCategory.setOnClickListener {
-            val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
-            categoryViewModel.getCategoriesByType(selectedType).observe(this) { list ->
-                val itemBottoms = list.map { ItemBottomDialog(it) }
-                showBottomDialogAddTransaction("Category", itemBottoms, edtCategory) {
-                }
-            }
-        }
+        categoryClick()
+        amountTextChangeListener()
+        categoryTextChangeListener()
 
         edtAccount.setOnClickListener {
             showBottomDialogAddTransaction("Account", accounts, edtAccount) {
             }
         }
-
-        edtAmount.addTextChangedListener(object : TextWatcher {
-            private var isEditing = false
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
-            override fun afterTextChanged(s: Editable?) {
-                if (isEditing || s == null) return
-
-                isEditing = true
-
-                // Xóa chữ đ nếu có trong chuỗi
-                val clean = s.toString().replace("[^\\d]".toRegex(), "")
-
-                if (clean.isNotEmpty()) {
-                    try {
-                        val parsed = clean.toDouble()
-                        val formatted = NumberFormat.getInstance(Locale("vi", "VN")).format(parsed)
-
-                        val finalText = "$formatted đ"
-
-                        // Cập nhật EditText
-                        edtAmount.setText(finalText)
-                        edtAmount.setSelection(formatted.length) // đặt con trỏ trước chữ đ
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                } else {
-                    edtAmount.setText("")
-                }
-
-                isEditing = false
-            }
-        })
 
         saveButton.setOnClickListener {
             saveTransaction {
@@ -180,13 +162,11 @@ class AddTransactionActivity : AppCompatActivity() {
         continueButton.setOnClickListener {
             saveTransaction {
                 Toast.makeText(this, "Giao dịch đã được lưu!", Toast.LENGTH_SHORT).show()
-
                 // Reset các trường
                 edtAmount.setText("")
                 edtCategory.setText("")
                 edtAccount.setText("")
                 edtNote.setText("")
-
                 edtAmount.requestFocus()
             }
         }
@@ -194,15 +174,12 @@ class AddTransactionActivity : AppCompatActivity() {
         // xu ly goi y khi input vao note
         viewModel.allTransactions.observe(this) {
             transactions = it
-
             val contents = transactions.map { it.note }.distinct()
-
             val adapter = ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
                 contents
             )
-
             edtNote.setAdapter(adapter)
         }
     }
@@ -232,6 +209,7 @@ class AddTransactionActivity : AppCompatActivity() {
         deleteButton = findViewById(R.id.add_transaction_btnDelete)
         copyButton = findViewById(R.id.add_transaction_btnCopy)
         bookMarkButton = findViewById(R.id.add_transaction_btnBookmark)
+        iconBookmark = findViewById(R.id.add_transaction_icon_bookmark)
     }
 
     private fun saveTransaction(onSuccess: () -> Unit) {
@@ -284,7 +262,6 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         editButton.setOnClickListener {
-            bottomSheetDialog.dismiss()
             onEditClick()
         }
 
@@ -382,5 +359,71 @@ class AddTransactionActivity : AppCompatActivity() {
         edtAccount.setText(transaction.account)
         edtNote.setText(transaction.note)
         dateTextView.text = transaction.date
+    }
+
+    private fun categoryClick() {
+        edtCategory.setOnClickListener {
+            val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
+            val tintColor = if (isIncome) R.color.income else R.color.red
+            edtCategory.backgroundTintList = ContextCompat.getColorStateList(this, tintColor)
+            categoryViewModel.getCategoriesByType(selectedType).observe(this) { list ->
+                val itemBottoms = list.map { ItemBottomDialog(it) } + ItemBottomDialog("➕", "Add Category")
+                showBottomDialogAddTransaction("Category", itemBottoms, edtCategory) {
+                }
+            }
+        }
+    }
+
+    private fun amountTextChangeListener() {
+        edtAmount.addTextChangedListener(object : TextWatcher {
+            private var isEditing = false
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                if (isEditing || s == null) return
+
+                isEditing = true
+
+                // Xóa chữ đ nếu có trong chuỗi
+                val clean = s.toString().replace("[^\\d]".toRegex(), "")
+
+                if (clean.isNotEmpty()) {
+                    try {
+                        val parsed = clean.toDouble()
+                        val formatted = NumberFormat.getInstance(Locale("vi", "VN")).format(parsed)
+
+                        val finalText = "$formatted đ"
+
+                        // Cập nhật EditText
+                        edtAmount.setText(finalText)
+                        edtAmount.setSelection(formatted.length) // đặt con trỏ trước chữ đ
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                } else {
+                    edtAmount.setText("")
+                }
+
+                isEditing = false
+            }
+        })
+    }
+
+    private fun categoryTextChangeListener() {
+        edtCategory.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                if (!s.isNullOrBlank()) {
+                    // Khi đã có text → đổi về màu bình thường
+                    val lightBlack = Color.parseColor("#99000000") // 70% opacity black
+                    edtCategory.backgroundTintList = ColorStateList.valueOf(lightBlack)
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
     }
 }

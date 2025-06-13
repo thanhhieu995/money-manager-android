@@ -61,7 +61,7 @@ class BookmarkListFragment : Fragment() {
         }
 
         adapter.clickListener = object : BookmarkAdapter.OnBookmarkLickListener {
-            override fun onBookmarkLick(transaction: com.example.moneymanager.model.Transaction) {
+            override fun onBookmarkClick(transaction: com.example.moneymanager.model.Transaction) {
                 Helper.openTransactionDetail(requireActivity(), transaction)
             }
         }

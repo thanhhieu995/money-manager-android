@@ -21,7 +21,7 @@ class BookmarkAdapter(
     var clickListener: OnBookmarkLickListener? = null
 
     interface OnBookmarkLickListener {
-        fun onBookmarkLick(transaction: Transaction)
+        fun onBookmarkClick(transaction: Transaction)
     }
 
     fun updateList(newList: List<Transaction>) {
@@ -54,7 +54,7 @@ class BookmarkAdapter(
             deleteIcon.visibility = if (isEditMode) View.VISIBLE else View.GONE
 
             itemView.setOnClickListener {
-                clickListener?.onBookmarkLick(item)
+                clickListener?.onBookmarkClick(item)
             }
 
             deleteIcon.setOnClickListener {
