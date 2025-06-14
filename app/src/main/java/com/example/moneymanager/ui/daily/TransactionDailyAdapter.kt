@@ -1,0 +1,67 @@
+package com.example.moneymanager.ui.daily
+
+import android.graphics.Color
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.example.moneymanager.R
+import com.example.moneymanager.helper.Helper
+import com.example.moneymanager.model.Transaction
+
+class TransactionDailyAdapter(
+    private val isSelected: ((Transaction) -> Boolean)? = null,
+    private val clickListener: ((Transaction) -> Boolean)? = null,
+    private val longClickListener: ((Transaction) -> Boolean)? = null
+) : ListAdapter<Transaction, TransactionDailyAdapter.TransactionViewHolder>(TransactionDailyDiffCallback) {
+
+    inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val noteText: TextView = itemView.findViewById(R.id.item_transaction_content)
+        val amountText: TextView = itemView.findViewById(R.id.item_transaction_amount)
+        val dateText: TextView = itemView.findViewById(R.id.item_transaction_date)
+        val account: TextView = itemView.findViewById(R.id.item_transaction_account)
+        val category: TextView = itemView.findViewById(R.id.item_transaction_category)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_transaction, parent, false)
+        return TransactionViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
+        val tx = getItem(position)
+
+        holder.noteText.text = tx.note
+        holder.amountText.text = Helper.formatCurrency(tx.amount)
+        holder.dateText.text = tx.date
+        holder.account.text = tx.account
+        holder.category.text = tx.category
+
+        holder.amountText.setTextColor(
+            if (tx.isIncome)
+                ContextCompat.getColor(holder.itemView.context, R.color.income)
+            else
+                Color.RED
+        )
+
+        holder.itemView.setOnClickListener {
+            clickListener?.invoke(tx)
+        }
+
+        holder.itemView.setOnLongClickListener {
+            longClickListener?.invoke(tx) ?: false
+        }
+
+        val selected = isSelected?.invoke(tx) == true
+        holder.itemView.setBackgroundColor(
+            if (selected)
+                ContextCompat.getColor(holder.itemView.context, R.color.rose)
+            else
+                Color.TRANSPARENT
+        )
+    }
+}

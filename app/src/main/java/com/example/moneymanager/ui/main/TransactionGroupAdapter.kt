@@ -14,19 +14,23 @@ import com.example.moneymanager.R
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
-import com.example.moneymanager.ui.search.TransactionAdapter
+import com.example.moneymanager.ui.daily.TransactionDailyAdapter
 
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
     private var groups: List<TransactionGroup> = listOf()
 
     var isTransactionSelected: ((Transaction) -> Boolean)? = null
-    private val childAdapters = mutableMapOf<String, TransactionAdapter>() // key = group.date
+    private val childAdapters = mutableMapOf<String, TransactionDailyAdapter>() // key = group.date
 
     var onTransactionLongClick: ((Transaction) -> Boolean)? = null
     var onTransactionClick: ((Transaction) -> Boolean)? = null
 
     fun submitList(newList: List<TransactionGroup>) {
+        // Xoá adapter cũ chỉ nếu group bị xoá khỏi danh sách
+        val newKeys = newList.map { it.date }.toSet()
+        childAdapters.keys.retainAll(newKeys) // giữ lại các key vẫn còn trong danh sách mới
+
         val diffCallback = TransactionGroupDiffCallback(groups, newList)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
         groups = newList
@@ -64,22 +68,16 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         childRecyclerView.setHasFixedSize(false)
         childRecyclerView.isNestedScrollingEnabled = false
         val adapter = childAdapters.getOrPut(group.date) {
-            TransactionAdapter(group.transactions).apply {
-                longClickListener = object : TransactionAdapter.OnTransactionLongClickListener {
-                    override fun onTransactionLongClick(transaction: Transaction): Boolean {
-                        return onTransactionLongClick?.invoke(transaction) ?: false
-                    }
-                }
-                clickListener = object : TransactionAdapter.OnTransactionClickListener {
-                    override fun onTransactionClick(transaction: Transaction): Boolean {
-                        return onTransactionClick?.invoke(transaction) ?: false
-                    }
-                }
-            }
+            TransactionDailyAdapter(
+                isSelected = isTransactionSelected,
+                clickListener = onTransactionClick,
+                longClickListener = onTransactionLongClick
+            )
         }
-        adapter.isSelected = isTransactionSelected
         childRecyclerView.adapter = adapter
-        adapter.updateList(group.transactions)
+        if (adapter.currentList != group.transactions) {
+            adapter.submitList(group.transactions)
+        }
     }
 
     override fun getItemCount(): Int = groups.size

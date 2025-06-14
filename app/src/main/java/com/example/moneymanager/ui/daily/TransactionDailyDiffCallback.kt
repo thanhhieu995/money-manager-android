@@ -1,0 +1,14 @@
+package com.example.moneymanager.ui.daily
+
+import androidx.recyclerview.widget.DiffUtil
+import com.example.moneymanager.model.Transaction
+
+object TransactionDailyDiffCallback: DiffUtil.ItemCallback<Transaction>() {
+    override fun areItemsTheSame(oldItem: Transaction, newItem: Transaction): Boolean {
+        return oldItem.id == newItem.id // hoặc so sánh theo unique key của bạn
+    }
+
+    override fun areContentsTheSame(oldItem: Transaction, newItem: Transaction): Boolean {
+        return oldItem == newItem
+    }
+}

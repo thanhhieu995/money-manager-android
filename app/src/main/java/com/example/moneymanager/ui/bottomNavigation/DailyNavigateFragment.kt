@@ -63,7 +63,6 @@ class DailyNavigateFragment : Fragment() {
     private var listTransactionGroup: List<TransactionGroup> = listOf()
     private var selectedTransactionList: List<Transaction> = emptyList()
     @RequiresApi(Build.VERSION_CODES.O)
-    private val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -85,7 +84,6 @@ class DailyNavigateFragment : Fragment() {
 
         val formatterYear = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
         val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-        var month = viewModel.currentMonthYear.value
 
         val tabLayout = view.findViewById<TabLayout>(R.id.fragment_daily_navigate_tabLayout)
 
@@ -193,7 +191,6 @@ class DailyNavigateFragment : Fragment() {
             month?.let {
                 val filtered = FilterTransactions.filterTransactionsByMonth(list, it)
                 handleSummarySection(filtered)
-                transactionGroupAdapter.submitList(filtered)
             }
         }
 
@@ -202,16 +199,13 @@ class DailyNavigateFragment : Fragment() {
             binding.fragmentDailyNavigateLayoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
         }
 
-        viewModel.selectedTransactions.observe(viewLifecycleOwner) { transactionList ->
-            selectedTransactionList = transactionList
+        viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
+            selectedTransactionList = selectedTransactions
             // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
             binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
-                "${transactionList.size} selected"
-
-            val transactions = viewModel.allTransactions.value
-            val selectedTransactions = transactions?.filter { transactionList.contains(it) } ?: emptyList()
+                "${selectedTransactions.size} selected"
             val totalAmount = selectedTransactions.sumOf {
-                if (it.isIncome) it.amount else -it.amount
+                if(it.isIncome) it.amount else -it.amount
             }
             binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
                 "Total: ${Helper.formatCurrency(totalAmount)}"

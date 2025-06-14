@@ -18,6 +18,9 @@ class TransactionGroupDiffCallback(
     }
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldList[oldItemPosition] == newList[newItemPosition]
+        return oldList[oldItemPosition].date == newList[newItemPosition].date &&
+                oldList[oldItemPosition].income == newList[newItemPosition].income &&
+                oldList[oldItemPosition].expense == newList[newItemPosition].expense &&
+                oldList[oldItemPosition].transactions == newList[newItemPosition].transactions
     }
 }

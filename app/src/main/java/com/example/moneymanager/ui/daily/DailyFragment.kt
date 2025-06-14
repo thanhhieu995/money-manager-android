@@ -29,6 +29,8 @@ class DailyFragment : Fragment() {
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
     private var transactionGroupListFilter: List<TransactionGroup> = emptyList()
+    private var allTransactions: List<TransactionGroup> = emptyList()
+    private var month: LocalDate? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,8 +73,8 @@ class DailyFragment : Fragment() {
         binding.transactionList.addItemDecoration(decoration)
 
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
+            allTransactions = transactions
             // Sắp xếp ngày giảm dần
-            val month = viewModel.currentMonthYear.value
             val filteredList =
                 month?.let { FilterTransactions.filterTransactionsByMonth(transactions, it) } ?: emptyList()
             adapter.submitList(filteredList)
@@ -80,12 +82,11 @@ class DailyFragment : Fragment() {
         }
 
         viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
-            viewModel.groupedTransactions.value?.let { allTransactions ->
-                val filtered = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
-                transactionGroupListFilter = filtered
-                adapter.submitList(filtered)
-                binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-            }
+            month = selectedMonth
+            val filtered = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
+            transactionGroupListFilter = filtered
+            adapter.submitList(filtered)
+            binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         }
 
         adapter.onTransactionLongClick = { transaction ->
@@ -109,12 +110,6 @@ class DailyFragment : Fragment() {
         adapter.isTransactionSelected = { transaction ->
             viewModel.selectionMode.value == true &&
             viewModel.selectedTransactions.value?.contains(transaction) == true
-        }
-
-        viewModel.selectionMode.observe(viewLifecycleOwner) { mode ->
-            if (!mode) {
-                adapter.notifyDataSetChanged()
-            }
         }
     }
 
