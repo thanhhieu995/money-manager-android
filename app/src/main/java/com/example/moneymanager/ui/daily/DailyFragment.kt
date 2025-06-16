@@ -15,6 +15,7 @@ import com.example.moneymanager.databinding.FragmentDailyBinding
 import com.example.moneymanager.helper.FilterTransactions
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.main.StickyHeaderItemDecoration
 import com.example.moneymanager.ui.main.TransactionGroupAdapter
@@ -77,6 +78,7 @@ class DailyFragment : Fragment() {
             // Sắp xếp ngày giảm dần
             val filteredList =
                 month?.let { FilterTransactions.filterTransactionsByMonth(transactions, it) } ?: emptyList()
+            transactionGroupListFilter = filteredList
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         }
@@ -84,7 +86,6 @@ class DailyFragment : Fragment() {
         viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
             month = selectedMonth
             val filtered = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
-            transactionGroupListFilter = filtered
             adapter.submitList(filtered)
             binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         }
@@ -92,14 +93,14 @@ class DailyFragment : Fragment() {
         adapter.onTransactionLongClick = { transaction ->
             viewModel.enterSelectionMode()
             viewModel.toggleTransactionSelection(transaction)
-            adapter.notifyDataSetChanged()
+            updateTransactionItem(transaction)
             true
         }
 
         adapter.onTransactionClick = { transaction ->
             if (viewModel.selectionMode.value == true) {
                 viewModel.toggleTransactionSelection(transaction)
-                adapter.notifyDataSetChanged()
+                updateTransactionItem(transaction)
             } else {
                 // Mở màn hình sửa
                 Helper.openTransactionDetail(requireContext(), transaction)
@@ -130,5 +131,21 @@ class DailyFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun updateTransactionItem(transaction: Transaction) {
+        // Tìm group chứa transaction
+        val groupIndex = transactionGroupListFilter.indexOfFirst { group ->
+            group.transactions.contains(transaction)
+        }
+        if (groupIndex != -1) {
+            val group = transactionGroupListFilter[groupIndex]
+            val transactionIndex = group.transactions.indexOf(transaction)
+
+            val childAdapter = adapter.getChildAdapterForGroup(group.date) // custom method
+            if (childAdapter != null && transactionIndex != -1) {
+                childAdapter.notifyItemChanged(transactionIndex)
+            }
+        }
     }
 }

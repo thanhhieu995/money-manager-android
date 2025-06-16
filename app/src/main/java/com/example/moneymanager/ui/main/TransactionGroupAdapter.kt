@@ -83,4 +83,8 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
     override fun getItemCount(): Int = groups.size
 
     fun getGroupAt(position: Int): TransactionGroup = groups[position]
+
+    fun getChildAdapterForGroup(groupDate: String): TransactionDailyAdapter? {
+        return childAdapters[groupDate]
+    }
 }

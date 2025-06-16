@@ -1,12 +1,11 @@
 package com.example.moneymanager.helper
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.recyclerview.widget.DiffUtil
+import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
-import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
-import com.example.moneymanager.ui.main.TransactionDiffCallback
 import java.text.NumberFormat
 import java.util.*
 
@@ -17,6 +16,9 @@ class Helper {
                 putExtra("transaction", transaction)
             }
             context.startActivity(intent)
+            if (context is Activity) {
+                context.overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
+            }
         }
 
         fun formatCurrency(amount: Double): String {
