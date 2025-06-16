@@ -22,6 +22,7 @@ class TransactionRepository(private val dao: TransactionDao) {
                     val expense = transactionsOnDate.filter { !it.isIncome }.sumOf { it.amount }
 
                     TransactionGroup(
+                        id = date.hashCode(),
                         date = date,
                         income = income,
                         expense = expense,

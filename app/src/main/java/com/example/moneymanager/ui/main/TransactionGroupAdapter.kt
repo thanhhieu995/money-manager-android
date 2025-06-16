@@ -44,6 +44,10 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         val container: RecyclerView = view.findViewById(R.id.transaction_container)
     }
 
+    init {
+        setHasStableIds(true)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_transaction_grouped, parent, false)
@@ -64,7 +68,9 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
 
         // Setup RecyclerView con
         val childRecyclerView = holder.container
-        childRecyclerView.layoutManager = LinearLayoutManager(holder.itemView.context)
+        if (childRecyclerView.layoutManager == null) {
+            childRecyclerView.layoutManager = LinearLayoutManager(holder.itemView.context)
+        }
         childRecyclerView.setHasFixedSize(false)
         childRecyclerView.isNestedScrollingEnabled = false
         val adapter = childAdapters.getOrPut(group.date) {
@@ -76,7 +82,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         }
         childRecyclerView.adapter = adapter
         if (adapter.currentList != group.transactions) {
-            adapter.submitList(group.transactions)
+            adapter.submitList(group.transactions.toMutableList())
         }
     }
 
@@ -86,5 +92,9 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
 
     fun getChildAdapterForGroup(groupDate: String): TransactionDailyAdapter? {
         return childAdapters[groupDate]
+    }
+
+    override fun getItemId(position: Int): Long {
+        return groups[position].id.toLong()
     }
 }

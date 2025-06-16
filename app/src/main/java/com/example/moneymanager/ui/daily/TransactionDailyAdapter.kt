@@ -26,6 +26,10 @@ class TransactionDailyAdapter(
         val category: TextView = itemView.findViewById(R.id.item_transaction_category)
     }
 
+    init {
+        setHasStableIds(true)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_transaction, parent, false)
@@ -63,5 +67,9 @@ class TransactionDailyAdapter(
             else
                 Color.TRANSPARENT
         )
+    }
+
+    override fun getItemId(position: Int): Long {
+        return getItem(position).id.toLong()
     }
 }

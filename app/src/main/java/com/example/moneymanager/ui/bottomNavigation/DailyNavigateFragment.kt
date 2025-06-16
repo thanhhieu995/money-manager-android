@@ -41,8 +41,6 @@ class DailyNavigateFragment : Fragment() {
 
     private var _binding: FragmentDailyNavigateBinding? = null
     private val binding get() = _binding!!
-    private lateinit var transactionGroupAdapter: TransactionGroupAdapter
-
     private lateinit var viewModel: TransactionViewModel
 
     private lateinit var search: ImageView
@@ -80,7 +78,6 @@ class DailyNavigateFragment : Fragment() {
         val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
-        transactionGroupAdapter = TransactionGroupAdapter()
 
         val formatterYear = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
         val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
