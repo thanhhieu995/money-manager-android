@@ -2,13 +2,10 @@ package com.example.moneymanager.ui.search
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,12 +19,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class SearchActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
-    private var transactions: List<Transaction> = listOf()
     private lateinit var transactionAdapter: TransactionAdapter
     private var selectedOption: String = "All" // default
-    private var searchQuery = ""
+    private var keySearch = ""
     private var allSelectedTransactions: List<Transaction> = emptyList()
-
+    private var transactions : List<Transaction> = emptyList()
     private lateinit var searchTitle: TextView
     private lateinit var searchArrange: ImageView
     private lateinit var btnBack: ImageView
@@ -51,8 +47,7 @@ class SearchActivity : AppCompatActivity() {
         setContentView(R.layout.activity_search)
 
         init()
-
-        transactionAdapter = TransactionAdapter(transactions)
+        transactionAdapter = TransactionAdapter(emptyList())
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = transactionAdapter
@@ -74,7 +69,7 @@ class SearchActivity : AppCompatActivity() {
         }
 
         searchArrange.setOnClickListener {
-            searchArrange(searchQuery)
+            searchArrange(keySearch)
         }
 
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
@@ -102,10 +97,9 @@ class SearchActivity : AppCompatActivity() {
             layoutEdit.visibility = if (enable) View.VISIBLE else View.GONE
         }
 
-        viewModel.selectedTransactions.observe(this) {selectedTransactionList ->
+        viewModel.selectedTransactions.observe(this) { selectedTransactionList ->
             allSelectedTransactions = selectedTransactionList
             tvSelectedEdit.text = "${selectedTransactionList.size} selected"
-            val transactions = viewModel.allTransactions.value
             val selectedTransactions = transactions?.filter { selectedTransactionList.contains(it) } ?: emptyList()
             val totalAmount = selectedTransactions.sumOf {
                 if (it.isIncome) it.amount else -it.amount
@@ -127,54 +121,40 @@ class SearchActivity : AppCompatActivity() {
             if (allSelectedTransactions.isNotEmpty()) {
                 viewModel.deleteAll(allSelectedTransactions)
                 viewModel.exitSelectionMode()
-                Handler(Looper.getMainLooper()).postDelayed({
-                    transactionAdapter.updateList(transactions)
-                    transactionAdapter.filter.filter(searchQuery)
-                }, 100)
             }
         }
 
-        viewModel.allTransactions.observe(this) { it ->
-            transactions = it
-            val contents = transactions.map { it.note }.distinct()
+        viewModel.allTransactions.observe(this) { transactionList ->
+            transactions = transactionList
+            transactionAdapter.transactions = transactionList
+            transactionAdapter.filter.filter(keySearch)
 
+            val contents = transactionList.map { it.note }.distinct()
             val arrayAdapter = ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
                 contents
             )
             searchInput.setAdapter(arrayAdapter)
-
             // Khi người dùng chọn 1 gợi ý
             searchInput.setOnItemClickListener { _, _, position, _ ->
                 val selected = arrayAdapter.getItem(position)
+                keySearch = selected.toString()
                 searchInput.setText(selected)
                 searchInput.setSelection(selected?.length ?: 0)
+                transactionAdapter.transactions = transactionList
                 transactionAdapter.filter.filter(selected)
             }
 
-            // Khi người dùng nhập văn bản
-            searchInput.addTextChangedListener {
-                searchQuery = it.toString()
-                if (it.isNullOrEmpty()) {
-                    transactionAdapter.updateList(emptyList())
-                    incomeCount.text = "0đ"
-                    expenseCount.text = "0đ"
-                } else {
-                    transactionAdapter.filter.filter(it.toString())
-                    transactionAdapter.updateList(transactions)
-                }
-            }
-            tvNoData.visibility = if(it.isEmpty()) View.VISIBLE else View.GONE
+            tvNoData.visibility = if(transactionList.isEmpty()) View.VISIBLE else View.GONE
         }
 
         transactionAdapter.setOnFilterResultListener(object :
             TransactionAdapter.OnFilterResultListener {
             override fun onFilterResult(filteredList: List<Transaction>) {
                 // TODO: cập nhật UI khác nếu cần
-                var totalIncome: Double = 0.0
-                var totalExpense: Double = 0.0
-
+                var totalIncome = 0.0
+                var totalExpense = 0.0
                 for (tx in filteredList) {
                     if (tx.isIncome) {
                         totalIncome += tx.amount
@@ -182,11 +162,10 @@ class SearchActivity : AppCompatActivity() {
                         totalExpense += tx.amount
                     }
                 }
-
                 incomeCount.text = Helper.formatCurrency(totalIncome)
                 expenseCount.text = Helper.formatCurrency(totalExpense)
-
                 tvNoData.visibility = if(filteredList.isEmpty()) View.VISIBLE else View.GONE
+                transactionAdapter.updateList(filteredList)
             }
         })
 

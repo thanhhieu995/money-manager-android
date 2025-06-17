@@ -2,7 +2,6 @@ package com.example.moneymanager.ui.search
 
 import android.graphics.Color
 import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,17 +16,14 @@ import com.example.moneymanager.R
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.main.TransactionDiffCallback
-import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import java.text.Normalizer
-import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.*
 import java.util.regex.Pattern
 
 class TransactionAdapter(
-    private var transactions: List<Transaction>,
+    var transactions: List<Transaction>,
 ) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>(), Filterable {
 
     private var filterResultListener: OnFilterResultListener? = null
