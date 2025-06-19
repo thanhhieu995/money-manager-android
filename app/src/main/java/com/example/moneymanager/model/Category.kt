@@ -8,7 +8,8 @@ data class Category(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val emoji: String,
     val name: String,
-    val type: CategoryType
+    val type: CategoryType,
+    val parentId: Int? = null // null: danh mục cha, != null: danh mục con
 )
 
 enum class CategoryType {

@@ -9,6 +9,14 @@ import com.example.moneymanager.model.CategoryType
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(private val dao: CategoryDao) : ViewModel() {
+    fun getParentCategories(type: CategoryType): LiveData<List<Category>> {
+        return dao.getParentCategoriesByType(type)
+    }
+
+    fun getChildCategories(parentId: Int): LiveData<List<Category>> {
+        return dao.getChildCategories(parentId)
+    }
+
     fun getAll() : LiveData<List<Category>> {
         return dao.getAll()
     }

@@ -21,7 +21,7 @@ class TransactionDailyAdapter(
     inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val noteText: TextView = itemView.findViewById(R.id.item_transaction_content)
         val amountText: TextView = itemView.findViewById(R.id.item_transaction_amount)
-        val dateText: TextView = itemView.findViewById(R.id.item_transaction_date)
+        val childCategory: TextView = itemView.findViewById(R.id.item_transaction_child_category)
         val account: TextView = itemView.findViewById(R.id.item_transaction_account)
         val category: TextView = itemView.findViewById(R.id.item_transaction_category)
     }
@@ -41,7 +41,7 @@ class TransactionDailyAdapter(
 
         holder.noteText.text = tx.note
         holder.amountText.text = Helper.formatCurrency(tx.amount)
-        holder.dateText.text = tx.date
+        holder.childCategory.text = ""
         holder.account.text = tx.account
         holder.category.text = tx.category
 

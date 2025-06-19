@@ -2,11 +2,9 @@ package com.example.moneymanager.ui.addtransaction
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
-import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.PorterDuff
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -14,7 +12,6 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -24,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.Category
 import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
@@ -75,12 +73,12 @@ class AddTransactionActivity : AppCompatActivity() {
         formattedDate = dateFormat.format(currentDate)
 
         val accounts = listOf(
-            ItemBottomDialog("💵", "Cash"),
-            ItemBottomDialog("🏦", "Bank Account"),
-            ItemBottomDialog("💳", "Credit Card"),
-            ItemBottomDialog("📱", "E-Wallet"),
-            ItemBottomDialog("🪙", "Crypto"),
-            ItemBottomDialog("📦", "Savings"),
+            CategoryItem(1,"💵", "Cash",true),
+            CategoryItem(2,"🏦", "Bank Account", true),
+            CategoryItem(3, "💳", "Credit Card", true),
+            CategoryItem(4,"📱", "E-Wallet", true),
+            CategoryItem(5,"🪙", "Crypto", true),
+            CategoryItem(6,"📦", "Savings", true),
         )
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
@@ -243,7 +241,7 @@ class AddTransactionActivity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     private fun showBottomDialogAddTransaction(
         title: String,
-        itemBottoms: List<ItemBottomDialog>,
+        itemBottoms: List<CategoryItem>,
         targetEditText: EditText,
         onEditClick: () -> Unit
     ) {
@@ -256,7 +254,7 @@ class AddTransactionActivity : AppCompatActivity() {
         titleBottom.text = title
 
         recyclerView.layoutManager = GridLayoutManager(this, 3)
-        recyclerView.adapter = ItemBottomAdapter(itemBottoms) { selectedItem ->
+        recyclerView.adapter = ExpandableCategoryAdapter(itemBottoms) { selectedItem ->
             targetEditText.setText("${selectedItem.emoji} ${selectedItem.name}")
             bottomSheetDialog.dismiss()
         }
@@ -366,9 +364,21 @@ class AddTransactionActivity : AppCompatActivity() {
             val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
             val tintColor = if (isIncome) R.color.income else R.color.red
             edtCategory.backgroundTintList = ContextCompat.getColorStateList(this, tintColor)
+
             categoryViewModel.getCategoriesByType(selectedType).observe(this) { list ->
-                val itemBottoms = list.map { ItemBottomDialog(it) } + ItemBottomDialog("➕", "Add Category")
-                showBottomDialogAddTransaction("Category", itemBottoms, edtCategory) {
+                val treeItems = buildCategoryTree(list)
+                // Gắn thêm "Add Category" ở cuối nếu muốn
+                val addItem = CategoryItem(
+                    id = -1,
+                    emoji = "➕",
+                    name = "Add Category",
+                    isParent = true
+                )
+
+                val fullList = treeItems + addItem
+
+                showBottomDialogAddTransaction("Category", fullList, edtCategory) {
+                    // Sự kiện chỉnh sửa hoặc thêm
                 }
             }
         }
@@ -425,5 +435,25 @@ class AddTransactionActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
+    }
+
+    private fun buildCategoryTree(categories: List<Category>): List<CategoryItem> {
+        val map = categories.groupBy { it.parentId } // Nhóm theo parentId
+
+        fun buildItems(parentId: Int?): List<CategoryItem> {
+            return map[parentId]?.map { category ->
+                val children = buildItems(category.id)
+                CategoryItem(
+                    id = category.id,
+                    emoji = category.emoji,
+                    name = category.name,
+                    isParent = category.parentId == null,
+                    children = children,
+                    isExpanded = false
+                )
+            } ?: emptyList()
+        }
+
+        return buildItems(null) // Bắt đầu từ danh mục cha (parentId == null)
     }
 }

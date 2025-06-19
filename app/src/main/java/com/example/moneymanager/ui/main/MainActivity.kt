@@ -92,6 +92,7 @@ class MainActivity : AppCompatActivity() {
                     Category(emoji = "💻", name = "Investment", type = typeExpense),
                     Category(emoji = "🎨", name = "Culture", type = typeExpense),
                     Category(emoji = "🚲", name = "Bicycle", type = typeExpense),
+                    Category(emoji = "🍔", name = "Breakfast", type = typeExpense, parentId = 1),
                     // income
                     Category(emoji = "💸", name = "Allowance", type = typeIncome),
                     Category(emoji = "💼", name = "Salary", type = typeIncome),

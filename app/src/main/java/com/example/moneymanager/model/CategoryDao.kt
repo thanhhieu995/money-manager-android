@@ -5,6 +5,12 @@ import androidx.room.*
 
 @Dao
 interface CategoryDao {
+    @Query("SELECT * FROM categories WHERE type = :type AND parentId IS NULL")
+    fun getParentCategoriesByType(type: CategoryType): LiveData<List<Category>>
+
+    @Query("SELECT * FROM categories WHERE parentId = :parentId")
+    fun getChildCategories(parentId: Int): LiveData<List<Category>>
+
     @Query("SELECT * FROM categories WHERE type = :type")
     fun getCategoriesByType(type: CategoryType): LiveData<List<Category>>
 

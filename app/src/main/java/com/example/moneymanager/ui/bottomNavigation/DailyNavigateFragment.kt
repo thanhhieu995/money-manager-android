@@ -24,7 +24,6 @@ import com.example.moneymanager.model.TransactionGroup
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
 import com.example.moneymanager.ui.daily.DailyFragment
-import com.example.moneymanager.ui.main.TransactionGroupAdapter
 import com.example.moneymanager.ui.main.ViewPagerAdapter
 import com.example.moneymanager.ui.monthly.MonthlyFragment
 import com.example.moneymanager.ui.search.SearchActivity
