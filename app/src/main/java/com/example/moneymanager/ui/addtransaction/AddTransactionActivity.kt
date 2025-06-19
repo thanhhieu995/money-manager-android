@@ -241,7 +241,7 @@ class AddTransactionActivity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     private fun showBottomDialogAddTransaction(
         title: String,
-        itemBottoms: List<CategoryItem>,
+        categoryItems: List<CategoryItem>,
         targetEditText: EditText,
         onEditClick: () -> Unit
     ) {
@@ -252,12 +252,24 @@ class AddTransactionActivity : AppCompatActivity() {
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
-
-        recyclerView.layoutManager = GridLayoutManager(this, 3)
-        recyclerView.adapter = ExpandableCategoryAdapter(itemBottoms) { selectedItem ->
+        val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
             targetEditText.setText("${selectedItem.emoji} ${selectedItem.name}")
             bottomSheetDialog.dismiss()
         }
+
+        val layoutManager = GridLayoutManager(this, 3)
+        layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                return when (adapter.getItemViewType(position)) {
+                    0 -> 1 // cha
+                    1 -> 3 // nhóm con
+                    else -> 1
+                }
+            }
+        }
+
+        recyclerView.layoutManager = layoutManager
+        recyclerView.adapter = adapter
 
         editButton.setOnClickListener {
             onEditClick()

@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 
@@ -12,7 +13,7 @@ class ExpandableCategoryAdapter(
     private val onItemClick: (CategoryItem) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val displayedItems = mutableListOf<CategoryItem>()
+    private val displayedItems = mutableListOf<DisplayedItem>()
 
     init {
         refreshDisplayedItems()
@@ -21,34 +22,44 @@ class ExpandableCategoryAdapter(
     private fun refreshDisplayedItems() {
         displayedItems.clear()
         for (item in originalItems) {
-            displayedItems.add(item)
-            if (item.isExpanded) {
-                displayedItems.addAll(item.children)
+            displayedItems.add(DisplayedItem.Parent(item))
+            if (item.isExpanded && item.children.isNotEmpty()) {
+                displayedItems.add(DisplayedItem.ChildGroup(item.children))
             }
         }
         notifyDataSetChanged()
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (displayedItems[position].isParent) 0 else 1
+        return when (displayedItems[position]) {
+            is DisplayedItem.Parent -> 0
+            is DisplayedItem.ChildGroup -> 1
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val layout = if (viewType == 0)
-            R.layout.item_category_parent
-        else
-            R.layout.item_category_child
-
-        val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
-        return if (viewType == 0) ParentViewHolder(view) else ChildViewHolder(view)
+        val inflater = LayoutInflater.from(parent.context)
+        return when (viewType) {
+            0 -> {
+                val view = inflater.inflate(R.layout.item_category_parent, parent, false)
+                ParentViewHolder(view)
+            }
+            else -> {
+                val view = inflater.inflate(R.layout.item_category_child_group, parent, false)
+                ChildGroupViewHolder(view)
+            }
+        }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = displayedItems[position]
-        if (holder is ParentViewHolder) {
-            holder.bind(item)
-        } else if (holder is ChildViewHolder) {
-            holder.bind(item)
+        when {
+            holder is ParentViewHolder && item is DisplayedItem.Parent -> {
+                holder.bind(item.category)
+            }
+            holder is ChildGroupViewHolder && item is DisplayedItem.ChildGroup -> {
+                holder.bind(item.children)
+            }
         }
     }
 
@@ -86,6 +97,27 @@ class ExpandableCategoryAdapter(
 
             itemView.setOnClickListener {
                 onItemClick(item)
+            }
+        }
+    }
+
+    inner class ChildGroupViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val recyclerView: RecyclerView = view.findViewById(R.id.rvChildGroup)
+
+        fun bind(children: List<CategoryItem>) {
+            recyclerView.layoutManager = GridLayoutManager(itemView.context, 3)
+            recyclerView.adapter = object : RecyclerView.Adapter<ChildViewHolder>() {
+                override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChildViewHolder {
+                    val view = LayoutInflater.from(parent.context)
+                        .inflate(R.layout.item_category_child, parent, false)
+                    return ChildViewHolder(view)
+                }
+
+                override fun onBindViewHolder(holder: ChildViewHolder, position: Int) {
+                    holder.bind(children[position])
+                }
+
+                override fun getItemCount(): Int = children.size
             }
         }
     }
