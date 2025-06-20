@@ -31,21 +31,19 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     }
 
     fun delete(transaction: Transaction) = viewModelScope.launch {
-        dao.delete(transaction)
+        repository.delete(transaction)
     }
 
     fun deleteAll(transactionList: List<Transaction>) = viewModelScope.launch {
-        dao.deleteAll(transactionList)
+        repository.deleteAll(transactionList)
     }
 
-    fun update(transaction: Transaction) {
-        viewModelScope.launch {
-            dao.update(transaction)
-        }
+    fun update(transaction: Transaction) = viewModelScope.launch{
+       repository.update(transaction)
     }
 
     fun getBookmarkedTransactions(): LiveData<List<Transaction>> {
-        return dao.getBookmarkedTransactions()
+        return repository.getBookmarkedTransactions()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

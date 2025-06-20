@@ -58,15 +58,41 @@ class AddTransactionActivity : AppCompatActivity() {
     private lateinit var bookMarkButton: Button
     private lateinit var iconBookmark: ImageView
     private lateinit var formattedDate: String
+    private var transactionFromIntent: Transaction? = null
 
     private var shouldAnimateExit = false
+    private var isEditMode = false
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_transaction)
 
         init()
+        listOf(
+            edtAmount,
+            edtNote,
+            edtAccount,
+            edtCategory,
+            dateTextView
+        ).forEach { view ->
+            view.setOnClickListener { switchToAddModeIfEditing() }
+            if (view is EditText) {
+                view.setOnFocusChangeListener { _, hasFocus ->
+                    if (hasFocus) switchToAddModeIfEditing()
+                }
+            }
+        }
+        edtCategory.setOnTouchListener { _, _ ->
+            switchToAddModeIfEditing()
+            false
+        }
+
+        edtAccount.setOnTouchListener { _, _ ->
+            switchToAddModeIfEditing()
+            false
+        }
+
         // Lấy ngày hiện tại và hiển thị
         val currentDate = Calendar.getInstance().time
         val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Locale.getDefault())
@@ -224,17 +250,32 @@ class AddTransactionActivity : AppCompatActivity() {
             .replace("[^\\d]".toRegex(), "")
             .toDoubleOrNull() ?: 0.0
 
-        val transaction = Transaction(
-            title = titleTransaction.text.toString(),
-            category = edtCategory.text.toString(),
-            note = edtNote.text.toString(),
-            account = edtAccount.text.toString(),
-            amount = amount,
-            isIncome = isIncome,
-            date = dateTextView.text.toString()
-        )
-
-        viewModel.insert(transaction)
+        if(isEditMode) {
+            transactionFromIntent?.let { original ->
+                val updatedTransaction = original.copy(
+                    title = titleTransaction.text.toString(),
+                    category = edtCategory.text.toString(),
+                    note = edtNote.text.toString(),
+                    account = edtAccount.text.toString(),
+                    amount = amount,
+                    isIncome = isIncome,
+                    date = dateTextView.text.toString()
+                )
+                viewModel.update(updatedTransaction)
+            }
+        } else {
+            val transaction = Transaction(
+                title = titleTransaction.text.toString(),
+                category = edtCategory.text.toString(),
+                note = edtNote.text.toString(),
+                account = edtAccount.text.toString(),
+                amount = amount,
+                isIncome = isIncome,
+                date = dateTextView.text.toString()
+            )
+            viewModel.insert(transaction)
+        }
+        isEditMode = false
         onSuccess()
     }
 
@@ -310,12 +351,12 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     private fun handleToAddTransaction() {
-        val transaction = intent.getSerializableExtra("transaction") as? Transaction
+        transactionFromIntent = intent.getSerializableExtra("transaction") as? Transaction
 
-        if (transaction == null) {
+        if (transactionFromIntent == null) {
             showAddMode()
         } else {
-            showEditMode(transaction)
+            showEditMode(transactionFromIntent!!)
         }
     }
 
@@ -323,10 +364,13 @@ class AddTransactionActivity : AppCompatActivity() {
         layoutSave.visibility = View.VISIBLE
         layoutEdit.visibility = View.GONE
         continueButton.visibility = View.VISIBLE
-        dateTextView.text = formattedDate
+        if (!isEditMode){
+            dateTextView.text = formattedDate
+        }
     }
 
     private fun showEditMode(transaction: Transaction) {
+        isEditMode = true
         continueButton.visibility = View.GONE
         layoutSave.visibility = View.GONE
         layoutEdit.visibility = View.VISIBLE
@@ -335,6 +379,7 @@ class AddTransactionActivity : AppCompatActivity() {
         setTransactionType(transaction.isIncome, true)
 
         copyButton.setOnClickListener {
+            isEditMode = false
             layoutSave.visibility = View.VISIBLE
             layoutEdit.visibility = View.GONE
             populateTransactionFields(transaction)
@@ -467,5 +512,11 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         return buildItems(null) // Bắt đầu từ danh mục cha (parentId == null)
+    }
+
+    private fun switchToAddModeIfEditing() {
+        if (isEditMode) {
+            showAddMode()
+        }
     }
 }

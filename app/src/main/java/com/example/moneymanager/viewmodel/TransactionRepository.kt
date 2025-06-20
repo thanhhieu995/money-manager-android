@@ -13,6 +13,18 @@ class TransactionRepository(private val dao: TransactionDao) {
         dao.insert(transaction)
     }
 
+    suspend fun delete(transaction: Transaction) {
+        dao.delete(transaction)
+    }
+
+    suspend fun deleteAll(transactionList: List<Transaction>) {
+        dao.deleteAll(transactionList)
+    }
+
+    suspend fun update(transaction: Transaction) {
+        dao.update(transaction)
+    }
+
     fun getGroupedTransactions(): LiveData<List<TransactionGroup>> {
         return allTransactions.map { transactionList ->
             transactionList
@@ -30,5 +42,9 @@ class TransactionRepository(private val dao: TransactionDao) {
                     )
                 }
         }
+    }
+
+    fun getBookmarkedTransactions() : LiveData<List<Transaction>> {
+        return dao.getBookmarkedTransactions()
     }
 }
