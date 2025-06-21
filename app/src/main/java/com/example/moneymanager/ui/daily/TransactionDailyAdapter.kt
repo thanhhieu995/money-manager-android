@@ -38,12 +38,17 @@ class TransactionDailyAdapter(
 
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val tx = getItem(position)
+        // get category parent and child
+        val fullCategory = tx.category // VD: "🍔 Food / 🍱 Lunch"
+        val parts = fullCategory.split("/")
+        val parentCategory = parts.getOrNull(0)?.trim() // "🍔 Food"
+        val childCategory = parts.getOrNull(1)?.trim()  // "🍱 Lunch"
 
         holder.noteText.text = tx.note
         holder.amountText.text = Helper.formatCurrency(tx.amount)
-        holder.childCategory.text = ""
-        holder.account.text = tx.account
-        holder.category.text = tx.category
+        holder.category.text = parentCategory
+        holder.childCategory.text = childCategory
+        holder.account.text = tx.account.trim()
 
         holder.amountText.setTextColor(
             if (tx.isIncome)

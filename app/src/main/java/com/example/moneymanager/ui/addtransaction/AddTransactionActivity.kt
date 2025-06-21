@@ -20,10 +20,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.helper.Helper
-import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.model.Category
-import com.example.moneymanager.model.CategoryType
-import com.example.moneymanager.model.Transaction
+import com.example.moneymanager.model.*
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
 import com.example.moneymanager.ui.main.MainActivity
 import com.example.moneymanager.viewmodel.CategoryViewModel
@@ -99,12 +96,12 @@ class AddTransactionActivity : AppCompatActivity() {
         formattedDate = dateFormat.format(currentDate)
 
         val accounts = listOf(
-            CategoryItem(1,"💵", "Cash",true),
-            CategoryItem(2,"🏦", "Bank Account", true),
-            CategoryItem(3, "💳", "Credit Card", true),
-            CategoryItem(4,"📱", "E-Wallet", true),
-            CategoryItem(5,"🪙", "Crypto", true),
-            CategoryItem(6,"📦", "Savings", true),
+            CategoryItem(0,"💵", "Cash", "", "", false, emptyList(),false),
+            CategoryItem(1,"🏦", "Bank Account", "", "", false, emptyList(),false),
+            CategoryItem(2, "💳", "Credit Card", "", "", false, emptyList(),false),
+            CategoryItem(3,"📱", "E-Wallet", "", "", false, emptyList(),false),
+            CategoryItem(4,"🪙", "Crypto", "", "", false, emptyList(),false),
+            CategoryItem(5,"📦", "Savings", "", "", false, emptyList(),false)
         )
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
@@ -294,7 +291,11 @@ class AddTransactionActivity : AppCompatActivity() {
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
-            targetEditText.setText("${selectedItem.emoji} ${selectedItem.name}")
+            if(title == "Category") {
+                targetEditText.setText("${selectedItem.parentEmoji} ${selectedItem.parentName}/${selectedItem.emoji} ${selectedItem.name}")
+            } else {
+                targetEditText.setText("${selectedItem.parentEmoji} ${selectedItem.parentName} ${selectedItem.emoji} ${selectedItem.name}")
+            }
             bottomSheetDialog.dismiss()
         }
 
@@ -495,23 +496,34 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     private fun buildCategoryTree(categories: List<Category>): List<CategoryItem> {
-        val map = categories.groupBy { it.parentId } // Nhóm theo parentId
+        val categoryMap = categories.associateBy { it.id }
+        val parentItems = mutableListOf<CategoryItem>()
 
-        fun buildItems(parentId: Int?): List<CategoryItem> {
-            return map[parentId]?.map { category ->
-                val children = buildItems(category.id)
-                CategoryItem(
-                    id = category.id,
-                    emoji = category.emoji,
-                    name = category.name,
-                    isParent = category.parentId == null,
-                    children = children,
-                    isExpanded = false
-                )
-            } ?: emptyList()
+        categories.filter { it.parentId == null }.forEach { parent ->
+            val children = categories.filter { it.parentId == parent.id }
+                .map { child ->
+                    CategoryItem(
+                        id = child.id,
+                        emoji = child.emoji,
+                        name = child.name,
+                        isParent = false,
+                        parentName = parent.name,
+                        parentEmoji = parent.emoji
+                    )
+                }
+
+            val parentItem = CategoryItem(
+                id = parent.id,
+                emoji = parent.emoji,
+                name = parent.name,
+                isParent = true,
+                children = children
+            )
+
+            parentItems.add(parentItem)
         }
 
-        return buildItems(null) // Bắt đầu từ danh mục cha (parentId == null)
+        return parentItems
     }
 
     private fun switchToAddModeIfEditing() {
