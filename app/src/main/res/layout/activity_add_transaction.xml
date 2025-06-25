@@ -2,183 +2,29 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Top: Navigation -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/add_transaction_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:backgroundTint="@color/purple_200"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:navigationIcon="@drawable/ic_baseline_navigate_before_24" />
 
-        <ImageButton
-            android:id="@+id/add_transaction_btn_back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_baseline_navigate_before_24"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/add_transaction_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Expense"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/add_transaction_btn_back"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/add_transaction_icon_bookmark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/ic_baseline_star_border_24"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Tabs: Income, Expense, Transfer -->
-    <LinearLayout
-        android:orientation="horizontal"
-        android:gravity="center"
+    <FrameLayout
+        android:id="@+id/fragment_container_add_transaction"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
-
-        <Button
-            android:id="@+id/add_transaction_btn_income"
-            android:text="Income"
-            android:backgroundTint="@color/transparent"
-            android:textColor="@color/black"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_marginEnd="8dp"
-            android:layout_height="wrap_content"/>
-
-        <Button
-            android:id="@+id/add_transaction_btn_expense"
-            android:text="Expense"
-            android:backgroundTint="@color/red"
-            android:textColor="@color/white"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_height="wrap_content"/>
-
-    </LinearLayout>
-
-    <!-- Date + Fields -->
-    <TextView
-        android:id="@+id/add_transaction_date"
-        android:text="26/4/25 (Sat)"
-        android:textSize="16sp"
-        android:layout_marginTop="16dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/add_transaction_amount"
-        android:hint="Amount"
-        android:inputType="numberDecimal" />
-
-    <EditText
-        android:id="@+id/add_transaction_edtCategory"
-        android:hint="Category"
-        android:focusable="false"
-        android:layout_marginTop="8dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <EditText
-        android:id="@+id/add_transaction_edtAccount"
-        android:hint="Account"
-        android:focusable="false"
-        android:layout_marginTop="8dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <AutoCompleteTextView
-        android:id="@+id/add_transaction_edtNote"
-        android:layout_marginTop="8dp"
-        android:hint="Note"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <!-- Custom Number Pad -->
-
-    <LinearLayout
-        android:id="@+id/add_transaction_layout_save"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="24dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:id="@+id/add_transaction_btnSave"
-            android:text="Save"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/red"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_marginEnd="8dp"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/add_transaction_btnContinue"
-            android:text="Continue"
-            android:textColor="@color/black"
-            android:backgroundTint="@color/white"
-            android:layout_width="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/add_transaction_layout_edit"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="24dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:id="@+id/add_transaction_btnDelete"
-            android:text="Delete"
-            android:textColor="@color/black"
-            android:backgroundTint="@color/white"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/add_transaction_btnCopy"
-            android:text="Copy"
-            android:textColor="@color/black"
-            android:backgroundTint="@color/white"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/add_transaction_btnBookmark"
-            android:text="Bookmark"
-            android:textColor="@color/black"
-            android:backgroundTint="@color/white"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bookmark_toolbar" />
 
 </LinearLayout>
