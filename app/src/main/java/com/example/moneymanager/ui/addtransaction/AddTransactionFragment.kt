@@ -392,7 +392,8 @@ class AddTransactionFragment : Fragment() {
                     viewModel.delete(transaction)
                     Toast.makeText(context, "Transaction deleted", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
-                    requireActivity().supportFragmentManager.popBackStack() // Thoát fragment
+                    requireActivity().finish()
+                    requireActivity().overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
                 }
                 .setNegativeButton("No") { dialog, _ -> dialog.dismiss() }
                 .show()
@@ -402,7 +403,8 @@ class AddTransactionFragment : Fragment() {
             val updated = transaction.copy(isBookmarked = true)
             viewModel.update(updated)
             Toast.makeText(context, "Bookmarked!", Toast.LENGTH_SHORT).show()
-            requireActivity().supportFragmentManager.popBackStack()
+            requireActivity().finish()
+            requireActivity().overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
         }
     }
 
