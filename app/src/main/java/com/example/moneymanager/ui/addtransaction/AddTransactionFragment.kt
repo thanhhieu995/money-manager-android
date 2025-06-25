@@ -286,7 +286,9 @@ class AddTransactionFragment : Fragment() {
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
             if(title == "Category") {
-                targetEditText.setText("${selectedItem.parentEmoji} ${selectedItem.parentName}/${selectedItem.emoji} ${selectedItem.name}")
+                val parentEmoji = selectedItem.parentEmoji ?: ""
+                val parentName = if (selectedItem.parentName == null) "" else selectedItem.parentName + "/"
+                targetEditText.setText("$parentEmoji $parentName ${selectedItem.emoji} ${selectedItem.name}")
             } else {
                 targetEditText.setText("${selectedItem.parentEmoji} ${selectedItem.parentName} ${selectedItem.emoji} ${selectedItem.name}")
             }

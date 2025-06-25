@@ -1,6 +1,7 @@
 package com.example.moneymanager.ui.addtransaction
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +11,7 @@ import android.widget.*
 import androidx.appcompat.widget.Toolbar
 import com.example.moneymanager.R
 import com.example.moneymanager.model.*
+import com.example.moneymanager.ui.bookmark.BookmarkActivity
 
 class AddTransactionActivity : AppCompatActivity() {
     private var isIncome: Boolean = false
@@ -47,6 +49,25 @@ class AddTransactionActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
         }
         toolbar.addView(titleTransaction, params)
+
+        val bookmarkIcon = ImageView(this).apply {
+            setImageResource(R.drawable.ic_baseline_star_border_24) // icon sao
+            setPadding(16, 0, 16, 0)
+            layoutParams = Toolbar.LayoutParams(
+                Toolbar.LayoutParams.WRAP_CONTENT,
+                Toolbar.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END
+            }
+        }
+
+        toolbar.addView(bookmarkIcon)
+
+        bookmarkIcon.setOnClickListener {
+            val intent = Intent(this, BookmarkActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
+        }
 
         toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_ios_24)
         toolbar.setNavigationOnClickListener {
