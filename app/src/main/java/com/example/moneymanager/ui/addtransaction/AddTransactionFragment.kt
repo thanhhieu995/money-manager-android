@@ -26,8 +26,8 @@ import com.example.moneymanager.viewmodel.CategoryViewModel
 import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.databinding.FragmentAddTransactionBinding
 import com.example.moneymanager.helper.Helper
+import com.example.moneymanager.helper.Helper.Companion.buildCategoryTree
 import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.model.Category
 import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.ui.main.MainActivity
 import com.example.moneymanager.viewmodel.CategoryViewModelFactory
@@ -311,6 +311,7 @@ class AddTransactionFragment : Fragment() {
 
         editButton.setOnClickListener {
             onEditClick()
+            bottomSheetDialog.dismiss()
         }
 
         closeButton.setOnClickListener {
@@ -436,6 +437,23 @@ class AddTransactionFragment : Fragment() {
 
                 showBottomDialogAddTransaction("Category", fullList, edtCategory) {
                     // Sự kiện chỉnh sửa hoặc thêm
+                    val bundle = Bundle().apply {
+                        putSerializable("selectedType", selectedType)
+                    }
+
+                    val fragment = EditCategoryFragment()
+                    fragment.arguments = bundle
+
+                    parentFragmentManager.beginTransaction()
+                        .setCustomAnimations(
+                            R.anim.slide_in_right,  // enter
+                            R.anim.no_animation,    // exit
+                            R.anim.no_animation,    // popEnter (khi quay lại)
+                            R.anim.slide_out_right  // popExit (khi quay lại)
+                        )
+                        .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
+                        .addToBackStack(null)
+                        .commit()
                 }
             }
         }
@@ -492,36 +510,6 @@ class AddTransactionFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
-    }
-
-    private fun buildCategoryTree(categories: List<Category>): List<CategoryItem> {
-        val parentItems = mutableListOf<CategoryItem>()
-
-        categories.filter { it.parentId == null }.forEach { parent ->
-            val children = categories.filter { it.parentId == parent.id }
-                .map { child ->
-                    CategoryItem(
-                        id = child.id,
-                        emoji = child.emoji,
-                        name = child.name,
-                        isParent = false,
-                        parentName = parent.name,
-                        parentEmoji = parent.emoji
-                    )
-                }
-
-            val parentItem = CategoryItem(
-                id = parent.id,
-                emoji = parent.emoji,
-                name = parent.name,
-                isParent = true,
-                children = children
-            )
-
-            parentItems.add(parentItem)
-        }
-
-        return parentItems
     }
 
     private fun switchToAddModeIfEditing() {

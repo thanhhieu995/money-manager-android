@@ -9,31 +9,38 @@ import com.example.moneymanager.model.CategoryType
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(private val dao: CategoryDao) : ViewModel() {
+
+    private val repository = CategoryRepository(dao)
+
     fun getParentCategories(type: CategoryType): LiveData<List<Category>> {
-        return dao.getParentCategoriesByType(type)
+        return repository.getParentCategories(type)
     }
 
     fun getChildCategories(parentId: Int): LiveData<List<Category>> {
-        return dao.getChildCategories(parentId)
+        return repository.getChildCategories(parentId)
     }
 
     fun getAll() : LiveData<List<Category>> {
-        return dao.getAll()
+        return repository.getAll()
     }
 
     fun getCategoriesByType(type: CategoryType): LiveData<List<Category>> {
-        return dao.getCategoriesByType(type)
+        return repository.getCategoriesByType(type)
     }
 
     fun insert(category: Category) = viewModelScope.launch {
-        dao.insert(category)
+        repository.insert(category)
     }
 
     fun delete(category: Category) = viewModelScope.launch {
-        dao.delete(category)
+        repository.delete(category)
+    }
+
+    fun deleteId(id: Int) = viewModelScope.launch {
+        repository.deleteId(id)
     }
 
     fun update(category: Category) = viewModelScope.launch {
-        dao.update(category)
+        repository.update(category)
     }
 }
