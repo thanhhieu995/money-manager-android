@@ -2,6 +2,7 @@ package com.example.moneymanager.ui.addtransaction
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -14,6 +15,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -246,7 +249,7 @@ class AddTransactionFragment : Fragment() {
                 val updatedTransaction = original.copy(
                     title = "",
                     category = edtCategory.text.toString(),
-                    note = edtNote.text.toString(),
+                    note = edtNote.text.toString().trim(),
                     account = edtAccount.text.toString(),
                     amount = amount,
                     isIncome = isIncome,
@@ -258,7 +261,7 @@ class AddTransactionFragment : Fragment() {
             val transaction = Transaction(
                 title = "",
                 category = edtCategory.text.toString(),
-                note = edtNote.text.toString(),
+                note = edtNote.text.toString().trim(),
                 account = edtAccount.text.toString(),
                 amount = amount,
                 isIncome = isIncome,
@@ -291,6 +294,17 @@ class AddTransactionFragment : Fragment() {
                 targetEditText.setText("$parentEmoji $parentName ${selectedItem.emoji} ${selectedItem.name}")
             } else {
                 targetEditText.setText("${selectedItem.parentEmoji} ${selectedItem.parentName} ${selectedItem.emoji} ${selectedItem.name}")
+            }
+
+            // Finish choose category and show account, finish account and show note auto
+            if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
+                edtAccount.requestFocus()
+                edtAccount.performClick() // mở bottom sheet account
+            } else if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
+                edtNote.postDelayed({
+                    edtNote.requestFocus()
+                    showKeyboard(edtNote)
+                }, 100)
             }
             bottomSheetDialog.dismiss()
         }
@@ -360,12 +374,32 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun showAddMode() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            // set ui when show add mode
+            setTransactionType(isIncome, false)
+            // show keyboard amount and show choose category auto
+            edtAmount.requestFocus()
+            showKeyboard(edtAmount)
+            edtAmount.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT) {
+                    edtCategory.requestFocus()
+                    edtCategory.performClick()
+                    true
+                } else false
+            }
+        }, 200)
+        // hide and show layout save or edit
         layoutSave.visibility = View.VISIBLE
         layoutEdit.visibility = View.GONE
         continueButton.visibility = View.VISIBLE
         if (!isEditMode){
             dateTextView.text = formattedDate
         }
+    }
+
+    private fun showKeyboard(view: View) {
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun showEditMode(transaction: Transaction) {

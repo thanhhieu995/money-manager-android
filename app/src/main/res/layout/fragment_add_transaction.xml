@@ -47,11 +47,14 @@
         android:layout_height="wrap_content" />
 
     <EditText
+        android:id="@+id/fragment_add_transaction_amount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/fragment_add_transaction_amount"
         android:hint="Amount"
-        android:inputType="numberDecimal" />
+        android:inputType="numberDecimal"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:clickable="true" />
 
     <EditText
         android:id="@+id/fragment_add_transaction_edtCategory"
@@ -73,6 +76,9 @@
         android:id="@+id/fragment_add_transaction_edtNote"
         android:layout_marginTop="8dp"
         android:hint="Note"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:clickable="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
