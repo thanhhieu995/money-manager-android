@@ -1,7 +1,6 @@
 package com.example.moneymanager.ui.addtransaction
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,15 +13,18 @@ import com.example.moneymanager.databinding.FragmentEditCategoryBinding
 import com.example.moneymanager.helper.Helper.Companion.buildCategoryTree
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.CategoryType
+import com.example.moneymanager.viewmodel.AccountViewModel
+import com.example.moneymanager.viewmodel.AccountViewModelFactory
 import com.example.moneymanager.viewmodel.CategoryViewModel
 import com.example.moneymanager.viewmodel.CategoryViewModelFactory
 
-class EditCategoryFragment : Fragment() {
+class EditItemDialogFragment : Fragment() {
     private var _binding : FragmentEditCategoryBinding? = null
     private val binding get() = _binding!!
 
-    private var adapter: EditCategoryAdapter?= null
-    private lateinit var viewModel: CategoryViewModel
+    private var adapter: EditItemDialogAdapter?= null
+    private lateinit var categoryViewModel: CategoryViewModel
+    private lateinit var accountViewModel: AccountViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,13 +38,18 @@ class EditCategoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val dao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
-        val factory = CategoryViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[CategoryViewModel::class.java]
+        val categoryDao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
+        val categoryViewModelFactory = CategoryViewModelFactory(categoryDao)
+        categoryViewModel = ViewModelProvider(this, categoryViewModelFactory)[CategoryViewModel::class.java]
+
+        val accountDao = AppDatabase.getDatabase(requireActivity().application).accountDao()
+        val accountViewModelFactory = AccountViewModelFactory(accountDao)
+        accountViewModel = ViewModelProvider(this, accountViewModelFactory)[AccountViewModel::class.java]
+
         val recyclerView = view.findViewById<RecyclerView>(R.id.fragment_edit_category_recycleView)
-        adapter = EditCategoryAdapter(emptyList(),
+        adapter = EditItemDialogAdapter(emptyList(),
         onDeleteClick = {categoryItem ->
-            viewModel.deleteId(categoryItem.id)
+            categoryViewModel.deleteId(categoryItem.id)
         })
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -50,11 +57,16 @@ class EditCategoryFragment : Fragment() {
 
         val selectedType = arguments?.getSerializable("selectedType") as? CategoryType
         selectedType?.let { type ->
-            viewModel.getCategoriesByType(type).observe(viewLifecycleOwner) { list ->
+            categoryViewModel.getCategoriesByType(type).observe(viewLifecycleOwner) { list ->
                 // xử lý dữ liệu tại đây
                 val treeItems = buildCategoryTree(list)
-                adapter?.submitList(treeItems)
+                val editItems = treeItems.map { EditItem.Category(it) }
+                adapter?.submitList(editItems)
             }
+        }
+        accountViewModel.getAllAccount().observe(viewLifecycleOwner) { list ->
+            val editItems = list.map { EditItem.AccountItem(it) }
+            adapter?.submitList(editItems)
         }
     }
 }

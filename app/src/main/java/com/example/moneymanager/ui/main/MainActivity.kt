@@ -7,14 +7,12 @@ import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.example.moneymanager.R
+import com.example.moneymanager.model.Account
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Category
 import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.ui.bottomNavigation.DailyNavigateFragment
-import com.example.moneymanager.viewmodel.CategoryViewModel
-import com.example.moneymanager.viewmodel.CategoryViewModelFactory
-import com.example.moneymanager.viewmodel.TransactionViewModel
-import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import com.example.moneymanager.viewmodel.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -35,6 +33,7 @@ class MainActivity : AppCompatActivity() {
 
         init()
         defaultCategory()
+        defaultAccount()
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
@@ -101,6 +100,24 @@ class MainActivity : AppCompatActivity() {
                     Category(emoji = "🎁", name = "Bonus", type = typeIncome),
                 )
                 defaultCategories.forEach { categoryViewModel.insert(it) }
+            }
+        }
+    }
+
+    private fun defaultAccount() {
+        val daoAccount = AppDatabase.getDatabase(application).accountDao()
+        val factoryAccount = AccountViewModelFactory(daoAccount)
+        val accountViewModel = ViewModelProvider(this, factoryAccount)[AccountViewModel::class.java]
+        accountViewModel.getAllAccount().observe(this) { accounts ->
+            if (accounts.isEmpty()) {
+                val defaultAccounts = listOf(
+                    Account(name = "Cash"),
+                    Account(name = "Bank Account"),
+                    Account(name = "Credit Card"),
+                    Account(name = "E-Wallet"),
+                    Account(name = "Crypto")
+                )
+                defaultAccounts.forEach { accountViewModel.insert(it) }
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.example.moneymanager.viewmodel
+package com.example.moneymanager.repository
 
 import androidx.lifecycle.LiveData
 import com.example.moneymanager.model.Category

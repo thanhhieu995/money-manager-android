@@ -25,16 +25,14 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Transaction
-import com.example.moneymanager.viewmodel.CategoryViewModel
-import com.example.moneymanager.viewmodel.TransactionViewModel
 import com.example.moneymanager.databinding.FragmentAddTransactionBinding
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.helper.Helper.Companion.buildCategoryTree
+import com.example.moneymanager.model.Account
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.ui.main.MainActivity
-import com.example.moneymanager.viewmodel.CategoryViewModelFactory
-import com.example.moneymanager.viewmodel.TransactionViewModelFactory
+import com.example.moneymanager.viewmodel.*
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -47,6 +45,7 @@ class AddTransactionFragment : Fragment() {
 
     private lateinit var viewModel: TransactionViewModel
     private lateinit var categoryViewModel: CategoryViewModel
+    private lateinit var accountViewModel: AccountViewModel
     private var isIncome: Boolean = false
     private var transactions: List<Transaction> = listOf()
     private lateinit var dateTextView: TextView
@@ -130,6 +129,10 @@ class AddTransactionFragment : Fragment() {
         val factoryCategory = CategoryViewModelFactory(daoCategory)
         categoryViewModel = ViewModelProvider(this, factoryCategory)[CategoryViewModel::class.java]
 
+        val daoAccount = AppDatabase.getDatabase(requireActivity().application).accountDao()
+        val factoryAccount = AccountViewModelFactory(daoAccount)
+        accountViewModel = ViewModelProvider(this, factoryAccount)[AccountViewModel::class.java]
+
         handleToAddTransaction()
 
         dateTextView.setOnClickListener {
@@ -173,9 +176,27 @@ class AddTransactionFragment : Fragment() {
         categoryClick()
         amountTextChangeListener()
         categoryTextChangeListener()
+        accountTextChangeListener()
 
         edtAccount.setOnClickListener {
-            showBottomDialogAddTransaction("Account", accounts, edtAccount) {
+            val tintColor = if (isIncome) R.color.income else R.color.red
+            edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+            accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
+                showAccountBottomDialog("Account", accountList, edtAccount) {
+
+                    val fragment = EditItemDialogFragment()
+
+                    parentFragmentManager.beginTransaction()
+                        .setCustomAnimations(
+                            R.anim.slide_in_right,  // enter
+                            R.anim.no_animation,    // exit
+                            R.anim.no_animation,    // popEnter (khi quay lại)
+                            R.anim.slide_out_right  // popExit (khi quay lại)
+                        )
+                        .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
+                        .addToBackStack(null)
+                        .commit()
+                }
             }
         }
 
@@ -273,8 +294,48 @@ class AddTransactionFragment : Fragment() {
         onSuccess()
     }
 
+    private fun showAccountBottomDialog(
+        title: String,
+        accountList: List<Account>,
+        targetEditText: EditText,
+        onEditClick: () -> Unit
+    ) {
+        val bottomSheetDialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
+        val recyclerView = view.findViewById<RecyclerView>(R.id.bottom_dialog_add_recyclerView)
+        val titleBottom = view.findViewById<TextView>(R.id.bottom_dialog_add_title)
+        val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
+        val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
+        titleBottom.text = title
+        val adapter = AccountAdapter(accountList) { selectedItem ->
+            targetEditText.setText(selectedItem.name)
+            if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
+                edtNote.postDelayed({
+                    edtNote.requestFocus()
+                    showKeyboard(edtNote)
+                }, 100)
+            }
+            bottomSheetDialog.dismiss()
+        }
+        val layoutManager = GridLayoutManager(context, 3)
+        recyclerView.layoutManager = layoutManager
+        recyclerView.adapter = adapter
+
+        editButton.setOnClickListener {
+            onEditClick()
+            bottomSheetDialog.dismiss()
+        }
+
+        closeButton.setOnClickListener {
+            bottomSheetDialog.dismiss()
+        }
+
+        bottomSheetDialog.setContentView(view)
+        bottomSheetDialog.show()
+    }
+
     @SuppressLint("MissingInflatedId")
-    private fun showBottomDialogAddTransaction(
+    private fun showCategoryBottomDialog(
         title: String,
         categoryItems: List<CategoryItem>,
         targetEditText: EditText,
@@ -288,23 +349,14 @@ class AddTransactionFragment : Fragment() {
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
-            if(title == "Category") {
-                val parentEmoji = selectedItem.parentEmoji ?: ""
-                val parentName = if (selectedItem.parentName == null) "" else selectedItem.parentName + "/"
-                targetEditText.setText("$parentEmoji $parentName ${selectedItem.emoji} ${selectedItem.name}")
-            } else {
-                targetEditText.setText("${selectedItem.parentEmoji} ${selectedItem.parentName} ${selectedItem.emoji} ${selectedItem.name}")
-            }
+            val parentEmoji = selectedItem.parentEmoji ?: ""
+            val parentName = if (selectedItem.parentName == null) "" else selectedItem.parentName + "/"
+            targetEditText.setText("$parentEmoji $parentName ${selectedItem.emoji} ${selectedItem.name}")
 
             // Finish choose category and show account, finish account and show note auto
             if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
                 edtAccount.requestFocus()
                 edtAccount.performClick() // mở bottom sheet account
-            } else if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
-                edtNote.postDelayed({
-                    edtNote.requestFocus()
-                    showKeyboard(edtNote)
-                }, 100)
             }
             bottomSheetDialog.dismiss()
         }
@@ -469,13 +521,13 @@ class AddTransactionFragment : Fragment() {
 
                 val fullList = treeItems + addItem
 
-                showBottomDialogAddTransaction("Category", fullList, edtCategory) {
+                showCategoryBottomDialog("Category", fullList, edtCategory) {
                     // Sự kiện chỉnh sửa hoặc thêm
                     val bundle = Bundle().apply {
                         putSerializable("selectedType", selectedType)
                     }
 
-                    val fragment = EditCategoryFragment()
+                    val fragment = EditItemDialogFragment()
                     fragment.arguments = bundle
 
                     parentFragmentManager.beginTransaction()
@@ -543,6 +595,22 @@ class AddTransactionFragment : Fragment() {
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+    }
+
+    private fun accountTextChangeListener() {
+        edtAccount.addTextChangedListener(object : TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                // Khi đã có text → đổi về màu bình thường
+                val lightBlack = Color.parseColor("#99000000") // 70% opacity black
+                edtAccount.backgroundTintList = ColorStateList.valueOf(lightBlack)
+            }
         })
     }
 

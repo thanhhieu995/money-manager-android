@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.moneymanager.model.Category
 import com.example.moneymanager.model.CategoryDao
 import com.example.moneymanager.model.CategoryType
+import com.example.moneymanager.repository.CategoryRepository
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(private val dao: CategoryDao) : ViewModel() {
