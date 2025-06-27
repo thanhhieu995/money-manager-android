@@ -311,8 +311,7 @@ class AddTransactionFragment : Fragment() {
             targetEditText.setText(selectedItem.name)
             if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
                 edtNote.postDelayed({
-                    edtNote.requestFocus()
-                    showKeyboard(edtNote)
+                    focusNextField()
                 }, 100)
             }
             bottomSheetDialog.dismiss()
@@ -355,8 +354,9 @@ class AddTransactionFragment : Fragment() {
 
             // Finish choose category and show account, finish account and show note auto
             if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
-                edtAccount.requestFocus()
-                edtAccount.performClick() // mở bottom sheet account
+                Handler(Looper.getMainLooper()).postDelayed({
+                    focusNextField()
+                }, 100)
             }
             bottomSheetDialog.dismiss()
         }
@@ -434,8 +434,7 @@ class AddTransactionFragment : Fragment() {
             showKeyboard(edtAmount)
             edtAmount.setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT) {
-                    edtCategory.requestFocus()
-                    edtCategory.performClick()
+                    focusNextField()
                     true
                 } else false
             }
@@ -511,17 +510,7 @@ class AddTransactionFragment : Fragment() {
 
             categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 val treeItems = buildCategoryTree(list)
-                // Gắn thêm "Add Category" ở cuối nếu muốn
-                val addItem = CategoryItem(
-                    id = -1,
-                    emoji = "➕",
-                    name = "Add Category",
-                    isParent = true
-                )
-
-                val fullList = treeItems + addItem
-
-                showCategoryBottomDialog("Category", fullList, edtCategory) {
+                showCategoryBottomDialog("Category", treeItems, edtCategory) {
                     // Sự kiện chỉnh sửa hoặc thêm
                     val bundle = Bundle().apply {
                         putSerializable("selectedType", selectedType)
@@ -617,6 +606,27 @@ class AddTransactionFragment : Fragment() {
     private fun switchToAddModeIfEditing() {
         if (isEditMode) {
             showAddMode()
+        }
+    }
+
+    private fun focusNextField() {
+        when {
+            edtAmount.text.isNullOrBlank() -> {
+                edtAmount.requestFocus()
+                showKeyboard(edtAmount)
+            }
+            edtCategory.text.isNullOrBlank() -> {
+                edtCategory.requestFocus()
+                edtCategory.performClick() // Gọi bottom sheet
+            }
+            edtAccount.text.isNullOrBlank() -> {
+                edtAccount.requestFocus()
+                edtAccount.performClick() // Gọi bottom sheet
+            }
+            edtNote.text.isNullOrBlank() -> {
+                edtNote.requestFocus()
+                showKeyboard(edtNote)
+            }
         }
     }
 }

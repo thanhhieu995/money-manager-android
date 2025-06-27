@@ -48,8 +48,11 @@ class EditItemDialogFragment : Fragment() {
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.fragment_edit_category_recycleView)
         adapter = EditItemDialogAdapter(emptyList(),
-        onDeleteClick = {categoryItem ->
-            categoryViewModel.deleteId(categoryItem.id)
+        onDeleteClick = {item ->
+            when(item) {
+                is EditItem.Category -> categoryViewModel.deleteId(item.item.id)
+                is EditItem.AccountItem -> accountViewModel.delete(item.item)
+            }
         })
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
