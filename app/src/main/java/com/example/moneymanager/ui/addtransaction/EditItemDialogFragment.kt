@@ -38,6 +38,7 @@ class EditItemDialogFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val layoutSubCategory = binding.fragmentEditCategoryLayoutSubCategory
         val categoryDao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
         val categoryViewModelFactory = CategoryViewModelFactory(categoryDao)
         categoryViewModel = ViewModelProvider(this, categoryViewModelFactory)[CategoryViewModel::class.java]
@@ -59,17 +60,20 @@ class EditItemDialogFragment : Fragment() {
         recyclerView.adapter = adapter
 
         val selectedType = arguments?.getSerializable("selectedType") as? CategoryType
-        selectedType?.let { type ->
-            categoryViewModel.getCategoriesByType(type).observe(viewLifecycleOwner) { list ->
+        if (selectedType == null) {
+            layoutSubCategory.visibility = View.GONE
+            accountViewModel.getAllAccount().observe(viewLifecycleOwner) { list ->
+                val editItems = list.map { EditItem.AccountItem(it) }
+                adapter?.submitList(editItems)
+            }
+        } else {
+            layoutSubCategory.visibility = View.VISIBLE
+            categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 // xử lý dữ liệu tại đây
                 val treeItems = buildCategoryTree(list)
                 val editItems = treeItems.map { EditItem.Category(it) }
                 adapter?.submitList(editItems)
             }
-        }
-        accountViewModel.getAllAccount().observe(viewLifecycleOwner) { list ->
-            val editItems = list.map { EditItem.AccountItem(it) }
-            adapter?.submitList(editItems)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.moneymanager.ui.addtransaction
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
@@ -7,6 +8,7 @@ import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
 import androidx.appcompat.widget.Toolbar
 import com.example.moneymanager.R
@@ -14,12 +16,8 @@ import com.example.moneymanager.model.*
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
 
 class AddTransactionActivity : AppCompatActivity() {
-    private var isIncome: Boolean = false
-    private var transactions: List<Transaction> = listOf()
-    private lateinit var titleTransaction: TextView
-    private lateinit var iconBookmark: ImageView
+    lateinit var titleTransaction: TextView
     private var shouldAnimateExit = false
-    private var isEditMode = false
 
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
     private lateinit var addTransactionFragment: AddTransactionFragment
@@ -73,6 +71,7 @@ class AddTransactionActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
+                animateTitleToCenter(titleTransaction)
             } else {
                 finish()
             }
@@ -113,5 +112,28 @@ class AddTransactionActivity : AppCompatActivity() {
 
     fun updateTransactionTitle(title: String) {
         titleTransaction.text = title
+    }
+
+    fun animateTitleToLeftOfIcon(titleTransaction: TextView) {
+        // Kích thước icon back
+        val iconWidth = toolbar.navigationIcon?.intrinsicWidth ?: 0
+
+        // Padding mặc định icon bên trái
+        val iconMargin = (toolbar.contentInsetStartWithNavigation)
+
+        // Tổng khoảng trống cần dịch tiêu đề sang trái
+        val targetTranslationX = -(toolbar.width / 2f) + iconWidth + iconMargin + 8f // 16dp padding tùy chỉnh
+
+        titleTransaction.animate()
+            .translationX(targetTranslationX)
+            .setDuration(300L)
+            .start()
+    }
+
+    fun animateTitleToCenter(titleTransaction: TextView) {
+        val animator = ObjectAnimator.ofFloat(titleTransaction, "translationX", titleTransaction.translationX, 0f)
+        animator.duration = 300
+        animator.interpolator = AccelerateDecelerateInterpolator()
+        animator.start()
     }
 }

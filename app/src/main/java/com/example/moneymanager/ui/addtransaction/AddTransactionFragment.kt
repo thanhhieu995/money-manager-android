@@ -174,9 +174,9 @@ class AddTransactionFragment : Fragment() {
             }
             accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
                 showAccountBottomDialog("Account", accountList, edtAccount) {
-
+                    val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
+                    (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
                     val fragment = EditItemDialogFragment()
-
                     parentFragmentManager.beginTransaction()
                         .setCustomAnimations(
                             R.anim.slide_in_right,  // enter
@@ -506,6 +506,14 @@ class AddTransactionFragment : Fragment() {
             categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 val treeItems = buildCategoryTree(list)
                 showCategoryBottomDialog("Category", treeItems, edtCategory) {
+
+                    val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
+                    titleView?.let { it1 ->
+                        (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(
+                            it1
+                        )
+                    }
+
                     // Sự kiện chỉnh sửa hoặc thêm
                     val bundle = Bundle().apply {
                         putSerializable("selectedType", selectedType)
