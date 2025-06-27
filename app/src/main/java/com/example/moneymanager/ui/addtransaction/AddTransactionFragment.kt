@@ -62,11 +62,9 @@ class AddTransactionFragment : Fragment() {
     private lateinit var deleteButton: Button
     private lateinit var copyButton: Button
     private lateinit var bookMarkButton: Button
-    private lateinit var iconBookmark: ImageView
     private lateinit var formattedDate: String
     private var transactionFromIntent: Transaction? = null
 
-    private var shouldAnimateExit = false
     private var isEditMode = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -111,15 +109,6 @@ class AddTransactionFragment : Fragment() {
         val currentDate = Calendar.getInstance().time
         val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Locale.getDefault())
         formattedDate = dateFormat.format(currentDate)
-
-        val accounts = listOf(
-            CategoryItem(0,"💵", "Cash", "", "", false, emptyList(),false),
-            CategoryItem(1,"🏦", "Bank Account", "", "", false, emptyList(),false),
-            CategoryItem(2, "💳", "Credit Card", "", "", false, emptyList(),false),
-            CategoryItem(3,"📱", "E-Wallet", "", "", false, emptyList(),false),
-            CategoryItem(4,"🪙", "Crypto", "", "", false, emptyList(),false),
-            CategoryItem(5,"📦", "Savings", "", "", false, emptyList(),false)
-        )
 
         val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
@@ -180,7 +169,9 @@ class AddTransactionFragment : Fragment() {
 
         edtAccount.setOnClickListener {
             val tintColor = if (isIncome) R.color.income else R.color.red
-            edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+            if (edtAccount.text.isEmpty()) {
+                edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+            }
             accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
                 showAccountBottomDialog("Account", accountList, edtAccount) {
 
@@ -252,10 +243,10 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun saveTransaction(onSuccess: () -> Unit) {
-        if (edtAmount.text.isEmpty() || edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
+        if (edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
             Toast.makeText(
                 context,
-                "Vui lòng nhập đầy đủ Amount, Category và Account",
+                "Vui lòng nhập đầy đủ Category và Account",
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -430,8 +421,10 @@ class AddTransactionFragment : Fragment() {
             // set ui when show add mode
             setTransactionType(isIncome, false)
             // show keyboard amount and show choose category auto
-            edtAmount.requestFocus()
-            showKeyboard(edtAmount)
+            if (!isEditMode) {
+                edtAmount.requestFocus()
+                showKeyboard(edtAmount)
+            }
             edtAmount.setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT) {
                     focusNextField()
@@ -506,7 +499,9 @@ class AddTransactionFragment : Fragment() {
         edtCategory.setOnClickListener {
             val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
             val tintColor = if (isIncome) R.color.income else R.color.red
-            edtCategory.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+            if (edtCategory.text.isEmpty()) {
+                edtCategory.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+            }
 
             categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 val treeItems = buildCategoryTree(list)
