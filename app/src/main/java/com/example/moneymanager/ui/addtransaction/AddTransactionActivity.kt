@@ -17,9 +17,10 @@ import com.example.moneymanager.ui.bookmark.BookmarkActivity
 
 class AddTransactionActivity : AppCompatActivity() {
     lateinit var titleTransaction: TextView
+    lateinit var bookmarkIcon: ImageView
     private var shouldAnimateExit = false
 
-    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var toolbar: Toolbar
     private lateinit var addTransactionFragment: AddTransactionFragment
 
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
@@ -28,39 +29,10 @@ class AddTransactionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_add_transaction)
 
         init()
-
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-
-        // Tạo tiêu đề tuỳ chỉnh và thêm vào toolbar
-        titleTransaction = TextView(this).apply {
-            text = "Expense" // Default
-            textSize = 18f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        val params = Toolbar.LayoutParams(
-            Toolbar.LayoutParams.WRAP_CONTENT,
-            Toolbar.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = Gravity.CENTER
-        }
-        toolbar.addView(titleTransaction, params)
-
-        val bookmarkIcon = ImageView(this).apply {
-            setImageResource(R.drawable.ic_baseline_star_border_24) // icon sao
-            setPadding(16, 0, 16, 0)
-            layoutParams = Toolbar.LayoutParams(
-                Toolbar.LayoutParams.WRAP_CONTENT,
-                Toolbar.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.END
-            }
-        }
-
-        toolbar.addView(bookmarkIcon)
-
+        titleTextToolbar()
+        bookmarkToolbar()
         bookmarkIcon.setOnClickListener {
             val intent = Intent(this, BookmarkActivity::class.java)
             startActivity(intent)
@@ -117,13 +89,10 @@ class AddTransactionActivity : AppCompatActivity() {
     fun animateTitleToLeftOfIcon(titleTransaction: TextView) {
         // Kích thước icon back
         val iconWidth = toolbar.navigationIcon?.intrinsicWidth ?: 0
-
         // Padding mặc định icon bên trái
         val iconMargin = (toolbar.contentInsetStartWithNavigation)
-
         // Tổng khoảng trống cần dịch tiêu đề sang trái
-        val targetTranslationX = -(toolbar.width / 2f) + iconWidth + iconMargin + 8f // 16dp padding tùy chỉnh
-
+        val targetTranslationX = -(toolbar.width / 2f) + iconWidth + iconMargin // 16dp padding tùy chỉnh
         titleTransaction.animate()
             .translationX(targetTranslationX)
             .setDuration(300L)
@@ -135,5 +104,39 @@ class AddTransactionActivity : AppCompatActivity() {
         animator.duration = 300
         animator.interpolator = AccelerateDecelerateInterpolator()
         animator.start()
+    }
+
+    private fun titleTextToolbar() {
+        // Tạo tiêu đề tuỳ chỉnh và thêm vào toolbar
+        titleTransaction = TextView(this).apply {
+            text = "Expense" // Default
+            textSize = 18f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        val params = Toolbar.LayoutParams(
+            Toolbar.LayoutParams.WRAP_CONTENT,
+            Toolbar.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.CENTER
+        }
+        toolbar.addView(titleTransaction, params)
+    }
+
+    private fun bookmarkToolbar() {
+        // icon bookmark
+         bookmarkIcon = ImageView(this).apply {
+            setImageResource(R.drawable.ic_baseline_star_border_24) // icon sao
+            setPadding(16, 0, 16, 0)
+            layoutParams = Toolbar.LayoutParams(
+                Toolbar.LayoutParams.WRAP_CONTENT,
+                Toolbar.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END
+            }
+        }
+
+        toolbar.addView(bookmarkIcon)
     }
 }

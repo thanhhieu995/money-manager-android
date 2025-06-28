@@ -173,21 +173,10 @@ class AddTransactionFragment : Fragment() {
                 edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
             accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
-                showAccountBottomDialog("Account", accountList, edtAccount) {
-                    val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
-                    (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
-                    val fragment = EditItemDialogFragment()
-                    parentFragmentManager.beginTransaction()
-                        .setCustomAnimations(
-                            R.anim.slide_in_right,  // enter
-                            R.anim.no_animation,    // exit
-                            R.anim.no_animation,    // popEnter (khi quay lại)
-                            R.anim.slide_out_right  // popExit (khi quay lại)
-                        )
-                        .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
-                        .addToBackStack(null)
-                        .commit()
-                }
+                showAccountBottomDialog("Account", accountList, edtAccount,
+                    onAddClick = {openAddItemFragment()},
+                    onEditClick = {openEditAccountFragment()}
+                )
             }
         }
 
@@ -289,12 +278,14 @@ class AddTransactionFragment : Fragment() {
         title: String,
         accountList: List<Account>,
         targetEditText: EditText,
+        onAddClick: () -> Unit,
         onEditClick: () -> Unit
     ) {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
         val recyclerView = view.findViewById<RecyclerView>(R.id.bottom_dialog_add_recyclerView)
         val titleBottom = view.findViewById<TextView>(R.id.bottom_dialog_add_title)
+        val addButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_add)
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
@@ -310,6 +301,11 @@ class AddTransactionFragment : Fragment() {
         val layoutManager = GridLayoutManager(context, 3)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
+
+        addButton.setOnClickListener {
+            onAddClick()
+            bottomSheetDialog.dismiss()
+        }
 
         editButton.setOnClickListener {
             onEditClick()
@@ -329,12 +325,14 @@ class AddTransactionFragment : Fragment() {
         title: String,
         categoryItems: List<CategoryItem>,
         targetEditText: EditText,
-        onEditClick: () -> Unit
+        onEditClick: () -> Unit,
+        onAddClick: () -> Unit
     ) {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
         val recyclerView = view.findViewById<RecyclerView>(R.id.bottom_dialog_add_recyclerView)
         val titleBottom = view.findViewById<TextView>(R.id.bottom_dialog_add_title)
+        val addButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_add)
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
@@ -365,6 +363,11 @@ class AddTransactionFragment : Fragment() {
 
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
+
+        addButton.setOnClickListener {
+            onAddClick()
+            bottomSheetDialog.dismiss()
+        }
 
         editButton.setOnClickListener {
             onEditClick()
@@ -505,36 +508,51 @@ class AddTransactionFragment : Fragment() {
 
             categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 val treeItems = buildCategoryTree(list)
-                showCategoryBottomDialog("Category", treeItems, edtCategory) {
-
-                    val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
-                    titleView?.let { it1 ->
-                        (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(
-                            it1
-                        )
-                    }
-
-                    // Sự kiện chỉnh sửa hoặc thêm
-                    val bundle = Bundle().apply {
-                        putSerializable("selectedType", selectedType)
-                    }
-
-                    val fragment = EditItemDialogFragment()
-                    fragment.arguments = bundle
-
-                    parentFragmentManager.beginTransaction()
-                        .setCustomAnimations(
-                            R.anim.slide_in_right,  // enter
-                            R.anim.no_animation,    // exit
-                            R.anim.no_animation,    // popEnter (khi quay lại)
-                            R.anim.slide_out_right  // popExit (khi quay lại)
-                        )
-                        .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
-                        .addToBackStack(null)
-                        .commit()
-                }
+                showCategoryBottomDialog("Category", treeItems, edtCategory,
+                    onAddClick = { openAddItemFragment() },
+                    onEditClick = { openEditCategoryFragment(selectedType) }
+                    )
             }
         }
+    }
+
+    private fun openAddItemFragment() {
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+            R.anim.slide_in_right,  // enter
+            R.anim.no_animation,    // exit
+            R.anim.no_animation,    // popEnter (khi quay lại)
+            R.anim.slide_out_right  // popExit (khi quay lại)
+        ).replace(R.id.fragment_container_add_transaction, AddItemFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun openEditCategoryFragment(selectedType: CategoryType) {
+        val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
+        titleView?.let { it1 ->
+            (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(
+                it1
+            )
+        }
+        // Sự kiện chỉnh sửa hoặc thêm
+        val bundle = Bundle().apply {
+            putSerializable("selectedType", selectedType)
+        }
+
+        val fragment = EditItemDialogFragment()
+        fragment.arguments = bundle
+
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,  // enter
+                R.anim.no_animation,    // exit
+                R.anim.no_animation,    // popEnter (khi quay lại)
+                R.anim.slide_out_right  // popExit (khi quay lại)
+            )
+            .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun amountTextChangeListener() {
@@ -631,5 +649,21 @@ class AddTransactionFragment : Fragment() {
                 showKeyboard(edtNote)
             }
         }
+    }
+
+    private fun openEditAccountFragment() {
+        val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
+        (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
+        val fragment = EditItemDialogFragment()
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,  // enter
+                R.anim.no_animation,    // exit
+                R.anim.no_animation,    // popEnter (khi quay lại)
+                R.anim.slide_out_right  // popExit (khi quay lại)
+            )
+            .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
+            .addToBackStack(null)
+            .commit()
     }
 }
