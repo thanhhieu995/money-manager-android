@@ -24,13 +24,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
-import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.databinding.FragmentAddTransactionBinding
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.helper.Helper.Companion.buildCategoryTree
-import com.example.moneymanager.model.Account
-import com.example.moneymanager.model.AppDatabase
-import com.example.moneymanager.model.CategoryType
+import com.example.moneymanager.model.*
 import com.example.moneymanager.ui.main.MainActivity
 import com.example.moneymanager.viewmodel.*
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -168,13 +165,14 @@ class AddTransactionFragment : Fragment() {
         accountTextChangeListener()
 
         edtAccount.setOnClickListener {
+            val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
             val tintColor = if (isIncome) R.color.income else R.color.red
             if (edtAccount.text.isEmpty()) {
                 edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
             accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
                 showAccountBottomDialog("Account", accountList, edtAccount,
-                    onAddClick = {openAddItemFragment()},
+                    onAddClick = {openAddItemFragment(ItemType.ACCOUNT, selectedType)},
                     onEditClick = {openEditAccountFragment()}
                 )
             }
@@ -509,21 +507,34 @@ class AddTransactionFragment : Fragment() {
             categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 val treeItems = buildCategoryTree(list)
                 showCategoryBottomDialog("Category", treeItems, edtCategory,
-                    onAddClick = { openAddItemFragment() },
+                    onAddClick = { openAddItemFragment(ItemType.CATEGORY, selectedType) },
                     onEditClick = { openEditCategoryFragment(selectedType) }
                     )
             }
         }
     }
 
-    private fun openAddItemFragment() {
+    private fun openAddItemFragment(itemType: ItemType, categoryType: CategoryType) {
+        val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
+        titleView?.let { it1 ->
+            (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(
+                it1
+            )
+        }
+        (requireActivity() as AddTransactionActivity).bookmarkIcon.visibility = View.GONE
+        val fragment = AddItemFragment().apply {
+            arguments = Bundle().apply {
+                putSerializable("item_type", itemType)
+                putSerializable("category_type", categoryType)
+            }
+        }
         parentFragmentManager.beginTransaction()
             .setCustomAnimations(
             R.anim.slide_in_right,  // enter
             R.anim.no_animation,    // exit
             R.anim.no_animation,    // popEnter (khi quay lại)
             R.anim.slide_out_right  // popExit (khi quay lại)
-        ).replace(R.id.fragment_container_add_transaction, AddItemFragment())
+        ).replace(R.id.fragment_container_add_transaction, fragment)
             .addToBackStack(null)
             .commit()
     }
@@ -535,6 +546,7 @@ class AddTransactionFragment : Fragment() {
                 it1
             )
         }
+        (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
         // Sự kiện chỉnh sửa hoặc thêm
         val bundle = Bundle().apply {
             putSerializable("selectedType", selectedType)
@@ -654,6 +666,7 @@ class AddTransactionFragment : Fragment() {
     private fun openEditAccountFragment() {
         val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
         (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
+        (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
         val fragment = EditItemDialogFragment()
         parentFragmentManager.beginTransaction()
             .setCustomAnimations(

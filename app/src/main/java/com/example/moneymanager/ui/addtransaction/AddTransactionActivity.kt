@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
 import androidx.appcompat.widget.Toolbar
@@ -18,6 +19,7 @@ import com.example.moneymanager.ui.bookmark.BookmarkActivity
 class AddTransactionActivity : AppCompatActivity() {
     lateinit var titleTransaction: TextView
     lateinit var bookmarkIcon: ImageView
+    lateinit var addIcon: ImageView
     private var shouldAnimateExit = false
 
     private lateinit var toolbar: Toolbar
@@ -33,6 +35,7 @@ class AddTransactionActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
         titleTextToolbar()
         bookmarkToolbar()
+        addIconToolbar()
         bookmarkIcon.setOnClickListener {
             val intent = Intent(this, BookmarkActivity::class.java)
             startActivity(intent)
@@ -44,6 +47,7 @@ class AddTransactionActivity : AppCompatActivity() {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
                 animateTitleToCenter(titleTransaction)
+                switchToBookmarkIconWithFade()
             } else {
                 finish()
             }
@@ -138,5 +142,38 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         toolbar.addView(bookmarkIcon)
+    }
+
+    private fun addIconToolbar() {
+         addIcon = ImageView(this).apply {
+            setImageResource(R.drawable.ic_baseline_add_24)
+            visibility = View.GONE // ẩn ban đầu
+            layoutParams = Toolbar.LayoutParams(
+                Toolbar.LayoutParams.WRAP_CONTENT,
+                Toolbar.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END
+                marginEnd = 16
+            }
+        }
+        toolbar.addView(addIcon)
+    }
+
+    fun switchToAddIconWithFade() {
+        bookmarkIcon.animate().alpha(0f).setDuration(150).withEndAction {
+            bookmarkIcon.visibility = View.GONE
+            addIcon.alpha = 0f
+            addIcon.visibility = View.VISIBLE
+            addIcon.animate().alpha(1f).setDuration(150).start()
+        }.start()
+    }
+
+    fun switchToBookmarkIconWithFade() {
+        addIcon.animate().alpha(0f).setDuration(150).withEndAction {
+            addIcon.visibility = View.GONE
+            bookmarkIcon.alpha = 0f
+            bookmarkIcon.visibility = View.VISIBLE
+            bookmarkIcon.animate().alpha(1f).setDuration(150).start()
+        }.start()
     }
 }
