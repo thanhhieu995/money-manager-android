@@ -46,7 +46,6 @@ class AddItemFragment : Fragment() {
                 when (itemType) {
                     ItemType.CATEGORY -> {
                         // Xử lý cho category
-                        nameText.hint = "Category name..."
                         val dao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
                         val factory = CategoryViewModelFactory(dao)
                         val viewModel = ViewModelProvider(this, factory)[CategoryViewModel::class.java]
@@ -60,16 +59,12 @@ class AddItemFragment : Fragment() {
                     }
                     ItemType.ACCOUNT -> {
                         // Xử lý cho account
-                        nameText.hint = "Account name..."
                         val dao = AppDatabase.getDatabase(requireActivity().application).accountDao()
                         val factory = AccountViewModelFactory(dao)
                         val viewModel = ViewModelProvider(this, factory)[AccountViewModel::class.java]
                         val account = Account(name = nameText.text.toString())
                         viewModel.insert(account)
                         parentFragmentManager.popBackStack()
-                    }
-                    null -> {
-                        // Trường hợp không xác định
                     }
                 }
             }

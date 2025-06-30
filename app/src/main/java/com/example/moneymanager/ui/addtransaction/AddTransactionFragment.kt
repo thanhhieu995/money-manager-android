@@ -173,7 +173,7 @@ class AddTransactionFragment : Fragment() {
             accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
                 showAccountBottomDialog("Account", accountList, edtAccount,
                     onAddClick = {openAddItemFragment(ItemType.ACCOUNT, selectedType)},
-                    onEditClick = {openEditAccountFragment()}
+                    onEditClick = {openEditAccountFragment(ItemType.ACCOUNT, selectedType)}
                 )
             }
         }
@@ -508,7 +508,7 @@ class AddTransactionFragment : Fragment() {
                 val treeItems = buildCategoryTree(list)
                 showCategoryBottomDialog("Category", treeItems, edtCategory,
                     onAddClick = { openAddItemFragment(ItemType.CATEGORY, selectedType) },
-                    onEditClick = { openEditCategoryFragment(selectedType) }
+                    onEditClick = { openEditCategoryFragment(ItemType.CATEGORY, selectedType) }
                     )
             }
         }
@@ -539,7 +539,7 @@ class AddTransactionFragment : Fragment() {
             .commit()
     }
 
-    private fun openEditCategoryFragment(selectedType: CategoryType) {
+    private fun openEditCategoryFragment(itemType: ItemType, selectedType: CategoryType) {
         val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
         titleView?.let { it1 ->
             (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(
@@ -547,6 +547,10 @@ class AddTransactionFragment : Fragment() {
             )
         }
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
+        (requireActivity() as AddTransactionActivity).apply {
+            currentItemType = itemType
+            currentCategoryType = selectedType
+        }
         // Sự kiện chỉnh sửa hoặc thêm
         val bundle = Bundle().apply {
             putSerializable("selectedType", selectedType)
@@ -663,10 +667,14 @@ class AddTransactionFragment : Fragment() {
         }
     }
 
-    private fun openEditAccountFragment() {
+    private fun openEditAccountFragment(itemType: ItemType, categoryType: CategoryType) {
         val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
         (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
+        (requireActivity() as AddTransactionActivity).apply {
+            currentItemType = itemType
+            currentCategoryType = categoryType
+        }
         val fragment = EditItemDialogFragment()
         parentFragmentManager.beginTransaction()
             .setCustomAnimations(

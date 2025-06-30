@@ -23,7 +23,9 @@ class AddTransactionActivity : AppCompatActivity() {
     private var shouldAnimateExit = false
 
     private lateinit var toolbar: Toolbar
-    private lateinit var addTransactionFragment: AddTransactionFragment
+
+    var currentItemType: ItemType? = null
+    var currentCategoryType: CategoryType? = null
 
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,12 +44,38 @@ class AddTransactionActivity : AppCompatActivity() {
             overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
         }
 
+        addIcon.setOnClickListener {
+            animateTitleToLeftOfIcon(titleTransaction)
+            val fragment = AddItemFragment().apply {
+                arguments = Bundle().apply {
+                    putSerializable("item_type", currentItemType)
+                    putSerializable("category_type", currentCategoryType)
+                }
+            }
+            addIcon.visibility = View.GONE
+            supportFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.slide_in_right,  // enter
+                    R.anim.no_animation,    // exit
+                    R.anim.no_animation,    // popEnter (khi quay lại)
+                    R.anim.slide_out_right  // popExit (khi quay lại)
+                ).replace(R.id.fragment_container_add_transaction, fragment)
+                .addToBackStack(null)
+                .commit()
+        }
+
         toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_ios_24)
         toolbar.setNavigationOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
-                animateTitleToCenter(titleTransaction)
-                switchToBookmarkIconWithFade()
+                val fragment =
+                    supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
+                if (fragment is EditItemDialogFragment) {
+                    animateTitleToCenter(titleTransaction)
+                    switchToBookmarkIconWithFade()
+                } else {
+                    switchToAddIconWithFade()
+                }
             } else {
                 finish()
             }
@@ -83,7 +111,6 @@ class AddTransactionActivity : AppCompatActivity() {
 
     private fun init() {
         toolbar = findViewById(R.id.add_transaction_toolbar)
-        addTransactionFragment = AddTransactionFragment()
     }
 
     fun updateTransactionTitle(title: String) {
@@ -96,7 +123,8 @@ class AddTransactionActivity : AppCompatActivity() {
         // Padding mặc định icon bên trái
         val iconMargin = (toolbar.contentInsetStartWithNavigation)
         // Tổng khoảng trống cần dịch tiêu đề sang trái
-        val targetTranslationX = -(toolbar.width / 2f) + iconWidth + iconMargin // 16dp padding tùy chỉnh
+        val targetTranslationX =
+            -(toolbar.width / 2f) + iconWidth + iconMargin // 16dp padding tùy chỉnh
         titleTransaction.animate()
             .translationX(targetTranslationX)
             .setDuration(300L)
@@ -104,7 +132,12 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     fun animateTitleToCenter(titleTransaction: TextView) {
-        val animator = ObjectAnimator.ofFloat(titleTransaction, "translationX", titleTransaction.translationX, 0f)
+        val animator = ObjectAnimator.ofFloat(
+            titleTransaction,
+            "translationX",
+            titleTransaction.translationX,
+            0f
+        )
         animator.duration = 300
         animator.interpolator = AccelerateDecelerateInterpolator()
         animator.start()
@@ -130,7 +163,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
     private fun bookmarkToolbar() {
         // icon bookmark
-         bookmarkIcon = ImageView(this).apply {
+        bookmarkIcon = ImageView(this).apply {
             setImageResource(R.drawable.ic_baseline_star_border_24) // icon sao
             setPadding(16, 0, 16, 0)
             layoutParams = Toolbar.LayoutParams(
@@ -145,7 +178,7 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     private fun addIconToolbar() {
-         addIcon = ImageView(this).apply {
+        addIcon = ImageView(this).apply {
             setImageResource(R.drawable.ic_baseline_add_24)
             visibility = View.GONE // ẩn ban đầu
             layoutParams = Toolbar.LayoutParams(
