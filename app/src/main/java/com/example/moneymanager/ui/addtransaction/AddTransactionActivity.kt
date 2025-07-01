@@ -18,6 +18,7 @@ import com.example.moneymanager.ui.bookmark.BookmarkActivity
 
 class AddTransactionActivity : AppCompatActivity() {
     lateinit var titleTransaction: TextView
+    lateinit var extraText: TextView
     lateinit var bookmarkIcon: ImageView
     lateinit var addIcon: ImageView
     private var shouldAnimateExit = false
@@ -36,6 +37,7 @@ class AddTransactionActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
         titleTextToolbar()
+        extraTextToolbar()
         bookmarkToolbar()
         addIconToolbar()
         bookmarkIcon.setOnClickListener {
@@ -50,9 +52,12 @@ class AddTransactionActivity : AppCompatActivity() {
                 arguments = Bundle().apply {
                     putSerializable("item_type", currentItemType)
                     putSerializable("category_type", currentCategoryType)
+                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
                 }
             }
             addIcon.visibility = View.GONE
+            animateExtraTextToCenter()
+
             supportFragmentManager.beginTransaction()
                 .setCustomAnimations(
                     R.anim.slide_in_right,  // enter
@@ -68,13 +73,17 @@ class AddTransactionActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
-                val fragment =
+                val currentFragment =
                     supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
-                if (fragment is EditItemDialogFragment) {
+                if (currentFragment is EditItemDialogFragment) {
                     animateTitleToCenter(titleTransaction)
                     switchToBookmarkIconWithFade()
                 } else {
-                    switchToAddIconWithFade()
+                    when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource ?: AddItemSource.FROM_ADD_TRANSACTION) {
+                        AddItemSource.FROM_ADD_TRANSACTION -> switchToBookmarkIconWithFade()
+                        AddItemSource.FROM_EDIT_ITEM_DIALOG -> switchToAddIconWithFade()
+                    }
+                    animateExtraTextToRight()
                 }
             } else {
                 finish()
@@ -161,6 +170,25 @@ class AddTransactionActivity : AppCompatActivity() {
         toolbar.addView(titleTransaction, params)
     }
 
+    fun extraTextToolbar() {
+        extraText = TextView(this).apply {
+            text = "Add"
+            textSize = 18f
+            visibility = View.GONE
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        val params = Toolbar.LayoutParams(
+            Toolbar.LayoutParams.WRAP_CONTENT,
+            Toolbar.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.END
+        }
+
+        toolbar.addView(extraText, params)
+    }
+
     private fun bookmarkToolbar() {
         // icon bookmark
         bookmarkIcon = ImageView(this).apply {
@@ -193,20 +221,47 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     fun switchToAddIconWithFade() {
-        bookmarkIcon.animate().alpha(0f).setDuration(150).withEndAction {
+        bookmarkIcon.animate().alpha(0f).setDuration(400).withEndAction {
             bookmarkIcon.visibility = View.GONE
             addIcon.alpha = 0f
             addIcon.visibility = View.VISIBLE
-            addIcon.animate().alpha(1f).setDuration(150).start()
+            addIcon.animate().alpha(1f).setDuration(400).start()
         }.start()
     }
 
     fun switchToBookmarkIconWithFade() {
-        addIcon.animate().alpha(0f).setDuration(150).withEndAction {
+        addIcon.animate().alpha(0f).setDuration(400).withEndAction {
             addIcon.visibility = View.GONE
             bookmarkIcon.alpha = 0f
             bookmarkIcon.visibility = View.VISIBLE
-            bookmarkIcon.animate().alpha(1f).setDuration(150).start()
+            bookmarkIcon.animate().alpha(1f).setDuration(400).start()
         }.start()
+    }
+
+    fun animateExtraTextToCenter() {
+        extraText.visibility = View.VISIBLE
+        extraText.post {
+            val toolbarCenterX = toolbar.width / 2f
+            val textCenterX = extraText.left + extraText.width / 2f
+            val targetTranslationX = toolbarCenterX - textCenterX
+
+            extraText.animate()
+                .translationX(targetTranslationX)
+                .setDuration(300)
+                .start()
+        }
+    }
+
+    fun animateExtraTextToRight() {
+        extraText.visibility = View.VISIBLE
+        extraText.animate()
+            .translationX(0f) // Di chuyển về vị trí ban đầu
+            .alpha(0f)        // Làm mờ dần
+            .setDuration(300)
+            .withEndAction {
+                extraText.visibility = View.GONE
+                extraText.alpha = 1f // reset alpha để dùng lại sau
+            }
+            .start()
     }
 }

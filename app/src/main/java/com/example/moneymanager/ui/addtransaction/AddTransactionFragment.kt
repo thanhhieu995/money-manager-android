@@ -522,10 +522,14 @@ class AddTransactionFragment : Fragment() {
             )
         }
         (requireActivity() as AddTransactionActivity).bookmarkIcon.visibility = View.GONE
+        (requireActivity() as AddTransactionActivity).addIcon.visibility = View.GONE
+        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter()
+
         val fragment = AddItemFragment().apply {
             arguments = Bundle().apply {
                 putSerializable("item_type", itemType)
                 putSerializable("category_type", categoryType)
+                putSerializable("source", AddItemSource.FROM_ADD_TRANSACTION)
             }
         }
         parentFragmentManager.beginTransaction()
