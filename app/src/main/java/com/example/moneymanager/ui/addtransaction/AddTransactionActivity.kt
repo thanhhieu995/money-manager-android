@@ -18,7 +18,8 @@ import com.example.moneymanager.ui.bookmark.BookmarkActivity
 
 class AddTransactionActivity : AppCompatActivity() {
     lateinit var titleTransaction: TextView
-    lateinit var extraText: TextView
+    lateinit var extraAddText: TextView
+    lateinit var extraEditText: TextView
     lateinit var bookmarkIcon: ImageView
     lateinit var addIcon: ImageView
     private var shouldAnimateExit = false
@@ -38,7 +39,8 @@ class AddTransactionActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
         titleTextToolbar()
-        extraTextToolbar()
+        extraTextAddToolbar()
+        extraTextEditToolbar()
         bookmarkToolbar()
         addIconToolbar()
         bookmarkIcon.setOnClickListener {
@@ -58,7 +60,7 @@ class AddTransactionActivity : AppCompatActivity() {
             }
             updateTransactionTitle("Edit")
             addIcon.visibility = View.GONE
-            animateExtraTextToCenter()
+            animateExtraTextToCenter(extraAddText)
 
             supportFragmentManager.beginTransaction()
                 .setCustomAnimations(
@@ -92,14 +94,14 @@ class AddTransactionActivity : AppCompatActivity() {
                         AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
                             switchToAddIconWithFade()
                             when(currentItemType) {
-                                ItemType.CATEGORY -> animateExtraTextToRight()
-                                ItemType.ACCOUNT -> animateExtraTextToRight()
+                                ItemType.CATEGORY -> animateExtraTextToRight(extraAddText)
+                                ItemType.ACCOUNT -> animateExtraTextToRight(extraAddText)
                                 else -> {}
                             }
-                            animateExtraTextToRight()
+                            animateExtraTextToRight(extraAddText)
                         }
                     }
-                    animateExtraTextToRight()
+                    animateExtraTextToRight(extraAddText)
                 }
             } else {
                 finish()
@@ -192,23 +194,37 @@ class AddTransactionActivity : AppCompatActivity() {
         toolbar.addView(titleTransaction, params)
     }
 
-    fun extraTextToolbar() {
-        extraText = TextView(this).apply {
+    private fun extraTextAddToolbar() {
+        extraAddText = TextView(this).apply {
             text = "Add"
             textSize = 18f
             visibility = View.GONE
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
         }
-
         val params = Toolbar.LayoutParams(
             Toolbar.LayoutParams.WRAP_CONTENT,
             Toolbar.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.END
         }
+        toolbar.addView(extraAddText, params)
+    }
 
-        toolbar.addView(extraText, params)
+    private fun extraTextEditToolbar() {
+        extraEditText = TextView(this).apply {
+            text = "Edit"
+            textSize = 18f
+            visibility = View.GONE
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        val params = Toolbar.LayoutParams(
+            Toolbar.LayoutParams.WRAP_CONTENT,
+            Toolbar.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.END
+        }
     }
 
     private fun bookmarkToolbar() {
@@ -260,29 +276,29 @@ class AddTransactionActivity : AppCompatActivity() {
         }.start()
     }
 
-    fun animateExtraTextToCenter() {
-        extraText.visibility = View.VISIBLE
-        extraText.post {
+    fun animateExtraTextToCenter(textView: TextView) {
+        textView.visibility = View.VISIBLE
+        textView.post {
             val toolbarCenterX = toolbar.width / 2f
-            val textCenterX = extraText.left + extraText.width / 2f
+            val textCenterX = textView.left + textView.width / 2f
             val targetTranslationX = toolbarCenterX - textCenterX
 
-            extraText.animate()
+            textView.animate()
                 .translationX(targetTranslationX)
                 .setDuration(300)
                 .start()
         }
     }
 
-    fun animateExtraTextToRight() {
-        extraText.visibility = View.VISIBLE
-        extraText.animate()
+    fun animateExtraTextToRight(textView: TextView) {
+        textView.visibility = View.VISIBLE
+        textView.animate()
             .translationX(0f) // Di chuyển về vị trí ban đầu
             .alpha(0f)        // Làm mờ dần
             .setDuration(300)
             .withEndAction {
-                extraText.visibility = View.GONE
-                extraText.alpha = 1f // reset alpha để dùng lại sau
+                textView.visibility = View.GONE
+                textView.alpha = 1f // reset alpha để dùng lại sau
             }
             .start()
     }

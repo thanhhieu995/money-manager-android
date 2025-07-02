@@ -526,9 +526,10 @@ class AddTransactionFragment : Fragment() {
                 it1
             )
         }
+        val extraAddText = (requireActivity() as AddTransactionActivity).extraAddText
         (requireActivity() as AddTransactionActivity).bookmarkIcon.visibility = View.GONE
         (requireActivity() as AddTransactionActivity).addIcon.visibility = View.GONE
-        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter()
+        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter(extraAddText)
 
         val fragment = AddItemFragment().apply {
             arguments = Bundle().apply {
