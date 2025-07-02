@@ -556,6 +556,9 @@ class AddTransactionFragment : Fragment() {
                 it1
             )
         }
+        val extraEditText = (requireActivity() as AddTransactionActivity).extraEditText
+        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter(extraEditText)
+        (requireActivity() as AddTransactionActivity).updateExtraEditText(if(itemType == ItemType.CATEGORY) "Category" else "Account")
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
         (requireActivity() as AddTransactionActivity).apply {
             currentItemType = itemType
@@ -680,6 +683,9 @@ class AddTransactionFragment : Fragment() {
     private fun openEditAccountFragment(itemType: ItemType, categoryType: CategoryType) {
         val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
         (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
+        val extraEditText = (requireActivity() as AddTransactionActivity).extraEditText
+        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter(extraEditText)
+        (requireActivity() as AddTransactionActivity).updateExtraEditText(if(itemType == ItemType.CATEGORY) "Category" else "Account")
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
         (requireActivity() as AddTransactionActivity).apply {
             currentItemType = itemType

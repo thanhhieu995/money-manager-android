@@ -40,9 +40,9 @@ class AddTransactionActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
         titleTextToolbar()
         extraTextAddToolbar()
-        extraTextEditToolbar()
         bookmarkToolbar()
         addIconToolbar()
+        extraTextEditToolbar()
         bookmarkIcon.setOnClickListener {
             val intent = Intent(this, BookmarkActivity::class.java)
             startActivity(intent)
@@ -51,6 +51,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
         addIcon.setOnClickListener {
             animateTitleToLeftOfIcon(titleTransaction)
+            updateExtraEditText("")
             val fragment = AddItemFragment().apply {
                 arguments = Bundle().apply {
                     putSerializable("item_type", currentItemType)
@@ -88,12 +89,15 @@ class AddTransactionActivity : AppCompatActivity() {
                 val currentFragment =
                     supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
                 if (currentFragment is EditItemDialogFragment) {
-                    animateTitleToCenter(titleTransaction)
                     switchToBookmarkIconWithFade()
+                    animateExtraTextToRight(extraEditText)
+                    animateTitleToCenter(titleTransaction)
                 } else {
                     getIsIncome()
                     val title = if (isIncome) "Income" else "Expense"
+                    val editText = if (currentItemType == ItemType.CATEGORY) "Category" else "Account"
                     updateTransactionTitle(title)
+                    updateExtraEditText(editText)
                     when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource ?: AddItemSource.FROM_ADD_TRANSACTION) {
                         AddItemSource.FROM_ADD_TRANSACTION -> {
                             switchToBookmarkIconWithFade()
@@ -150,6 +154,10 @@ class AddTransactionActivity : AppCompatActivity() {
 
     fun updateTransactionTitle(title: String) {
         titleTransaction.text = title
+    }
+
+    fun updateExtraEditText(text: String) {
+        extraEditText.text = text
     }
 
     fun animateTitleToLeftOfIcon(titleTransaction: TextView) {
@@ -225,7 +233,7 @@ class AddTransactionActivity : AppCompatActivity() {
             Toolbar.LayoutParams.WRAP_CONTENT,
             Toolbar.LayoutParams.WRAP_CONTENT
         ).apply {
-            gravity = Gravity.CENTER
+            gravity = Gravity.END
         }
         toolbar.addView(extraEditText, params)
     }
@@ -262,20 +270,20 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     fun switchToAddIconWithFade() {
-        bookmarkIcon.animate().alpha(0f).setDuration(400).withEndAction {
+        bookmarkIcon.animate().alpha(0f).setDuration(300).withEndAction {
             bookmarkIcon.visibility = View.GONE
             addIcon.alpha = 0f
             addIcon.visibility = View.VISIBLE
-            addIcon.animate().alpha(1f).setDuration(400).start()
+            addIcon.animate().alpha(1f).setDuration(300).start()
         }.start()
     }
 
     fun switchToBookmarkIconWithFade() {
-        addIcon.animate().alpha(0f).setDuration(400).withEndAction {
+        addIcon.animate().alpha(0f).setDuration(300).withEndAction {
             addIcon.visibility = View.GONE
             bookmarkIcon.alpha = 0f
             bookmarkIcon.visibility = View.VISIBLE
-            bookmarkIcon.animate().alpha(1f).setDuration(400).start()
+            bookmarkIcon.animate().alpha(1f).setDuration(300).start()
         }.start()
     }
 
