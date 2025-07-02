@@ -386,6 +386,11 @@ class AddTransactionFragment : Fragment() {
     ) {
         isIncome = isIncomeType
 
+        parentFragmentManager.setFragmentResult(
+            "update_title",
+            Bundle().apply { putBoolean("is_income", isIncome) }
+        )
+
         val activeColor = if (isIncomeType) Color.BLUE else Color.RED
         val inactiveColor = Color.WHITE
         val activeTextColor = Color.WHITE

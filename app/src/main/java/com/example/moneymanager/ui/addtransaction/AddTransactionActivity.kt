@@ -24,6 +24,7 @@ class AddTransactionActivity : AppCompatActivity() {
     private var shouldAnimateExit = false
 
     private lateinit var toolbar: Toolbar
+    private var isIncome: Boolean = false
 
     var currentItemType: ItemType? = null
     var currentCategoryType: CategoryType? = null
@@ -55,6 +56,7 @@ class AddTransactionActivity : AppCompatActivity() {
                     putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
                 }
             }
+            updateTransactionTitle("Edit")
             addIcon.visibility = View.GONE
             animateExtraTextToCenter()
 
@@ -79,9 +81,23 @@ class AddTransactionActivity : AppCompatActivity() {
                     animateTitleToCenter(titleTransaction)
                     switchToBookmarkIconWithFade()
                 } else {
+                    getIsIncome()
+                    val title = if (isIncome) "Income" else "Expense"
+                    updateTransactionTitle(title)
                     when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource ?: AddItemSource.FROM_ADD_TRANSACTION) {
-                        AddItemSource.FROM_ADD_TRANSACTION -> switchToBookmarkIconWithFade()
-                        AddItemSource.FROM_EDIT_ITEM_DIALOG -> switchToAddIconWithFade()
+                        AddItemSource.FROM_ADD_TRANSACTION -> {
+                            switchToBookmarkIconWithFade()
+                            animateTitleToCenter(titleTransaction)
+                        }
+                        AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
+                            switchToAddIconWithFade()
+                            when(currentItemType) {
+                                ItemType.CATEGORY -> animateExtraTextToRight()
+                                ItemType.ACCOUNT -> animateExtraTextToRight()
+                                else -> {}
+                            }
+                            animateExtraTextToRight()
+                        }
                     }
                     animateExtraTextToRight()
                 }
@@ -115,6 +131,12 @@ class AddTransactionActivity : AppCompatActivity() {
         if (shouldAnimateExit) {
             overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
             shouldAnimateExit = false
+        }
+    }
+
+    private fun getIsIncome() {
+        supportFragmentManager.setFragmentResultListener("update_title", this) { _, bundle ->
+            isIncome = bundle.getBoolean("is_income", false)
         }
     }
 
