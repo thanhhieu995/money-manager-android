@@ -58,7 +58,15 @@ class AddTransactionActivity : AppCompatActivity() {
                     putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
                 }
             }
-            updateTransactionTitle("Edit")
+            when(currentItemType) {
+                ItemType.CATEGORY -> {
+                    updateTransactionTitle("Category")
+                }
+                ItemType.ACCOUNT -> {
+                    updateTransactionTitle("Account")
+                }
+                else -> {}
+            }
             addIcon.visibility = View.GONE
             animateExtraTextToCenter(extraAddText)
 
@@ -93,12 +101,6 @@ class AddTransactionActivity : AppCompatActivity() {
                         }
                         AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
                             switchToAddIconWithFade()
-                            when(currentItemType) {
-                                ItemType.CATEGORY -> animateExtraTextToRight(extraAddText)
-                                ItemType.ACCOUNT -> animateExtraTextToRight(extraAddText)
-                                else -> {}
-                            }
-                            animateExtraTextToRight(extraAddText)
                         }
                     }
                     animateExtraTextToRight(extraAddText)
@@ -223,8 +225,9 @@ class AddTransactionActivity : AppCompatActivity() {
             Toolbar.LayoutParams.WRAP_CONTENT,
             Toolbar.LayoutParams.WRAP_CONTENT
         ).apply {
-            gravity = Gravity.END
+            gravity = Gravity.CENTER
         }
+        toolbar.addView(extraEditText, params)
     }
 
     private fun bookmarkToolbar() {
