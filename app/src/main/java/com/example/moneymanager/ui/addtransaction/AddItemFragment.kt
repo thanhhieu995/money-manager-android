@@ -23,6 +23,7 @@ class AddItemFragment : Fragment() {
     private lateinit var btnSave: Button
     private lateinit var itemType: ItemType
     private lateinit var categoryType: CategoryType
+    private lateinit var source: AddItemSource
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,9 +41,23 @@ class AddItemFragment : Fragment() {
 
         itemType = arguments?.getSerializable("item_type") as? ItemType ?: ItemType.CATEGORY
         categoryType = arguments?.getSerializable("category_type") as? CategoryType ?: CategoryType.EXPENSE
+        source = arguments?.getSerializable("source") as? AddItemSource ?: AddItemSource.FROM_ADD_TRANSACTION
 
         btnSave.setOnClickListener {
             if (nameText.text.trim().isNotEmpty()) {
+                (requireActivity() as AddTransactionActivity).updateTransactionTitle(if (categoryType == CategoryType.EXPENSE)"Expense" else "Income")
+                (requireActivity() as AddTransactionActivity).updateExtraEditText(if (itemType == ItemType.CATEGORY) "Category" else "Account")
+                when (source) {
+                    AddItemSource.FROM_ADD_TRANSACTION -> {
+                        (requireActivity() as AddTransactionActivity).switchToBookmarkIconWithFade()
+                        (requireActivity() as AddTransactionActivity).animateTitleToCenter((requireActivity() as AddTransactionActivity).titleTransaction)
+                    }
+                    AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
+                        (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
+                    }
+                }
+                (requireActivity() as AddTransactionActivity).animateExtraTextToRight((requireActivity() as AddTransactionActivity).extraAddText)
+
                 when (itemType) {
                     ItemType.CATEGORY -> {
                         // Xử lý cho category
