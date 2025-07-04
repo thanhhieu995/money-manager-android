@@ -9,4 +9,4 @@ data class CategoryItem(
     val isParent: Boolean,
     val children: List<CategoryItem> = emptyList(),
     var isExpanded: Boolean = false
-)
+): java.io.Serializable

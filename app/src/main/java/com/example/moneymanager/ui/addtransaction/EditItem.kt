@@ -2,7 +2,7 @@ package com.example.moneymanager.ui.addtransaction
 
 import com.example.moneymanager.model.Account
 
-sealed class EditItem{
+sealed class EditItem : java.io.Serializable{
     abstract val id: Int
     data class Category(val item: CategoryItem): EditItem() {
         override val id: Int

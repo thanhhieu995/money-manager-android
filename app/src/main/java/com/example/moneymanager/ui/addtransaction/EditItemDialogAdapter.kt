@@ -12,13 +12,12 @@ import com.example.moneymanager.model.Account
 
 class EditItemDialogAdapter(
     private var itemList: List<EditItem>,
-    private val onDeleteClick: (EditItem) -> Unit
+    private val onDeleteClick: (EditItem) -> Unit,
+    private val clickItemListener: OnEditClickListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val clickItemListener: OnEditClickListener?= null
-
     interface OnEditClickListener {
-        fun onEditCategoryClick(item: EditItem)
+        fun onEditItemClick(item: EditItem)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -46,7 +45,7 @@ class EditItemDialogAdapter(
             }
 
             itemView.setOnClickListener {
-                clickItemListener?.onEditCategoryClick(EditItem.Category(item))
+                clickItemListener.onEditItemClick(EditItem.Category(item))
             }
         }
     }
@@ -59,7 +58,7 @@ class EditItemDialogAdapter(
             name.text = item.name
             // icon.setImage... nếu có icon
             itemView.setOnClickListener {
-                clickItemListener?.onEditCategoryClick(EditItem.AccountItem(item))
+                clickItemListener?.onEditItemClick(EditItem.AccountItem(item))
             }
             icon.setOnClickListener {
                 onDeleteClick.invoke(EditItem.AccountItem(item))
