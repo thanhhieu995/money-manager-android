@@ -13,6 +13,7 @@ import com.example.moneymanager.databinding.FragmentEditCategoryBinding
 import com.example.moneymanager.helper.Helper.Companion.buildCategoryTree
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.CategoryType
+import com.example.moneymanager.model.ItemType
 import com.example.moneymanager.viewmodel.AccountViewModel
 import com.example.moneymanager.viewmodel.AccountViewModelFactory
 import com.example.moneymanager.viewmodel.CategoryViewModel
@@ -82,9 +83,12 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
         when(item) {
             is EditItem.Category -> {
                 //open detail
+                (requireActivity() as AddTransactionActivity).updateTransactionTitle("Category")
+                (requireActivity() as AddTransactionActivity).updateExtraEditText(item.item.name)
                 val fragment = CategoryDetailFragment()
                 val bundle = Bundle().apply {
                     putSerializable("edit_child_item", item)
+                    putSerializable("item_type", ItemType.CATEGORY)
                 }
                 fragment.arguments = bundle
                 parentFragmentManager.beginTransaction()
@@ -100,6 +104,22 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
             }
             is EditItem.AccountItem -> {
                 //open detail
+                val fragment = AddItemFragment()
+                val bundle = Bundle().apply {
+                    putSerializable("item_type", ItemType.ACCOUNT)
+                    putSerializable("account_to_edit", item)
+                }
+                fragment.arguments = bundle
+                parentFragmentManager.beginTransaction()
+                    .setCustomAnimations(
+                    R.anim.slide_in_right,  // enter
+                    R.anim.no_animation,    // exit
+                    R.anim.no_animation,    // popEnter (khi quay lại)
+                    R.anim.slide_out_right  // popExit (khi quay lại)
+                    )
+                    .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
+                    .addToBackStack(null)
+                    .commit()
             }
         }
     }

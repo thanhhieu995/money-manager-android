@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.example.moneymanager.R
 import com.example.moneymanager.model.Category
+import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.model.Transaction
 import com.example.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.example.moneymanager.ui.addtransaction.CategoryItem
@@ -56,6 +57,16 @@ class Helper {
             }
 
             return parentItems
+        }
+
+        fun CategoryItem.toCategory(type: CategoryType): Category {
+            return Category(
+                id = this.id,
+                name = this.name,
+                emoji = this.emoji,
+                type = type,
+                parentId = null // hoặc truyền thêm nếu cần
+            )
         }
     }
 }

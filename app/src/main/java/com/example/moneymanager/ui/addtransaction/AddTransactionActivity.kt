@@ -29,6 +29,8 @@ class AddTransactionActivity : AppCompatActivity() {
 
     var currentItemType: ItemType? = null
     var currentCategoryType: CategoryType? = null
+    var selectedCategoryItemForAdd: CategoryItem? = null
+    var selectedAccountItemForAdd: Account? = null
 
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,19 +54,29 @@ class AddTransactionActivity : AppCompatActivity() {
         addIcon.setOnClickListener {
             animateTitleToLeftOfIcon(titleTransaction)
             updateExtraEditText("")
-            val fragment = AddItemFragment().apply {
-                arguments = Bundle().apply {
-                    putSerializable("item_type", currentItemType)
-                    putSerializable("category_type", currentCategoryType)
-                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
-                }
-            }
+            val fragment = AddItemFragment()
             when(currentItemType) {
                 ItemType.CATEGORY -> {
                     updateTransactionTitle("Category")
+                    fragment.apply {
+                        arguments = Bundle().apply {
+                            putSerializable("item_type", currentItemType)
+                            putSerializable("category_type", currentCategoryType)
+                            putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
+                            putSerializable("category_to_edit", selectedCategoryItemForAdd)
+                        }
+                    }
                 }
                 ItemType.ACCOUNT -> {
                     updateTransactionTitle("Account")
+                    fragment.apply {
+                        arguments = Bundle().apply {
+                            putSerializable("item_type", currentItemType)
+                            putSerializable("category_type", currentCategoryType)
+                            putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
+                            putSerializable("account_to_edit", selectedAccountItemForAdd)
+                        }
+                    }
                 }
                 else -> {}
             }

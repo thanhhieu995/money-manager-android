@@ -1,19 +1,26 @@
 package com.example.moneymanager.ui.addtransaction
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moneymanager.databinding.FragmentCategoryDetailBinding
+import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.viewmodel.AccountViewModel
+import com.example.moneymanager.viewmodel.AccountViewModelFactory
+import com.example.moneymanager.viewmodel.CategoryViewModel
+import com.example.moneymanager.viewmodel.CategoryViewModelFactory
 
 class CategoryDetailFragment : Fragment() {
 
     private var _binding : FragmentCategoryDetailBinding? = null
     private val binding  get() = _binding!!
     private lateinit var adapter : DetailCategoryAdapter
+    private lateinit var categoryViewModel: CategoryViewModel
+    private lateinit var accountViewModel : AccountViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,15 +34,42 @@ class CategoryDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val categoryDao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
+        val categoryViewModelFactory = CategoryViewModelFactory(categoryDao)
+        categoryViewModel = ViewModelProvider(this, categoryViewModelFactory)[CategoryViewModel::class.java]
+
+        val accountDao = AppDatabase.getDatabase(requireActivity().application).accountDao()
+        val accountViewModelFactory = AccountViewModelFactory(accountDao)
+        accountViewModel = ViewModelProvider(this, accountViewModelFactory)[AccountViewModel::class.java]
+
         val item = arguments?.getSerializable("edit_child_item") as EditItem
-        Log.d("hieu", "item: $item")
         val recyclerView = binding.fragmentCategoryDetailRecyclerView
-        adapter = DetailCategoryAdapter(emptyList())
+        adapter = DetailCategoryAdapter(emptyList()) {
+            categoryViewModel.deleteId(it.id)
+        }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
-        if (item is EditItem.Category) {
-            val list = item.item.children
-            adapter.submitList(list)
+        when(item) {
+            is EditItem.Category -> {
+                categoryViewModel.getChildCategories(item.id).observe(viewLifecycleOwner) { list ->
+                    val categoryItemList = list.map { category ->
+                        CategoryItem(
+                            id = category.id,
+                            name = category.name,
+                            emoji = category.emoji,
+                            isParent = false,
+                            parentName = item.item.parentName,
+                            parentEmoji = item.item.parentEmoji
+                        )
+                    }
+                    adapter.submitList(categoryItemList)
+                    (requireActivity() as AddTransactionActivity).selectedCategoryItemForAdd = item.item
+                }
+            }
+            is EditItem.AccountItem -> {
+                adapter.submitList(emptyList())
+                (requireActivity() as AddTransactionActivity).selectedAccountItemForAdd = item.item
+            }
         }
     }
 }
