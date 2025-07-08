@@ -40,6 +40,7 @@ class Helper {
                             emoji = child.emoji,
                             name = child.name,
                             isParent = false,
+                            parentId = parent.id,
                             parentName = parent.name,
                             parentEmoji = parent.emoji
                         )

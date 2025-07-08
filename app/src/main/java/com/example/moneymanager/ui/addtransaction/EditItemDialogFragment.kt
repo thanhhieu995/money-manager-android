@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentEditCategoryBinding
 import com.example.moneymanager.helper.Helper.Companion.buildCategoryTree
+import com.example.moneymanager.model.AddItemSource
 import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.model.ItemType
@@ -89,6 +90,7 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
                 val bundle = Bundle().apply {
                     putSerializable("edit_child_item", item)
                     putSerializable("item_type", ItemType.CATEGORY)
+                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
                 }
                 fragment.arguments = bundle
                 parentFragmentManager.beginTransaction()

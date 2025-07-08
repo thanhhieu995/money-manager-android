@@ -12,6 +12,7 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
 import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
 import com.example.moneymanager.R
 import com.example.moneymanager.model.*
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
@@ -31,6 +32,8 @@ class AddTransactionActivity : AppCompatActivity() {
     var currentCategoryType: CategoryType? = null
     var selectedCategoryItemForAdd: CategoryItem? = null
     var selectedAccountItemForAdd: Account? = null
+
+    private var currentFragment: Fragment?= null
 
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,29 +57,44 @@ class AddTransactionActivity : AppCompatActivity() {
         addIcon.setOnClickListener {
             animateTitleToLeftOfIcon(titleTransaction)
             updateExtraEditText("")
+
+            currentFragment =
+                supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
+            // source truoc khi chuyen
+            val source = currentFragment?.arguments?.getSerializable("source") as? AddItemSource
             val fragment = AddItemFragment()
-            when(currentItemType) {
-                ItemType.CATEGORY -> {
-                    updateTransactionTitle("Category")
+            when (currentFragment) {
+                is EditItemDialogFragment -> {
                     fragment.apply {
                         arguments = Bundle().apply {
                             putSerializable("item_type", currentItemType)
                             putSerializable("category_type", currentCategoryType)
                             putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
-                            putSerializable("category_to_edit", selectedCategoryItemForAdd)
                         }
                     }
                 }
-                ItemType.ACCOUNT -> {
-                    updateTransactionTitle("Account")
+                is CategoryDetailFragment -> {
                     fragment.apply {
                         arguments = Bundle().apply {
                             putSerializable("item_type", currentItemType)
                             putSerializable("category_type", currentCategoryType)
-                            putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
-                            putSerializable("account_to_edit", selectedAccountItemForAdd)
+                            putSerializable("source", AddItemSource.FROM_DETAIL_CATEGORY)
                         }
                     }
+                }
+            }
+
+            when(currentItemType) {
+                ItemType.CATEGORY -> {
+                    when(source) {
+                        AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
+                            updateTransactionTitle(selectedCategoryItemForAdd?.name ?: "Category")
+                        }
+                        else -> {}
+                    }
+                }
+                ItemType.ACCOUNT -> {
+                    updateTransactionTitle(selectedAccountItemForAdd?.name ?: "Account")
                 }
                 else -> {}
             }
@@ -98,7 +116,7 @@ class AddTransactionActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
-                val currentFragment =
+                currentFragment =
                     supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
                 if (currentFragment is EditItemDialogFragment) {
                     switchToBookmarkIconWithFade()
@@ -108,16 +126,21 @@ class AddTransactionActivity : AppCompatActivity() {
                     getIsIncome()
                     val title = if (isIncome) "Income" else "Expense"
                     val editText = if (currentItemType == ItemType.CATEGORY) "Category" else "Account"
-                    updateTransactionTitle(title)
-                    updateExtraEditText(editText)
-                    when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource ?: AddItemSource.FROM_ADD_TRANSACTION) {
+                    when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource) {
                         AddItemSource.FROM_ADD_TRANSACTION -> {
                             switchToBookmarkIconWithFade()
                             animateTitleToCenter(titleTransaction)
                         }
                         AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
+                            updateTransactionTitle(title)
+                            updateExtraEditText(editText)
                             switchToAddIconWithFade()
                         }
+                        AddItemSource.FROM_DETAIL_CATEGORY -> {
+                            updateTransactionTitle(editText)
+                            updateExtraEditText(selectedCategoryItemForAdd?.name ?: "Category")
+                        }
+                        else -> {}
                     }
                     animateExtraTextToRight(extraAddText)
                 }
@@ -162,6 +185,8 @@ class AddTransactionActivity : AppCompatActivity() {
 
     private fun init() {
         toolbar = findViewById(R.id.add_transaction_toolbar)
+        currentFragment =
+            supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
     }
 
     fun updateTransactionTitle(title: String) {

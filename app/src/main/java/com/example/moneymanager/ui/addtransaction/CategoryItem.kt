@@ -1,9 +1,10 @@
 package com.example.moneymanager.ui.addtransaction
 
 data class CategoryItem(
-    val id: Int,
+    val id: Int = -1,
     val emoji: String,
     val name: String,
+    val parentId: Int = -1,
     val parentEmoji: String? = null,
     val parentName: String? = null,
     val isParent: Boolean,

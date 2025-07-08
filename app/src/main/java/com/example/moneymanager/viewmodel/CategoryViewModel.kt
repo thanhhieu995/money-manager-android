@@ -44,4 +44,8 @@ class CategoryViewModel(private val dao: CategoryDao) : ViewModel() {
     fun update(category: Category) = viewModelScope.launch {
         repository.update(category)
     }
+
+    fun updateChildren(children: List<Category>) = viewModelScope.launch {
+        children.forEach{repository.update(it)}
+    }
 }

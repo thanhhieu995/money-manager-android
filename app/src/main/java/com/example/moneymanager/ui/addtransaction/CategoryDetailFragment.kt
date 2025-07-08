@@ -7,8 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.moneymanager.R
 import com.example.moneymanager.databinding.FragmentCategoryDetailBinding
+import com.example.moneymanager.model.AddItemSource
 import com.example.moneymanager.model.AppDatabase
+import com.example.moneymanager.model.ItemType
 import com.example.moneymanager.viewmodel.AccountViewModel
 import com.example.moneymanager.viewmodel.AccountViewModelFactory
 import com.example.moneymanager.viewmodel.CategoryViewModel
@@ -44,9 +47,9 @@ class CategoryDetailFragment : Fragment() {
 
         val item = arguments?.getSerializable("edit_child_item") as EditItem
         val recyclerView = binding.fragmentCategoryDetailRecyclerView
-        adapter = DetailCategoryAdapter(emptyList()) {
-            categoryViewModel.deleteId(it.id)
-        }
+        adapter = DetailCategoryAdapter(emptyList(),
+        onDeleteClick = {deleteChildrenCategory(it.id)},
+        onItemClick = {childrenCategoryClick(it)})
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
         when(item) {
@@ -57,19 +60,43 @@ class CategoryDetailFragment : Fragment() {
                             id = category.id,
                             name = category.name,
                             emoji = category.emoji,
+                            parentId = category.parentId ?: -1,
                             isParent = false,
                             parentName = item.item.parentName,
                             parentEmoji = item.item.parentEmoji
                         )
                     }
                     adapter.submitList(categoryItemList)
-                    (requireActivity() as AddTransactionActivity).selectedCategoryItemForAdd = item.item
                 }
+                (requireActivity() as AddTransactionActivity).selectedCategoryItemForAdd = item.item
             }
             is EditItem.AccountItem -> {
                 adapter.submitList(emptyList())
                 (requireActivity() as AddTransactionActivity).selectedAccountItemForAdd = item.item
             }
         }
+    }
+
+    private fun deleteChildrenCategory(id : Int){
+        categoryViewModel.deleteId(id)
+    }
+
+    private fun childrenCategoryClick(categoryItem: CategoryItem) {
+        val fragment = AddItemFragment().apply {
+            arguments = Bundle().apply {
+                putSerializable("item_type", ItemType.CATEGORY)
+                putSerializable("source", AddItemSource.FROM_DETAIL_CATEGORY)
+                putSerializable("category_to_edit", categoryItem)
+            }
+        }
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,  // enter
+                R.anim.no_animation,    // exit
+                R.anim.no_animation,    // popEnter (khi quay lại)
+                R.anim.slide_out_right  // popExit (khi quay lại)
+            ).replace(R.id.fragment_container_add_transaction, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

@@ -25,7 +25,7 @@ class AddItemFragment : Fragment() {
     private lateinit var itemType: ItemType
     private lateinit var categoryType: CategoryType
     private lateinit var source: AddItemSource
-    private  var categoryUpdate: CategoryItem?= null
+    private var categoryUpdate: CategoryItem?= null
     private var accountUpdate: EditItem.AccountItem?= null
 
     override fun onCreateView(
@@ -48,14 +48,15 @@ class AddItemFragment : Fragment() {
         categoryUpdate = arguments?.getSerializable("category_to_edit") as? CategoryItem
         accountUpdate = arguments?.getSerializable("account_to_edit") as? EditItem.AccountItem
 
-        if (categoryUpdate != null) {
-            nameText.text = categoryUpdate!!.name
-            btnSave.text = "Update"
-        }
-
-        if (accountUpdate != null) {
-            nameText.text = accountUpdate!!.item.name
-            btnSave.text = "Update"
+        when {
+            categoryUpdate != null -> {
+                nameText.text = categoryUpdate!!.name
+                btnSave.text = "Update"
+            }
+            accountUpdate != null -> {
+                nameText.text = accountUpdate!!.item.name
+                btnSave.text = "Update"
+            }
         }
 
         btnSave.setOnClickListener {
@@ -70,6 +71,7 @@ class AddItemFragment : Fragment() {
                     AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
                         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
                     }
+                    AddItemSource.FROM_DETAIL_CATEGORY -> {}
                 }
                 (requireActivity() as AddTransactionActivity).animateExtraTextToRight((requireActivity() as AddTransactionActivity).extraAddText)
                 when (itemType) {
@@ -80,7 +82,9 @@ class AddItemFragment : Fragment() {
                         val viewModel = ViewModelProvider(this, factory)[CategoryViewModel::class.java]
 
                         val category = categoryUpdate?.toCategory(categoryType)?.copy(
-                            name = nameText.text.toString()
+                            name = nameText.text.toString(),
+                            parentId = categoryUpdate!!.parentId,
+                            id = categoryUpdate!!.id
                         ) ?: Category(
                             emoji = "",
                             name = nameText.text.toString(),

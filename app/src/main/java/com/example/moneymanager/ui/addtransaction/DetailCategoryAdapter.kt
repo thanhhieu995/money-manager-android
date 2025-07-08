@@ -10,7 +10,8 @@ import com.example.moneymanager.R
 
 class DetailCategoryAdapter(
     private var categoryItems: List<CategoryItem>,
-    private val onDeleteClick: (CategoryItem) -> Unit
+    private val onDeleteClick: (CategoryItem) -> Unit,
+    private val onItemClick: (CategoryItem) -> Unit
 ): RecyclerView.Adapter<DetailCategoryAdapter.DetailCategoryViewHolder>() {
 
     inner class DetailCategoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -20,6 +21,9 @@ class DetailCategoryAdapter(
             name.text = "${item.emoji} ${item.name}"
             deleteIcon.setOnClickListener {
                 onDeleteClick.invoke(item)
+            }
+            itemView.setOnClickListener {
+                onItemClick.invoke(item)
             }
         }
     }
