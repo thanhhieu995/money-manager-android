@@ -3,7 +3,6 @@ package com.example.moneymanager.ui.addtransaction
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -28,7 +27,6 @@ import com.example.moneymanager.databinding.FragmentAddTransactionBinding
 import com.example.moneymanager.helper.Helper
 import com.example.moneymanager.helper.Helper.Companion.buildCategoryTree
 import com.example.moneymanager.model.*
-import com.example.moneymanager.ui.main.MainActivity
 import com.example.moneymanager.viewmodel.*
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.NumberFormat
@@ -180,10 +178,7 @@ class AddTransactionFragment : Fragment() {
 
         saveButton.setOnClickListener {
             saveTransaction {
-                // Nếu đủ thông tin thì chuyển sang MainActivity
-                val intent = Intent(requireContext(), MainActivity::class.java)
-                startActivity(intent)
-                requireActivity().finish() // kết thúc activity hiện tại
+                (saveButton.context as? AddTransactionActivity)?.onTransactionSaved()
             }
         }
 
@@ -520,17 +515,18 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun openAddItemFragment(itemType: ItemType, categoryType: CategoryType) {
-        val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
+        val titleView = (requireActivity() as AddTransactionActivity).titleCurrent
         titleView?.let { it1 ->
             (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(
                 it1
             )
         }
-        val extraAddText = (requireActivity() as AddTransactionActivity).extraAddText
         (requireActivity() as AddTransactionActivity).bookmarkIcon.visibility = View.GONE
         (requireActivity() as AddTransactionActivity).addIcon.visibility = View.GONE
-        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter(extraAddText)
-
+        (requireActivity() as AddTransactionActivity).titleStack.addLast(titleView.text.toString())
+        (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
+        val titleIncoming = (requireActivity() as AddTransactionActivity).titleIncoming
+        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(titleIncoming, "Add")
         val fragment = AddItemFragment().apply {
             arguments = Bundle().apply {
                 putSerializable("item_type", itemType)
@@ -550,16 +546,17 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun openEditCategoryFragment(itemType: ItemType, selectedType: CategoryType) {
-        val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
-        titleView?.let { it1 ->
+        val titleView = (requireActivity() as AddTransactionActivity).titleCurrent
+        titleView.let { it1 ->
             (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(
                 it1
             )
         }
-        val extraEditText = (requireActivity() as AddTransactionActivity).extraEditText
-        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter(extraEditText)
-        (requireActivity() as AddTransactionActivity).updateExtraEditText(if(itemType == ItemType.CATEGORY) "Category" else "Account")
+        (requireActivity() as AddTransactionActivity).updateTitleIncoming(if(itemType == ItemType.CATEGORY) "Category" else "Account")
+        val extraEditText = (requireActivity() as AddTransactionActivity).titleIncoming
+        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(extraEditText, extraEditText.text.toString())
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
+        (requireActivity() as AddTransactionActivity).titleStack.addLast(titleView.text.toString())
         (requireActivity() as AddTransactionActivity).apply {
             currentItemType = itemType
             currentCategoryType = selectedType
@@ -567,6 +564,7 @@ class AddTransactionFragment : Fragment() {
         // Sự kiện chỉnh sửa hoặc thêm
         val bundle = Bundle().apply {
             putSerializable("selectedType", selectedType)
+            putSerializable("source",  AddItemSource.FROM_ADD_TRANSACTION)
         }
 
         val fragment = EditItemDialogFragment()
@@ -681,17 +679,24 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun openEditAccountFragment(itemType: ItemType, categoryType: CategoryType) {
-        val titleView = (requireActivity() as AddTransactionActivity).titleTransaction
+        val titleView = (requireActivity() as AddTransactionActivity).titleCurrent
         (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
-        val extraEditText = (requireActivity() as AddTransactionActivity).extraEditText
-        (requireActivity() as AddTransactionActivity).animateExtraTextToCenter(extraEditText)
-        (requireActivity() as AddTransactionActivity).updateExtraEditText(if(itemType == ItemType.CATEGORY) "Category" else "Account")
+        (requireActivity() as AddTransactionActivity).updateTitleIncoming(if(itemType == ItemType.CATEGORY) "Category" else "Account")
+        val extraEditText = (requireActivity() as AddTransactionActivity).titleIncoming
+        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(extraEditText, extraEditText.text.toString())
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
+        (requireActivity() as AddTransactionActivity).titleStack.addLast(titleView.text.toString())
         (requireActivity() as AddTransactionActivity).apply {
             currentItemType = itemType
             currentCategoryType = categoryType
         }
         val fragment = EditItemDialogFragment()
+        fragment.apply {
+            arguments = Bundle().apply {
+                putSerializable("source",  AddItemSource.FROM_ADD_TRANSACTION)
+            }
+        }
+
         parentFragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.slide_in_right,  // enter

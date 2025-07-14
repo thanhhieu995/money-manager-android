@@ -40,7 +40,6 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val layoutSubCategory = binding.fragmentEditCategoryLayoutSubCategory
         val categoryDao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
         val categoryViewModelFactory = CategoryViewModelFactory(categoryDao)
         categoryViewModel = ViewModelProvider(this, categoryViewModelFactory)[CategoryViewModel::class.java]
@@ -64,13 +63,11 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
 
         val selectedType = arguments?.getSerializable("selectedType") as? CategoryType
         if (selectedType == null) {
-            layoutSubCategory.visibility = View.GONE
             accountViewModel.getAllAccount().observe(viewLifecycleOwner) { list ->
                 val editItems = list.map { EditItem.AccountItem(it) }
                 adapter?.submitList(editItems)
             }
         } else {
-            layoutSubCategory.visibility = View.VISIBLE
             categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 // xử lý dữ liệu tại đây
                 val treeItems = buildCategoryTree(list)
@@ -81,16 +78,19 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
     }
 
     override fun onEditItemClick(item: EditItem) {
+        val title = (requireActivity() as AddTransactionActivity).titleCurrent
+        (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(title)
+        (requireActivity() as AddTransactionActivity).updateTitleIncoming(item.name)
+        val titleIncoming = (requireActivity() as AddTransactionActivity).titleIncoming
+        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(titleIncoming, item.name)
+        (requireActivity() as AddTransactionActivity).titleStack.addLast(title.text.toString())
         when(item) {
             is EditItem.Category -> {
-                //open detail
-                (requireActivity() as AddTransactionActivity).updateTransactionTitle("Category")
-                (requireActivity() as AddTransactionActivity).updateExtraEditText(item.item.name)
                 val fragment = CategoryDetailFragment()
                 val bundle = Bundle().apply {
                     putSerializable("edit_child_item", item)
                     putSerializable("item_type", ItemType.CATEGORY)
-                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
+                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG)
                 }
                 fragment.arguments = bundle
                 parentFragmentManager.beginTransaction()
@@ -105,11 +105,12 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
                     .commit()
             }
             is EditItem.AccountItem -> {
-                //open detail
+                (requireActivity() as AddTransactionActivity).addIcon.visibility = View.GONE
                 val fragment = AddItemFragment()
                 val bundle = Bundle().apply {
                     putSerializable("item_type", ItemType.ACCOUNT)
                     putSerializable("account_to_edit", item)
+                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_ACCOUNT_DIALOG)
                 }
                 fragment.arguments = bundle
                 parentFragmentManager.beginTransaction()

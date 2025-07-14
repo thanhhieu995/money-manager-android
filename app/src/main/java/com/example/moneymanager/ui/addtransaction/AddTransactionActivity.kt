@@ -3,29 +3,25 @@ package com.example.moneymanager.ui.addtransaction
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
-import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.example.moneymanager.R
 import com.example.moneymanager.model.*
 import com.example.moneymanager.ui.bookmark.BookmarkActivity
 
 class AddTransactionActivity : AppCompatActivity() {
-    lateinit var titleTransaction: TextView
-    lateinit var extraAddText: TextView
-    lateinit var extraEditText: TextView
+    lateinit var titleCurrent: TextView
+    lateinit var titleIncoming: TextView
     lateinit var bookmarkIcon: ImageView
     lateinit var addIcon: ImageView
+    lateinit var iconBack: ImageView
     private var shouldAnimateExit = false
 
-    private lateinit var toolbar: Toolbar
+    private lateinit var toolbar: com.google.android.material.appbar.MaterialToolbar
     private var isIncome: Boolean = false
 
     var currentItemType: ItemType? = null
@@ -35,6 +31,8 @@ class AddTransactionActivity : AppCompatActivity() {
 
     private var currentFragment: Fragment?= null
 
+    val titleStack = ArrayDeque<String>()
+
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,11 +41,6 @@ class AddTransactionActivity : AppCompatActivity() {
         init()
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        titleTextToolbar()
-        extraTextAddToolbar()
-        bookmarkToolbar()
-        addIconToolbar()
-        extraTextEditToolbar()
         bookmarkIcon.setOnClickListener {
             val intent = Intent(this, BookmarkActivity::class.java)
             startActivity(intent)
@@ -55,9 +48,9 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         addIcon.setOnClickListener {
-            animateTitleToLeftOfIcon(titleTransaction)
-            updateExtraEditText("")
+            titleStack.addLast(titleCurrent.text.toString()) // Thêm vào đầu stack
 
+            animateTitleToLeftOfIcon(titleCurrent)
             currentFragment =
                 supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
             // source truoc khi chuyen
@@ -69,7 +62,7 @@ class AddTransactionActivity : AppCompatActivity() {
                         arguments = Bundle().apply {
                             putSerializable("item_type", currentItemType)
                             putSerializable("category_type", currentCategoryType)
-                            putSerializable("source", AddItemSource.FROM_EDIT_ITEM_DIALOG)
+                            putSerializable("source", AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG)
                         }
                     }
                 }
@@ -87,7 +80,7 @@ class AddTransactionActivity : AppCompatActivity() {
             when(currentItemType) {
                 ItemType.CATEGORY -> {
                     when(source) {
-                        AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
+                        AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG -> {
                             updateTransactionTitle(selectedCategoryItemForAdd?.name ?: "Category")
                         }
                         else -> {}
@@ -99,7 +92,7 @@ class AddTransactionActivity : AppCompatActivity() {
                 else -> {}
             }
             addIcon.visibility = View.GONE
-            animateExtraTextToCenter(extraAddText)
+            animateIncomingTitleToCenter(titleIncoming, "Add")
 
             supportFragmentManager.beginTransaction()
                 .setCustomAnimations(
@@ -112,37 +105,35 @@ class AddTransactionActivity : AppCompatActivity() {
                 .commit()
         }
 
-        toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_ios_24)
-        toolbar.setNavigationOnClickListener {
+        iconBack.setOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
+
                 currentFragment =
                     supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
-                if (currentFragment is EditItemDialogFragment) {
-                    switchToBookmarkIconWithFade()
-                    animateExtraTextToRight(extraEditText)
-                    animateTitleToCenter(titleTransaction)
-                } else {
-                    getIsIncome()
-                    val title = if (isIncome) "Income" else "Expense"
-                    val editText = if (currentItemType == ItemType.CATEGORY) "Category" else "Account"
-                    when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource) {
-                        AddItemSource.FROM_ADD_TRANSACTION -> {
-                            switchToBookmarkIconWithFade()
-                            animateTitleToCenter(titleTransaction)
-                        }
-                        AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
-                            updateTransactionTitle(title)
-                            updateExtraEditText(editText)
-                            switchToAddIconWithFade()
-                        }
-                        AddItemSource.FROM_DETAIL_CATEGORY -> {
-                            updateTransactionTitle(editText)
-                            updateExtraEditText(selectedCategoryItemForAdd?.name ?: "Category")
-                        }
-                        else -> {}
+
+                // Lấy title từ titleStack (có thể là title trước đó, hoặc mặc định là "Transaction")
+                val previousTitle = if (titleStack.isNotEmpty()) titleStack.removeLast() else "Transaction"
+
+                // Áp dụng animation cho title khi quay lại
+                animateBackTitleTransition(previousTitle)
+
+                // Xử lý các thay đổi UI khác khi quay lại
+                when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource) {
+                    AddItemSource.FROM_ADD_TRANSACTION -> {
+                        switchToBookmarkIconWithFade()
                     }
-                    animateExtraTextToRight(extraAddText)
+                    AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG -> {
+                        switchToAddIconWithFade()
+                    }
+                    AddItemSource.FROM_DETAIL_CATEGORY -> {
+                        // Optional logic if necessary
+                        switchToAddIconWithFade()
+                    }
+                    AddItemSource.FROM_EDIT_ITEM_ACCOUNT_DIALOG -> {
+                        addIcon.visibility = View.VISIBLE
+                    }
+                    else -> {}
                 }
             } else {
                 finish()
@@ -153,7 +144,7 @@ class AddTransactionActivity : AppCompatActivity() {
         val transaction = intent.getSerializableExtra("transaction") as? Transaction
 
         if (transaction != null) {
-            titleTransaction.text = if (transaction.isIncome) "Income" else "Expense"
+            titleCurrent.text = if (transaction.isIncome) "Income" else "Expense"
         }
 
         if (savedInstanceState == null) {
@@ -187,28 +178,34 @@ class AddTransactionActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.add_transaction_toolbar)
         currentFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
+        bookmarkIcon = findViewById(R.id.add_transaction_starButton)
+        addIcon = findViewById(R.id.add_transaction_addButton)
+        iconBack = findViewById(R.id.add_transaction_backButton)
+        titleCurrent = findViewById(R.id.add_transaction_titleCurrent)
+        titleIncoming = findViewById(R.id.add_transaction_titleIncoming)
     }
 
     fun updateTransactionTitle(title: String) {
-        titleTransaction.text = title
+        titleCurrent.text = title
     }
 
-    fun updateExtraEditText(text: String) {
-        extraEditText.text = text
+    fun updateTitleIncoming(text: String) {
+        titleIncoming.text = text
     }
 
-    fun animateTitleToLeftOfIcon(titleTransaction: TextView) {
-        // Kích thước icon back
-        val iconWidth = toolbar.navigationIcon?.intrinsicWidth ?: 0
-        // Padding mặc định icon bên trái
-        val iconMargin = (toolbar.contentInsetStartWithNavigation)
-        // Tổng khoảng trống cần dịch tiêu đề sang trái
-        val targetTranslationX =
-            -(toolbar.width / 2f) + iconWidth + iconMargin // 16dp padding tùy chỉnh
-        titleTransaction.animate()
-            .translationX(targetTranslationX)
-            .setDuration(300L)
-            .start()
+    fun animateTitleToLeftOfIcon(titleView: TextView) {
+        titleView.post {
+            val iconStart = iconBack.left
+            val titleCenterX = titleView.left + titleView.width / 2f
+            val iconCenterX = iconStart + iconBack.width / 2f
+            val targetTranslationX = iconCenterX - titleCenterX
+
+            titleView.animate()
+                .translationX(targetTranslationX)
+                .setDuration(300)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .start()
+        }
     }
 
     fun animateTitleToCenter(titleTransaction: TextView) {
@@ -221,89 +218,6 @@ class AddTransactionActivity : AppCompatActivity() {
         animator.duration = 300
         animator.interpolator = AccelerateDecelerateInterpolator()
         animator.start()
-    }
-
-    private fun titleTextToolbar() {
-        // Tạo tiêu đề tuỳ chỉnh và thêm vào toolbar
-        titleTransaction = TextView(this).apply {
-            text = "Expense" // Default
-            textSize = 18f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        val params = Toolbar.LayoutParams(
-            Toolbar.LayoutParams.WRAP_CONTENT,
-            Toolbar.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = Gravity.CENTER
-        }
-        toolbar.addView(titleTransaction, params)
-    }
-
-    private fun extraTextAddToolbar() {
-        extraAddText = TextView(this).apply {
-            text = "Add"
-            textSize = 18f
-            visibility = View.GONE
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-        }
-        val params = Toolbar.LayoutParams(
-            Toolbar.LayoutParams.WRAP_CONTENT,
-            Toolbar.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = Gravity.END
-        }
-        toolbar.addView(extraAddText, params)
-    }
-
-    private fun extraTextEditToolbar() {
-        extraEditText = TextView(this).apply {
-            text = "Edit"
-            textSize = 18f
-            visibility = View.GONE
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-        }
-        val params = Toolbar.LayoutParams(
-            Toolbar.LayoutParams.WRAP_CONTENT,
-            Toolbar.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = Gravity.END
-        }
-        toolbar.addView(extraEditText, params)
-    }
-
-    private fun bookmarkToolbar() {
-        // icon bookmark
-        bookmarkIcon = ImageView(this).apply {
-            setImageResource(R.drawable.ic_baseline_star_border_24) // icon sao
-            setPadding(16, 0, 16, 0)
-            layoutParams = Toolbar.LayoutParams(
-                Toolbar.LayoutParams.WRAP_CONTENT,
-                Toolbar.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.END
-            }
-        }
-
-        toolbar.addView(bookmarkIcon)
-    }
-
-    private fun addIconToolbar() {
-        addIcon = ImageView(this).apply {
-            setImageResource(R.drawable.ic_baseline_add_24)
-            visibility = View.GONE // ẩn ban đầu
-            layoutParams = Toolbar.LayoutParams(
-                Toolbar.LayoutParams.WRAP_CONTENT,
-                Toolbar.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.END
-                marginEnd = 16
-            }
-        }
-        toolbar.addView(addIcon)
     }
 
     fun switchToAddIconWithFade() {
@@ -324,30 +238,82 @@ class AddTransactionActivity : AppCompatActivity() {
         }.start()
     }
 
-    fun animateExtraTextToCenter(textView: TextView) {
-        textView.visibility = View.VISIBLE
-        textView.post {
-            val toolbarCenterX = toolbar.width / 2f
-            val textCenterX = textView.left + textView.width / 2f
-            val targetTranslationX = toolbarCenterX - textCenterX
+    fun animateIncomingTitleToCenter(titleView: TextView, newText: String) {
+        titleView.text = newText
+        titleView.visibility = View.VISIBLE
+        titleView.alpha = 1f
 
-            textView.animate()
-                .translationX(targetTranslationX)
+        titleView.post {
+            val screenWidth = toolbar.width
+            val centerX = screenWidth / 2f
+            val textCenterX = titleView.left + titleView.width / 2f
+            val offsetToCenter = centerX - textCenterX
+
+            // Bắt đầu từ bên phải ngoài màn hình
+            titleView.translationX = screenWidth.toFloat()
+
+            // Animate vào giữa
+            titleView.animate()
+                .translationX(offsetToCenter)
                 .setDuration(300)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .withEndAction {
+                    // Sau khi vào giữa, cập nhật lại titleCurrent
+                    titleCurrent.text = newText
+                    titleCurrent.translationX = 0f
+
+                    // Ẩn và reset titleIncoming
+                    titleView.visibility = View.GONE
+                    titleView.translationX = 0f
+                }
                 .start()
         }
     }
 
-    fun animateExtraTextToRight(textView: TextView) {
-        textView.visibility = View.VISIBLE
-        textView.animate()
-            .translationX(0f) // Di chuyển về vị trí ban đầu
-            .alpha(0f)        // Làm mờ dần
+    fun animateBackTitleTransition(previousTitle: String) {
+        val toolbarWidth = toolbar.width.toFloat()
+
+        // 1. Animate titleCurrent trượt sang phải và ẩn
+        titleCurrent.animate()
+            .translationX(toolbarWidth) // trượt ra bên phải
             .setDuration(300)
+            .setInterpolator(AccelerateDecelerateInterpolator())
             .withEndAction {
-                textView.visibility = View.GONE
-                textView.alpha = 1f // reset alpha để dùng lại sau
+                titleCurrent.visibility = View.GONE
+                titleCurrent.translationX = 0f // reset để dùng lại
             }
             .start()
+
+        // 2. titleIncoming xuất hiện từ bên trái
+        titleIncoming.text = previousTitle
+        titleIncoming.visibility = View.VISIBLE
+        titleIncoming.translationX = -toolbarWidth // bắt đầu từ ngoài trái
+
+        // 3. Animate titleIncoming vào giữa
+        titleIncoming.animate()
+            .translationX(0f)
+            .setDuration(300)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .withEndAction {
+                // Khi animation kết thúc: cập nhật titleCurrent
+                titleCurrent.text = previousTitle
+                titleCurrent.translationX = 0f
+                titleCurrent.visibility = View.VISIBLE
+
+                // Reset titleIncoming
+                titleIncoming.visibility = View.GONE
+                titleIncoming.translationX = 0f
+            }
+            .start()
+    }
+
+    fun popTitleStackAndAnimateBack() {
+        val previousTitle = if (titleStack.isNotEmpty()) titleStack.removeLast() else "Transaction"
+        animateBackTitleTransition(previousTitle)
+    }
+
+    fun onTransactionSaved() {
+        finish()
+        overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
     }
 }

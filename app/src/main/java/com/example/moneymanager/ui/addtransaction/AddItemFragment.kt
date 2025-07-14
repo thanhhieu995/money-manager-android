@@ -52,28 +52,30 @@ class AddItemFragment : Fragment() {
             categoryUpdate != null -> {
                 nameText.text = categoryUpdate!!.name
                 btnSave.text = "Update"
+                (requireActivity() as AddTransactionActivity).addIcon.visibility = View.GONE
             }
             accountUpdate != null -> {
                 nameText.text = accountUpdate!!.item.name
                 btnSave.text = "Update"
+                (requireActivity() as AddTransactionActivity).addIcon.visibility = View.GONE
             }
         }
 
         btnSave.setOnClickListener {
             if (nameText.text.trim().isNotEmpty()) {
                 (requireActivity() as AddTransactionActivity).updateTransactionTitle(if (categoryType == CategoryType.EXPENSE)"Expense" else "Income")
-                (requireActivity() as AddTransactionActivity).updateExtraEditText(if (itemType == ItemType.CATEGORY) "Category" else "Account")
+                (requireActivity() as AddTransactionActivity).updateTitleIncoming(if (itemType == ItemType.CATEGORY) "Category" else "Account")
                 when (source) {
                     AddItemSource.FROM_ADD_TRANSACTION -> {
                         (requireActivity() as AddTransactionActivity).switchToBookmarkIconWithFade()
-                        (requireActivity() as AddTransactionActivity).animateTitleToCenter((requireActivity() as AddTransactionActivity).titleTransaction)
+                        (requireActivity() as AddTransactionActivity).animateTitleToCenter((requireActivity() as AddTransactionActivity).titleCurrent)
                     }
-                    AddItemSource.FROM_EDIT_ITEM_DIALOG -> {
+                    AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG -> {
                         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
                     }
                     AddItemSource.FROM_DETAIL_CATEGORY -> {}
+                    AddItemSource.FROM_EDIT_ITEM_ACCOUNT_DIALOG -> {}
                 }
-                (requireActivity() as AddTransactionActivity).animateExtraTextToRight((requireActivity() as AddTransactionActivity).extraAddText)
                 when (itemType) {
                     ItemType.CATEGORY -> {
                         // Xử lý cho category
@@ -92,9 +94,15 @@ class AddItemFragment : Fragment() {
                         )
                         if (categoryUpdate != null) {
                             viewModel.update(category)
+                        } else if (source == AddItemSource.FROM_DETAIL_CATEGORY) {
+                            val categoryChoose = (requireActivity() as AddTransactionActivity).selectedCategoryItemForAdd
+                            val childCategory = Category(emoji = "", name = nameText.text.toString(), parentId = categoryChoose?.id, type = categoryType)
+                            viewModel.insert(childCategory)
                         } else {
                             viewModel.insert(category)
                         }
+                        (requireActivity() as AddTransactionActivity).popTitleStackAndAnimateBack()
+                        (requireActivity() as AddTransactionActivity).addIcon.visibility = View.VISIBLE
                         parentFragmentManager.popBackStack()
                     }
                     ItemType.ACCOUNT -> {
@@ -110,6 +118,8 @@ class AddItemFragment : Fragment() {
                         } else {
                             viewModel.insert(account)
                         }
+                        (requireActivity() as AddTransactionActivity).popTitleStackAndAnimateBack()
+                        (requireActivity() as AddTransactionActivity).addIcon.visibility = View.VISIBLE
                         parentFragmentManager.popBackStack()
                     }
                 }
