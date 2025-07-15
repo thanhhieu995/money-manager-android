@@ -12,6 +12,7 @@ import com.example.moneymanager.model.AppDatabase
 import com.example.moneymanager.model.Category
 import com.example.moneymanager.model.CategoryType
 import com.example.moneymanager.ui.bottomNavigation.DailyNavigateFragment
+import com.example.moneymanager.ui.bottomNavigation.StatisticFragment
 import com.example.moneymanager.viewmodel.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.time.format.DateTimeFormatter
@@ -51,6 +52,9 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_stats -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.main_fragment_container, StatisticFragment())
+                        .commit()
                     true
                 }
                 R.id.nav_accounts -> {
@@ -79,7 +83,7 @@ class MainActivity : AppCompatActivity() {
             if (listCategory.isEmpty()) {
                 val defaultCategories = listOf(
                     // expense
-                    Category(emoji = "🍔", name = "Food", type = typeExpense),
+                    Category(emoji = " \uD83E\uDD57", name = "Food", type = typeExpense),
                     Category(emoji = "🚗", name = "Transport", type = typeExpense),
                     Category(emoji = "🏠", name = "Household", type = typeExpense),
                     Category(emoji = "🐶", name = "Pets", type = typeExpense),
@@ -91,21 +95,9 @@ class MainActivity : AppCompatActivity() {
                     Category(emoji = "💻", name = "Investment", type = typeExpense),
                     Category(emoji = "🎨", name = "Culture", type = typeExpense),
                     Category(emoji = "🚲", name = "Bicycle", type = typeExpense),
-                    Category(emoji = "🍔", name = "Breakfast", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Lunch", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Dinner", type = typeExpense, parentId = 1),
-                    Category(emoji = "🚲", name = "Bicycle", type = typeExpense),
-                    Category(emoji = "🍔", name = "Breakfast", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Lunch", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Dinner", type = typeExpense, parentId = 1),
-                    Category(emoji = "🚲", name = "Bicycle", type = typeExpense),
-                    Category(emoji = "🍔", name = "Breakfast", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Lunch", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Dinner", type = typeExpense, parentId = 1),
-                    Category(emoji = "🚲", name = "Bicycle", type = typeExpense),
-                    Category(emoji = "🍔", name = "Breakfast", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Lunch", type = typeExpense, parentId = 1),
-                    Category(emoji = "🍔", name = "Dinner", type = typeExpense, parentId = 1),
+                    Category(emoji = "\uD83C\uDF73 ☕", name = "Breakfast", type = typeExpense, parentId = 1),
+                    Category(emoji = "\uD83E\uDD57 \uD83C\uDF71", name = "Lunch", type = typeExpense, parentId = 1),
+                    Category(emoji = "\uD83C\uDF72 \uD83C\uDF56", name = "Dinner", type = typeExpense, parentId = 1),
                     // income
                     Category(emoji = "💸", name = "Allowance", type = typeIncome),
                     Category(emoji = "💼", name = "Salary", type = typeIncome),

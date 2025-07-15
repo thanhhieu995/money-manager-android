@@ -102,31 +102,35 @@ class DailyNavigateFragment : Fragment() {
         })
 
         viewModel.currentTabPosition.observe(viewLifecycleOwner) { position ->
-            val filteredMonth = FilterTransactions.filterTransactionsByMonth(listTransactionGroup,
-                month!!
-            )
+            val filteredMonth = month?.let {
+                FilterTransactions.filterTransactionsByMonth(listTransactionGroup,
+                    it
+                )
+            }
             val filteredYear =
-                FilterTransactions.filterTransactionsByYear(listTransactionGroup, month!!)
+                month?.let { FilterTransactions.filterTransactionsByYear(listTransactionGroup, it) }
             when (position) {
                 0 -> {
                     // Daily tab selected
                     if (month != null) {
                         monthText.text = month!!.format(formatterMonth)
-                        handleSummarySection(filteredMonth)
+                        handleSummarySection(filteredMonth?: emptyList())
                     }
                 }
                 1 -> {
                     // Calendar tab selected
                     if (month != null) {
                         monthText.text = month!!.format(formatterMonth)
-                        handleSummarySection(filteredMonth)
+                        handleSummarySection(filteredMonth ?: emptyList())
                     }
                 }
                 2 -> {
                     // Monthly tab selected
                     if (month != null) {
                         monthText.text = month!!.format(formatterYear)
-                        handleSummarySection(filteredYear)
+                        if (filteredYear != null) {
+                            handleSummarySection(filteredYear)
+                        }
                     }
                 }
             }
