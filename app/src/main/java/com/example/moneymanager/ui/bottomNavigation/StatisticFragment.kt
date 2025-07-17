@@ -65,7 +65,7 @@ class StatisticFragment : Fragment() {
         _binding = null
     }
 
-    fun drawPieChart(entries: List<PieEntry>) {
+    private fun drawPieChart(entries: List<PieEntry>) {
         val dataSet = PieDataSet(entries, "")
         dataSet.colors = listOf(
             Color.parseColor("#FF6F61"),
@@ -89,6 +89,7 @@ class StatisticFragment : Fragment() {
             setEntryLabelColor(Color.BLACK)
             setEntryLabelTextSize(12f)
             description.isEnabled = false
+            legend.isEnabled = false
             invalidate() // refresh
         }
     }
