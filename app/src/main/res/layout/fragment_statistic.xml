@@ -132,10 +132,20 @@
             android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
-    <com.github.mikephil.charting.charts.PieChart
-        android:id="@+id/fragment_statistic_pieChart"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content">
+
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/fragment_statistic_pieChart"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     <!-- Danh sách phân loại -->
     <androidx.recyclerview.widget.RecyclerView
