@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:gravity="center_vertical">
+
+    <!-- Ô vuông màu -->
+    <FrameLayout
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="12dp">
+
+        <!-- Nền màu -->
+        <View
+            android:id="@+id/item_statistic_category_colorBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_rounded_color_box"
+            android:layout_gravity="center" />
+
+        <!-- Phần trăm -->
+        <TextView
+            android:id="@+id/item_statistic_category_percent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="25%"
+            android:textSize="10sp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Tên category -->
+    <TextView
+        android:id="@+id/item_statistic_category_category_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Food"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <!-- Số tiền -->
+    <TextView
+        android:id="@+id/item_statistic_category_amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="120,000 ₫"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black" />
+</LinearLayout>

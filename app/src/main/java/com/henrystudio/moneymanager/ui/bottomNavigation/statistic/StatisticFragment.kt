@@ -1,17 +1,20 @@
-package com.henrystudio.moneymanager.ui.bottomNavigation
+package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
 import com.henrystudio.moneymanager.model.AppDatabase
+import com.henrystudio.moneymanager.model.CategoryStat
 import com.henrystudio.moneymanager.model.CategoryTotal
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -56,7 +59,7 @@ class StatisticFragment : Fragment() {
             val pieEntries = categoryTotals.map {
                 PieEntry(((it.totalAmount / totalExpenses) * 100f).toFloat(), it.categoryName)
             }
-            drawPieChart(pieEntries)
+            drawPieChart(pieEntries, categoryTotals)
         }
     }
 
@@ -65,9 +68,9 @@ class StatisticFragment : Fragment() {
         _binding = null
     }
 
-    private fun drawPieChart(entries: List<PieEntry>) {
+    private fun drawPieChart(entries: List<PieEntry>, categoryTotals: List<CategoryTotal>) {
         val dataSet = PieDataSet(entries, "")
-        dataSet.colors = listOf(
+        val colors = listOf(
             Color.parseColor("#FF6F61"),
             Color.parseColor("#6A1B9A"),
             Color.parseColor("#039BE5"),
@@ -75,6 +78,7 @@ class StatisticFragment : Fragment() {
             Color.parseColor("#FFB74D"),
             Color.parseColor("#26A69A")
         )
+        dataSet.colors = colors
         dataSet.valueTextColor = Color.WHITE
         dataSet.valueTextSize = 14f
 
@@ -92,5 +96,22 @@ class StatisticFragment : Fragment() {
             legend.isEnabled = false
             invalidate() // refresh
         }
+
+        // Tính tổng để tính phần trăm
+        val total = categoryTotals.sumOf { it.totalAmount }
+
+        val statList = categoryTotals.mapIndexed { index, cat ->
+            CategoryStat(
+                name = cat.categoryName ?: "Unknown",
+                percent = (cat.totalAmount / total * 100f).toFloat(),
+                amount = cat.totalAmount.toFloat(),
+                color = colors[index % colors.size]
+            )
+        }
+
+        // Gán adapter cho RecyclerView
+        val adapter = CategoryStatAdapter(statList)
+        binding.fragmentStatisticStatsRecyclerView.adapter = adapter
+        binding.fragmentStatisticStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
     }
 }

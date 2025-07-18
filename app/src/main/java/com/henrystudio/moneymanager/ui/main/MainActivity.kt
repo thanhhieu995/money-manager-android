@@ -13,7 +13,7 @@ import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Category
 import com.henrystudio.moneymanager.model.CategoryType
 import com.henrystudio.moneymanager.ui.bottomNavigation.DailyNavigateFragment
-import com.henrystudio.moneymanager.ui.bottomNavigation.StatisticFragment
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticFragment
 import com.henrystudio.moneymanager.viewmodel.*
 import java.time.format.DateTimeFormatter
 import java.util.*
