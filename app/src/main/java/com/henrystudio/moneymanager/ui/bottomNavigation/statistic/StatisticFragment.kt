@@ -1,6 +1,7 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
 import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -12,10 +13,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.CategoryStat
 import com.henrystudio.moneymanager.model.CategoryTotal
+import com.henrystudio.moneymanager.model.CategoryType
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
@@ -23,6 +26,7 @@ class StatisticFragment : Fragment() {
     private var _binding: FragmentStatisticBinding? = null
     private val binding get() = _binding!!
     private var transactionViewModel: TransactionViewModel? = null
+    var currentStatType = CategoryType.EXPENSE
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,27 +43,18 @@ class StatisticFragment : Fragment() {
         val factory = TransactionViewModelFactory(dao)
         transactionViewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
 
-        transactionViewModel!!.allTransactions.observe(viewLifecycleOwner) { list ->
-            val expenseTransactions = list.filter { !it.isIncome } // chỉ lấy chi tiêu
-
-            // Gom nhóm theo categoryName
-            val categoryTotals = expenseTransactions
-                .groupBy { it.category }
-                .map { (category, transactions) ->
-                    CategoryTotal(
-                        categoryName = category,
-                        totalAmount = transactions.sumOf { it.amount }
-                    )
+        binding.fragmentStatisticToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                currentStatType = when (checkedId) {
+                    binding.fragmentStatisticBtnIncome.id -> CategoryType.INCOME
+                    else -> CategoryType.EXPENSE
                 }
-
-            // Tổng tất cả chi tiêu
-            val totalExpenses = categoryTotals.sumOf { it.totalAmount }
-
-            // Chuyển thành dữ liệu cho PieChart (MPAndroidChart)
-            val pieEntries = categoryTotals.map {
-                PieEntry(((it.totalAmount / totalExpenses) * 100f).toFloat(), it.categoryName)
+                updateChart(currentStatType)
             }
-            drawPieChart(pieEntries, categoryTotals)
+        }
+
+        transactionViewModel!!.allTransactions.observe(viewLifecycleOwner) {
+            updateChart(currentStatType)
         }
     }
 
@@ -68,7 +63,33 @@ class StatisticFragment : Fragment() {
         _binding = null
     }
 
-    private fun drawPieChart(entries: List<PieEntry>, categoryTotals: List<CategoryTotal>) {
+    private fun updateChart(statType: CategoryType) {
+        val list = transactionViewModel!!.allTransactions.value ?: return
+
+        val filtered = when (statType) {
+            CategoryType.EXPENSE -> list.filter { !it.isIncome }
+            CategoryType.INCOME -> list.filter { it.isIncome }
+        }
+
+        val categoryTotals = filtered
+            .groupBy { it.category }
+            .map { (category, transactions) ->
+                CategoryTotal(
+                    categoryName = category,
+                    totalAmount = transactions.sumOf { it.amount }
+                )
+            }
+
+        val totalAmount = categoryTotals.sumOf { it.totalAmount }.takeIf { it > 0 } ?: 1f
+
+        val pieEntries = categoryTotals.map {
+            PieEntry(((it.totalAmount.toFloat() / totalAmount.toFloat()) * 100f), it.categoryName)
+        }
+
+        drawPieChart(pieEntries, categoryTotals, statType)
+    }
+
+    private fun drawPieChart(entries: List<PieEntry>, categoryTotals: List<CategoryTotal>, categoryType: CategoryType) {
         val dataSet = PieDataSet(entries, "")
         val colors = listOf(
             Color.parseColor("#FF6F61"),
@@ -83,21 +104,25 @@ class StatisticFragment : Fragment() {
         dataSet.valueTextSize = 14f
 
         val pieData = PieData(dataSet)
+        pieData.setValueFormatter(object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                return "${Math.round(value)}%"
+            }
+        })
 
         binding.fragmentStatisticPieChart.apply {
             data = pieData
             setUsePercentValues(true)
             isDrawHoleEnabled = true
-            centerText = "Expenses"
+            centerText = if (categoryType == CategoryType.EXPENSE) "Expense" else "Income"
             setCenterTextSize(16f)
             setEntryLabelColor(Color.BLACK)
             setEntryLabelTextSize(12f)
             description.isEnabled = false
             legend.isEnabled = false
-            invalidate() // refresh
+            invalidate()
         }
 
-        // Tính tổng để tính phần trăm
         val total = categoryTotals.sumOf { it.totalAmount }
 
         val statList = categoryTotals.mapIndexed { index, cat ->
@@ -109,7 +134,6 @@ class StatisticFragment : Fragment() {
             )
         }
 
-        // Gán adapter cho RecyclerView
         val adapter = CategoryStatAdapter(statList)
         binding.fragmentStatisticStatsRecyclerView.adapter = adapter
         binding.fragmentStatisticStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())

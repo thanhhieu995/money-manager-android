@@ -102,6 +102,7 @@
         android:layout_marginTop="8dp"
         android:layout_gravity="center"
         app:singleSelection="true"
+        app:selectionRequired="true"
         app:checkedButton="@+id/fragment_statistic_btnExpense"
         android:backgroundTint="@android:color/transparent">
 
@@ -110,26 +111,26 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/ToggleButtonStyle"
             android:text="Income"
             app:cornerRadius="16dp"
-            app:strokeColor="@color/rose"
+            app:strokeColor="@color/income"
             app:strokeWidth="2dp"
-            android:textColor="@color/black"
-            android:backgroundTint="@android:color/transparent" />
+            android:textColor="@color/toggle_button_income_text_selector"
+            android:backgroundTint="@color/toggle_button_income_background_selector"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/fragment_statistic_btnExpense"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/ToggleButtonStyle"
             android:text="Expense"
             app:cornerRadius="16dp"
             app:strokeColor="@color/red"
             app:strokeWidth="2dp"
-            android:textColor="@color/red"
-            android:backgroundTint="@android:color/transparent" />
+            android:textColor="@color/toggle_button_expense_text_selector"
+            android:backgroundTint="@color/toggle_button_expense_background_selector"/>
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <androidx.core.widget.NestedScrollView
