@@ -31,6 +31,7 @@ class DailyFragment : Fragment() {
     private var transactionGroupListFilter: List<TransactionGroup> = emptyList()
     private var allTransactions: List<TransactionGroup> = emptyList()
     private var month: LocalDate? = null
+    private var selectedList: List<Transaction> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -107,9 +108,27 @@ class DailyFragment : Fragment() {
             true
         }
 
+        // Adapter listen click update color item transaction
         adapter.isTransactionSelected = { transaction ->
             viewModel.selectionMode.value == true &&
-            viewModel.selectedTransactions.value?.contains(transaction) == true
+                    viewModel.selectedTransactions.value?.contains(transaction) == true
+        }
+
+        // Click close edit layout change color item transaction
+        viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
+            if (selectedTransactions.isEmpty()) {
+                val allGroups = allTransactions
+                for (tx in selectedList) {
+                    for (group in allGroups) {
+                        if (group.transactions.contains(tx)) {
+                            val childAdapter = adapter.getChildAdapterForGroup(group.date) ?: continue
+                            childAdapter.updateTransaction(tx)
+                            break
+                        }
+                    }
+                }
+            }
+            selectedList = selectedTransactions
         }
     }
 

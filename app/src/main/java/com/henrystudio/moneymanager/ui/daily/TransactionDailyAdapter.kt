@@ -77,4 +77,11 @@ class TransactionDailyAdapter(
     override fun getItemId(position: Int): Long {
         return getItem(position).id.toLong()
     }
+
+    fun updateTransaction(transaction: Transaction) {
+        val index = currentList.indexOf(transaction)
+        if (index != -1) {
+            notifyItemChanged(index)
+        }
+    }
 }
