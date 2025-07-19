@@ -84,6 +84,7 @@ class StatisticFragment : Fragment() {
         viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
             monthText.text = selectedMonth.format(formatterMonth)
             val filterList = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
+            updateTextButton(filterList)
             filteredListTransaction = filterList
             updateChart(currentStatType, filterList)
         }
@@ -206,5 +207,15 @@ class StatisticFragment : Fragment() {
         toggleGroupButton = binding.fragmentStatisticToggleGroup
         incomeBtn = binding.fragmentStatisticBtnIncome
         expenseBtn = binding.fragmentStatisticBtnExpense
+    }
+
+    private fun updateTextButton(filteredList: List<Transaction>) {
+        val incomeList = filteredList.filter { it.isIncome }
+        val expenseList = filteredList.filter { !it.isIncome }
+
+        val totalIncome = incomeList.sumOf { it.amount }
+        val totalExpense = expenseList.sumOf { it.amount }
+        incomeBtn.text = "Income " + Helper.formatCurrency(totalIncome)
+        expenseBtn.text = "Exp " + Helper.formatCurrency(totalExpense)
     }
 }
