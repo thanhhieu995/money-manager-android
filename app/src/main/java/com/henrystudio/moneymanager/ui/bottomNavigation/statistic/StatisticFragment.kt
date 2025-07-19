@@ -1,14 +1,12 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
 import android.graphics.Color
-import android.graphics.Paint
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -25,8 +23,14 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 class StatisticFragment : Fragment() {
     private var _binding: FragmentStatisticBinding? = null
     private val binding get() = _binding!!
-    private var transactionViewModel: TransactionViewModel? = null
     var currentStatType = CategoryType.EXPENSE
+
+    private val viewModel : TransactionViewModel by activityViewModels {
+        TransactionViewModelFactory(
+            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+        )
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,10 +43,6 @@ class StatisticFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        transactionViewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
-
         binding.fragmentStatisticToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 currentStatType = when (checkedId) {
@@ -53,7 +53,7 @@ class StatisticFragment : Fragment() {
             }
         }
 
-        transactionViewModel!!.allTransactions.observe(viewLifecycleOwner) {
+        viewModel.allTransactions.observe(viewLifecycleOwner) {
             updateChart(currentStatType)
         }
     }
@@ -64,7 +64,7 @@ class StatisticFragment : Fragment() {
     }
 
     private fun updateChart(statType: CategoryType) {
-        val list = transactionViewModel!!.allTransactions.value ?: return
+        val list = viewModel.allTransactions.value ?: return
 
         val filtered = when (statType) {
             CategoryType.EXPENSE -> list.filter { !it.isIncome }

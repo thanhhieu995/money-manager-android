@@ -26,6 +26,10 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
+    val transactionDao by lazy {
+        AppDatabase.getDatabase(application).transactionDao()
+    }
+
     @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {

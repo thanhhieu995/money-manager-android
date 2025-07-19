@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
@@ -22,9 +21,9 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.fragment.app.activityViewModels
 
 class DailyFragment : Fragment() {
-    private lateinit var viewModel: TransactionViewModel
     private lateinit var adapter: TransactionGroupAdapter
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
@@ -32,6 +31,12 @@ class DailyFragment : Fragment() {
     private var allTransactions: List<TransactionGroup> = emptyList()
     private var month: LocalDate? = null
     private var selectedList: List<Transaction> = emptyList()
+
+    private val viewModel: TransactionViewModel by activityViewModels {
+        TransactionViewModelFactory(
+            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,10 +49,6 @@ class DailyFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
 
         adapter = TransactionGroupAdapter()
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
@@ -108,26 +109,31 @@ class DailyFragment : Fragment() {
             true
         }
 
-        // Adapter listen click update color item transaction
+        // click to change color choose transaction
         adapter.isTransactionSelected = { transaction ->
-            viewModel.selectionMode.value == true &&
-                    viewModel.selectedTransactions.value?.contains(transaction) == true
+            val mode = viewModel.selectionMode.value == true
+            val selectedList = viewModel.selectedTransactions.value
+            val selected = selectedList?.any { it.id == transaction.id } == true
+            mode && selected
         }
 
         // Click close edit layout change color item transaction
         viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
             if (selectedTransactions.isEmpty()) {
-                val allGroups = allTransactions
                 for (tx in selectedList) {
-                    for (group in allGroups) {
-                        if (group.transactions.contains(tx)) {
-                            val childAdapter = adapter.getChildAdapterForGroup(group.date) ?: continue
-                            childAdapter.updateTransaction(tx)
-                            break
-                        }
-                    }
+                    val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
+                    childAdapter.updateTransaction(tx)
+                }
+            } else {
+                val added = selectedTransactions.filterNot { selectedList.contains(it) }
+                val removed = selectedList.filterNot { selectedTransactions.contains(it) }
+
+                for (tx in added + removed) {
+                    val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
+                    childAdapter.updateTransaction(tx)
                 }
             }
+
             selectedList = selectedTransactions
         }
     }
