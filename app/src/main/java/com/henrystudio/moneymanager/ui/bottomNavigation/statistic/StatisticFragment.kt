@@ -20,9 +20,12 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -36,6 +39,9 @@ class StatisticFragment : Fragment() {
     private lateinit var monthNext: ImageView
     private lateinit var monthText: TextView
     private lateinit var noDataText: TextView
+    private lateinit var toggleGroupButton: MaterialButtonToggleGroup
+    private lateinit var incomeBtn: MaterialButton
+    private lateinit var expenseBtn: MaterialButton
     private var allTransactions: List<Transaction> = emptyList()
     private var filteredListTransaction : List<Transaction> = emptyList()
     var currentStatType = CategoryType.EXPENSE
@@ -61,7 +67,7 @@ class StatisticFragment : Fragment() {
         val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         init()
 
-        binding.fragmentStatisticToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+        toggleGroupButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 currentStatType = when (checkedId) {
                     binding.fragmentStatisticBtnIncome.id -> CategoryType.INCOME
@@ -197,5 +203,8 @@ class StatisticFragment : Fragment() {
         monthBack = binding.fragmentStatisticMonthBack
         monthText = binding.fragmentStatisticMonthText
         noDataText = binding.fragmentStatisticNoDataText
+        toggleGroupButton = binding.fragmentStatisticToggleGroup
+        incomeBtn = binding.fragmentStatisticBtnIncome
+        expenseBtn = binding.fragmentStatisticBtnExpense
     }
 }

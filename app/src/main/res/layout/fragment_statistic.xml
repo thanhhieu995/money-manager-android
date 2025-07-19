@@ -9,60 +9,6 @@
     android:padding="16dp">
 
     <LinearLayout
-        android:id="@+id/fragment_statistic_layout_top_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@color/purple_200">
-
-        <!-- Tab: Stats -->
-        <TextView
-            android:id="@+id/fragment_statistic_tab_stats"
-        android:text="Stats"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:paddingVertical="8dp"
-        android:background="@color/purple_200"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"/>
-
-        <!-- Tab: Budget -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/fragment_statistic_tab_budget"
-            android:text="Budget"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:paddingVertical="8dp"
-            android:background="@color/purple_200" />
-
-        <!-- Tab: Note -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/fragment_statistic_tab_note"
-            android:text="Note"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:paddingVertical="8dp"
-            android:background="@color/purple_200" />
-
-        <!-- Nút chọn tháng -->
-        <TextView
-            android:id="@+id/fragment_statistic_month_selector"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="M"
-            android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_down_24"
-            android:drawablePadding="4dp"
-            android:padding="8dp"
-            android:textColor="@android:color/white" />
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/fragment_statistic_layout_topYear"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

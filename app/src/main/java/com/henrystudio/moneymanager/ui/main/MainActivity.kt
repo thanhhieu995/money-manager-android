@@ -14,6 +14,7 @@ import com.henrystudio.moneymanager.model.Category
 import com.henrystudio.moneymanager.model.CategoryType
 import com.henrystudio.moneymanager.ui.bottomNavigation.DailyNavigateFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticFragment
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.viewmodel.*
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -57,7 +58,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.nav_stats -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.main_fragment_container, StatisticFragment())
+                        .replace(R.id.main_fragment_container, StatisticViewPagerFragment())
                         .commit()
                     true
                 }
