@@ -46,7 +46,7 @@ class MonthlyFragment : Fragment() {
             val listGroupTransaction = viewModel.groupedTransactions.value ?: emptyList()
             val currentYear = viewModel.currentMonthYear.value
             val filterTransactionYear = currentYear?.let { it1 ->
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionsByYear(listGroupTransaction ,
+                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listGroupTransaction ,
                     it1
                 )
             }

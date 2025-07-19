@@ -12,7 +12,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
@@ -39,7 +39,6 @@ class DailyNavigateFragment : Fragment() {
 
     private var _binding: FragmentDailyNavigateBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: TransactionViewModel
 
     private lateinit var search: ImageView
     private lateinit var incomeCountAll: TextView
@@ -58,8 +57,11 @@ class DailyNavigateFragment : Fragment() {
     private var month: LocalDate? = null
     private var listTransactionGroup: List<TransactionGroup> = listOf()
     private var selectedTransactionList: List<Transaction> = emptyList()
-    @RequiresApi(Build.VERSION_CODES.O)
+    private val viewModel: TransactionViewModel by activityViewModels {
+        TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
+    }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -72,10 +74,6 @@ class DailyNavigateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
-
-        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
 
         val formatterYear = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
         val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
@@ -102,12 +100,12 @@ class DailyNavigateFragment : Fragment() {
 
         viewModel.currentTabPosition.observe(viewLifecycleOwner) { position ->
             val filteredMonth = month?.let {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionsByMonth(listTransactionGroup,
+                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
                     it
                 )
             }
             val filteredYear =
-                month?.let { com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionsByYear(listTransactionGroup, it) }
+                month?.let { com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, it) }
             when (position) {
                 0 -> {
                     // Daily tab selected
@@ -177,9 +175,9 @@ class DailyNavigateFragment : Fragment() {
             monthText.text = selectedMonth.format(if (isMonthly) formatterYear else formatterMonth)
 
             val filtered = if (isMonthly) {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionsByYear(listTransactionGroup, selectedMonth)
+                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, selectedMonth)
             } else {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionsByMonth(listTransactionGroup, selectedMonth)
+                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, selectedMonth)
             }
 
             handleSummarySection(filtered)
@@ -188,7 +186,7 @@ class DailyNavigateFragment : Fragment() {
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
             listTransactionGroup = list
             month?.let {
-                val filtered = com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionsByMonth(list, it)
+                val filtered = com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(list, it)
                 handleSummarySection(filtered)
             }
         }

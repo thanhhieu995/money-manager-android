@@ -1,28 +1,43 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
-import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.CategoryStat
-import com.henrystudio.moneymanager.model.CategoryTotal
-import com.henrystudio.moneymanager.model.CategoryType
+import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class StatisticFragment : Fragment() {
     private var _binding: FragmentStatisticBinding? = null
     private val binding get() = _binding!!
+    private lateinit var monthBack: ImageView
+    private lateinit var monthNext: ImageView
+    private lateinit var monthText: TextView
+    private lateinit var noDataText: TextView
+    private var allTransactions: List<Transaction> = emptyList()
+    private var filteredListTransaction : List<Transaction> = emptyList()
     var currentStatType = CategoryType.EXPENSE
 
     private val viewModel : TransactionViewModel by activityViewModels {
@@ -40,8 +55,11 @@ class StatisticFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+        init()
 
         binding.fragmentStatisticToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
@@ -49,12 +67,27 @@ class StatisticFragment : Fragment() {
                     binding.fragmentStatisticBtnIncome.id -> CategoryType.INCOME
                     else -> CategoryType.EXPENSE
                 }
-                updateChart(currentStatType)
+                updateChart(currentStatType, filteredListTransaction)
             }
         }
 
-        viewModel.allTransactions.observe(viewLifecycleOwner) {
-            updateChart(currentStatType)
+        viewModel.allTransactions.observe(viewLifecycleOwner) { transactionList->
+            allTransactions = transactionList
+        }
+
+        viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
+            monthText.text = selectedMonth.format(formatterMonth)
+            val filterList = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
+            filteredListTransaction = filterList
+            updateChart(currentStatType, filterList)
+        }
+
+        monthBack.setOnClickListener {
+            viewModel.changeMonth(-1)
+        }
+
+        monthNext.setOnClickListener {
+            viewModel.changeMonth(1)
         }
     }
 
@@ -63,9 +96,7 @@ class StatisticFragment : Fragment() {
         _binding = null
     }
 
-    private fun updateChart(statType: CategoryType) {
-        val list = viewModel.allTransactions.value ?: return
-
+    private fun updateChart(statType: CategoryType, list: List<Transaction>) {
         val filtered = when (statType) {
             CategoryType.EXPENSE -> list.filter { !it.isIncome }
             CategoryType.INCOME -> list.filter { it.isIncome }
@@ -110,17 +141,39 @@ class StatisticFragment : Fragment() {
             }
         })
 
+        val centerTextValue = if (categoryType == CategoryType.EXPENSE) "Expense" else "Income"
+        val color = if (categoryType == CategoryType.EXPENSE) Color.RED else ContextCompat.getColor(requireContext(), R.color.income)
+
+        val spannable = SpannableString(centerTextValue).apply {
+            setSpan(
+                ForegroundColorSpan(color),
+                0, centerTextValue.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
         binding.fragmentStatisticPieChart.apply {
-            data = pieData
             setUsePercentValues(true)
             isDrawHoleEnabled = true
-            centerText = if (categoryType == CategoryType.EXPENSE) "Expense" else "Income"
             setCenterTextSize(16f)
             setEntryLabelColor(Color.BLACK)
             setEntryLabelTextSize(12f)
             description.isEnabled = false
             legend.isEnabled = false
-            invalidate()
+
+            if (entries.isNotEmpty()) {
+                data = pieData
+                centerText = spannable
+                binding.fragmentStatisticNoDataText.visibility = View.GONE
+                binding.fragmentStatisticStatsRecyclerView.visibility = View.VISIBLE
+                visibility = View.VISIBLE
+                invalidate()
+            } else {
+                clear()
+                binding.fragmentStatisticNoDataText.visibility = View.VISIBLE
+                binding.fragmentStatisticStatsRecyclerView.visibility = View.GONE
+                visibility = View.INVISIBLE
+            }
         }
 
         val total = categoryTotals.sumOf { it.totalAmount }
@@ -137,5 +190,12 @@ class StatisticFragment : Fragment() {
         val adapter = CategoryStatAdapter(statList)
         binding.fragmentStatisticStatsRecyclerView.adapter = adapter
         binding.fragmentStatisticStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+    }
+
+    fun init() {
+        monthNext = binding.fragmentStatisticMonthNext
+        monthBack = binding.fragmentStatisticMonthBack
+        monthText = binding.fragmentStatisticMonthText
+        noDataText = binding.fragmentStatisticNoDataText
     }
 }
