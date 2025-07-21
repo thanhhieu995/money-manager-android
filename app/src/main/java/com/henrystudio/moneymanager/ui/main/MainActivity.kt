@@ -13,6 +13,7 @@ import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Category
 import com.henrystudio.moneymanager.model.CategoryType
 import com.henrystudio.moneymanager.ui.bottomNavigation.DailyNavigateFragment
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.viewmodel.*
 import java.time.format.DateTimeFormatter
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
-        viewModel.currentFilterDate.observe(this) { month ->
+        viewModel.currentMonthYear.observe(this) { month ->
             bottomNav.menu.findItem(R.id.nav_daily).title = month.format(formatterMonth)
         }
 

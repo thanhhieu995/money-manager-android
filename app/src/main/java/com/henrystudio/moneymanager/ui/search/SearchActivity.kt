@@ -219,10 +219,10 @@ class SearchActivity : AppCompatActivity() {
         )
 
         val optionConfigs = listOf(
-            Triple("All", R.id.optionTotalLayout, FilterPeriodSearch.All),
-            Triple("Weekly", R.id.optionWeeklyLayout, FilterPeriodSearch.Weekly),
-            Triple("Monthly", R.id.optionMonthlyLayout, FilterPeriodSearch.Monthly),
-            Triple("Yearly", R.id.optionYearlyLayout, FilterPeriodSearch.Yearly)
+            Triple("All", R.id.optionTotalLayout, FilterPeriod.All),
+            Triple("Weekly", R.id.optionWeeklyLayout, FilterPeriod.Weekly),
+            Triple("Monthly", R.id.optionMonthlyLayout, FilterPeriod.Monthly),
+            Triple("Yearly", R.id.optionYearlyLayout, FilterPeriod.Yearly)
         )
 
         fun updateCheckMarks(selected: String) {

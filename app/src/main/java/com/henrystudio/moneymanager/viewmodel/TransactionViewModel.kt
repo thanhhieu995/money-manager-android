@@ -3,8 +3,12 @@ package com.henrystudio.moneymanager.viewmodel
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
-import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.model.FilterOption
+import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.model.TransactionDao
+import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.repository.TransactionRepository
+import com.henrystudio.moneymanager.ui.search.FilterPeriod
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -13,9 +17,9 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val allTransactions: LiveData<List<Transaction>> = repository.allTransactions
     val groupedTransactions: LiveData<List<TransactionGroup>> = repository.getGroupedTransactions()
     @RequiresApi(Build.VERSION_CODES.O)
-    private val _currentFilterDate = MutableLiveData(LocalDate.now())
+    private val _currentMonthYear = MutableLiveData(LocalDate.now())
     @RequiresApi(Build.VERSION_CODES.O)
-    val currentFilterDate: LiveData<LocalDate> = _currentFilterDate
+    val currentMonthYear: LiveData<LocalDate> = _currentMonthYear
     private val _currentTabPosition = MutableLiveData<Int>()
     val currentTabPosition: LiveData<Int> get() = _currentTabPosition
     private val _selectionMode = MutableLiveData<Boolean>(false)
@@ -48,18 +52,13 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun changeWeek(offset: Long) {
-        _currentFilterDate.value = _currentFilterDate.value?.plusWeeks(offset)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
     fun changeMonth(offset: Long) {
-        _currentFilterDate.value = _currentFilterDate.value?.plusMonths(offset)
+        _currentMonthYear.value = _currentMonthYear.value?.plusMonths(offset)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun changeYear(offset: Long) {
-        _currentFilterDate.value = _currentFilterDate.value?.plusYears(offset)
+        _currentMonthYear.value = _currentMonthYear.value?.plusYears(offset)
     }
 
     fun setCurrentTab(position: Int) {
@@ -91,12 +90,12 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun navigateToWeekFromMonthly(date: LocalDate) {
-        _currentFilterDate.value = date.withDayOfMonth(1)
+        _currentMonthYear.value = date.withDayOfMonth(1)
         _navigateToWeekFromMonthly.value = date // Dùng để scroll sau khi cập nhật
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setFilter(type: FilterPeriodStatistic, date: LocalDate) {
+    fun setFilter(type: FilterPeriod, date: LocalDate) {
         _filterOption.value = FilterOption(type, date)
     }
 }

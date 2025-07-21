@@ -27,11 +27,10 @@ import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.ui.search.FilterPeriod
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.WeekFields
 import java.util.*
 
 class StatisticFragment : Fragment() {
@@ -46,17 +45,13 @@ class StatisticFragment : Fragment() {
     private lateinit var expenseBtn: MaterialButton
     private var allTransactions: List<Transaction> = emptyList()
     private var filteredListTransaction : List<Transaction> = emptyList()
-    private var currentStatType = CategoryType.EXPENSE
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOptionTemp : FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
+    var currentStatType = CategoryType.EXPENSE
 
     private val viewModel : TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
             AppDatabase.getDatabase(requireActivity().application).transactionDao()
         )
     }
-    @RequiresApi(Build.VERSION_CODES.O)
-    private val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,6 +65,7 @@ class StatisticFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         init()
 
         toggleGroupButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
@@ -86,35 +82,35 @@ class StatisticFragment : Fragment() {
             allTransactions = transactionList
         }
 
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { filterDate ->
-            viewModel.setFilter(filterOptionTemp.type, filterDate)
+        viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
+            monthText.text = selectedMonth.format(formatterMonth)
+            val filterList = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
+            updateTextButton(filterList)
+            filteredListTransaction = filterList
+            updateCircleChart(currentStatType, filterList)
         }
 
         viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
-            filterOptionTemp = filterOption
-            getListUpdateChart(filterOption)
+            val list = when (filterOption.type) {
+                FilterPeriod.All -> allTransactions
+                FilterPeriod.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
+                FilterPeriod.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
+                FilterPeriod.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
+            }
+
+            if (filterOption.type == FilterPeriod.All) {
+                updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
+            } else {
+                updateCircleChart(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn
+            }
         }
 
         monthBack.setOnClickListener {
-            when(filterOptionTemp.type) {
-                FilterPeriodStatistic.Monthly -> viewModel.changeMonth(-1)
-                FilterPeriodStatistic.Weekly -> viewModel.changeWeek(-1)
-                FilterPeriodStatistic.Yearly -> viewModel.changeYear(-1)
-                FilterPeriodStatistic.List -> {}
-                FilterPeriodStatistic.Trend -> {}
-            }
-            updateMonthText(filterOptionTemp)
+            viewModel.changeMonth(-1)
         }
 
         monthNext.setOnClickListener {
-            when(filterOptionTemp.type) {
-                FilterPeriodStatistic.Monthly -> viewModel.changeMonth(1)
-                FilterPeriodStatistic.Weekly -> viewModel.changeWeek(1)
-                FilterPeriodStatistic.Yearly -> viewModel.changeYear(1)
-                FilterPeriodStatistic.List -> {}
-                FilterPeriodStatistic.Trend -> {}
-            }
-            updateMonthText(filterOptionTemp)
+            viewModel.changeMonth(1)
         }
     }
 
@@ -239,43 +235,5 @@ class StatisticFragment : Fragment() {
         val totalExpense = expenseList.sumOf { it.amount }
         incomeBtn.text = "Income " + Helper.formatCurrency(totalIncome)
         expenseBtn.text = "Exp " + Helper.formatCurrency(totalExpense)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateMonthText(filterOption: FilterOption) {
-        // ✅ Cập nhật text phù hợp
-        monthText.text = when (filterOption.type) {
-            FilterPeriodStatistic.Monthly -> filterOption.date.format(formatterMonth)
-            FilterPeriodStatistic.Weekly -> {
-                val formatterFirst = DateTimeFormatter.ofPattern("dd/MM")
-                val formatterLast = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                val weekFields = WeekFields.of(Locale.getDefault())
-                val firstDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 1) // Monday
-                val lastDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 7) // Sunday
-                "${firstDayOfWeek.format(formatterFirst)} ~ ${lastDayOfWeek.format(formatterLast)}"
-            }
-            FilterPeriodStatistic.Yearly -> filterOption.date.year.toString()
-            FilterPeriodStatistic.List -> "Not code now"
-            FilterPeriodStatistic.Trend -> "Not code now"
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getListUpdateChart(filterOption: FilterOption) {
-        val list = when (filterOption.type) {
-            FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
-            FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
-            FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
-            FilterPeriodStatistic.List -> emptyList()
-            FilterPeriodStatistic.Trend -> emptyList()
-        }
-        updateMonthText(filterOption)
-        updateTextButton(list)
-        filteredListTransaction = list
-        if (filterOption.type == FilterPeriodStatistic.List) {
-            updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
-        } else {
-            updateCircleChart(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn
-        }
     }
 }

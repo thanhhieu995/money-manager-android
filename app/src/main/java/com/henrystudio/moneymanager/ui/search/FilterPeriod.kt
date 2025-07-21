@@ -1,5 +1,5 @@
 package com.henrystudio.moneymanager.ui.search
 
-enum class FilterPeriodSearch {
+enum class FilterPeriod {
     All, Weekly, Monthly, Yearly
 }

@@ -1,6 +1,5 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
-import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -19,7 +18,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticViewPagerBinding
 import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.ui.search.FilterPeriod
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
@@ -71,25 +70,22 @@ class StatisticViewPagerFragment : Fragment() {
         filterDropdown = binding.statisticFilterDropdown
     }
 
-    @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showDialogOption() {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
-        val view = layoutInflater.inflate(R.layout.item_statistic_dialog, null)
+        val view = layoutInflater.inflate(R.layout.item_search_arrange, null)
         bottomSheetDialog.setContentView(view)
         val checkViews = mapOf(
-            "Weekly" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgWeeklyCheck),
-            "Monthly" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgMonthlyCheck),
-            "Yearly" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgYearlyCheck),
-            "List" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgListCheck),
-            "Trend" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgTrendCheck),
+            "All" to view.findViewById<ImageView>(R.id.search_optionTotalCheck),
+            "Weekly" to view.findViewById<ImageView>(R.id.search_optionWeeklyCheck),
+            "Monthly" to view.findViewById<ImageView>(R.id.search_optionMonthlyCheck),
+            "Yearly" to view.findViewById<ImageView>(R.id.search_optionYearlyCheck),
         )
         val optionConfigs = listOf(
-            Triple("Weekly", R.id.item_statistic_dialog_weeklyLayout, FilterPeriodStatistic.Weekly),
-            Triple("Monthly", R.id.item_statistic_dialog_monthlyLayout, FilterPeriodStatistic.Monthly),
-            Triple("Yearly", R.id.item_statistic_dialog_yearlyLayout, FilterPeriodStatistic.Yearly),
-            Triple("List", R.id.item_statistic_dialog_listLayout, FilterPeriodStatistic.List),
-            Triple("Trend", R.id.item_statistic_dialog_trendLayout, FilterPeriodStatistic.Trend)
+            Triple("All", R.id.optionTotalLayout, FilterPeriod.All),
+            Triple("Weekly", R.id.optionWeeklyLayout, FilterPeriod.Weekly),
+            Triple("Monthly", R.id.optionMonthlyLayout, FilterPeriod.Monthly),
+            Triple("Yearly", R.id.optionYearlyLayout, FilterPeriod.Yearly)
         )
 
         fun updateCheckMarks(selected: String) {
@@ -106,7 +102,7 @@ class StatisticViewPagerFragment : Fragment() {
                 viewModel.setFilter(filterPeriod, LocalDate.now())
             }
         }
-        view.findViewById<TextView>(R.id.item_statistic_dialog_optionCancel).setOnClickListener {
+        view.findViewById<TextView>(R.id.search_optionCancel).setOnClickListener {
             bottomSheetDialog.dismiss()
         }
         bottomSheetDialog.show()
