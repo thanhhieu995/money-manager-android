@@ -70,7 +70,7 @@ class CalendarFragment : Fragment() {
             binding.calendarView.setEvents(events)
         }
 
-        viewModel.currentMonthYear.observe(viewLifecycleOwner) { date ->
+        viewModel.currentFilterDate.observe(viewLifecycleOwner) { date ->
             val calendar = Calendar.getInstance().apply {
                 set(Calendar.YEAR, date.year)
                 set(Calendar.MONTH, date.monthValue - 1) // Vì Calendar.MONTH bắt đầu từ 0

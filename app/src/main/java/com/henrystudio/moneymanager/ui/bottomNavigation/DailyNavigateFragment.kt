@@ -166,7 +166,7 @@ class DailyNavigateFragment : Fragment() {
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
         }
 
-        viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
+        viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
             month = selectedMonth
             // Đổi tiêu đề của item "Daily"
             val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)

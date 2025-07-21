@@ -84,7 +84,7 @@ class DailyFragment : Fragment() {
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         }
 
-        viewModel.currentMonthYear.observe(viewLifecycleOwner) { selectedMonth ->
+        viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
             month = selectedMonth
             val filtered = com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
             adapter.submitList(filtered)
