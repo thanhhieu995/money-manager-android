@@ -6,6 +6,8 @@ import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.model.TransactionGroup
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
+import java.util.*
 
 class FilterTransactions {
     companion object{
@@ -51,6 +53,46 @@ class FilterTransactions {
                 val cleanedDate = tx.date.substringBefore(" ")
                 val date = LocalDate.parse(cleanedDate, inputFormatter)
                 date.monthValue == selectedMonth.monthValue && date.year == selectedMonth.year
+            }.sortedByDescending {
+                val cleanedDate = it.date.substringBefore(" ")
+                LocalDate.parse(cleanedDate, inputFormatter)
+            }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun filterTransactionsByWeek(
+            transactions: List<Transaction>,
+            selectedDate: LocalDate
+        ): List<Transaction> {
+            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+            val weekFields = WeekFields.of(Locale.getDefault())
+            val selectedWeek = selectedDate.get(weekFields.weekOfWeekBasedYear())
+            val selectedYear = selectedDate.get(weekFields.weekBasedYear())
+
+            return transactions.filter { tx ->
+                val cleanedDate = tx.date.substringBefore(" ")
+                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val week = date.get(weekFields.weekOfWeekBasedYear())
+                val year = date.get(weekFields.weekBasedYear())
+                week == selectedWeek && year == selectedYear
+            }.sortedByDescending {
+                val cleanedDate = it.date.substringBefore(" ")
+                LocalDate.parse(cleanedDate, inputFormatter)
+            }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun filterTransactionsByYear(
+            transactions: List<Transaction>,
+            selectedDate: LocalDate
+        ): List<Transaction> {
+            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+            val selectedYear = selectedDate.year
+
+            return transactions.filter { tx ->
+                val cleanedDate = tx.date.substringBefore(" ")
+                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                date.year == selectedYear
             }.sortedByDescending {
                 val cleanedDate = it.date.substringBefore(" ")
                 LocalDate.parse(cleanedDate, inputFormatter)

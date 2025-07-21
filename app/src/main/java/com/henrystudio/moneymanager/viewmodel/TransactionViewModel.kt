@@ -3,10 +3,12 @@ package com.henrystudio.moneymanager.viewmodel
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
+import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.model.TransactionDao
 import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.repository.TransactionRepository
+import com.henrystudio.moneymanager.ui.search.FilterPeriod
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -26,6 +28,8 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
     private val _navigateToWeekFromMonthly = MutableLiveData<LocalDate?>(null)
     val navigateToWeekFromMonthly: LiveData<LocalDate?> = _navigateToWeekFromMonthly
+    private val _filterOption = MutableLiveData<FilterOption>()
+    val filterOption: LiveData<FilterOption> = _filterOption
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
@@ -88,5 +92,10 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     fun navigateToWeekFromMonthly(date: LocalDate) {
         _currentMonthYear.value = date.withDayOfMonth(1)
         _navigateToWeekFromMonthly.value = date // Dùng để scroll sau khi cập nhật
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setFilter(type: FilterPeriod, date: LocalDate) {
+        _filterOption.value = FilterOption(type, date)
     }
 }

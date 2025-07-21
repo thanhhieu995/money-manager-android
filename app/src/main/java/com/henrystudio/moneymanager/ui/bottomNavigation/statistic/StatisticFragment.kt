@@ -27,6 +27,7 @@ import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.ui.search.FilterPeriod
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.format.DateTimeFormatter
@@ -73,7 +74,7 @@ class StatisticFragment : Fragment() {
                     binding.fragmentStatisticBtnIncome.id -> CategoryType.INCOME
                     else -> CategoryType.EXPENSE
                 }
-                updateChart(currentStatType, filteredListTransaction)
+                updateCircleChart(currentStatType, filteredListTransaction)
             }
         }
 
@@ -86,7 +87,22 @@ class StatisticFragment : Fragment() {
             val filterList = FilterTransactions.filterTransactionsByMonth(allTransactions, selectedMonth)
             updateTextButton(filterList)
             filteredListTransaction = filterList
-            updateChart(currentStatType, filterList)
+            updateCircleChart(currentStatType, filterList)
+        }
+
+        viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
+            val list = when (filterOption.type) {
+                FilterPeriod.All -> allTransactions
+                FilterPeriod.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
+                FilterPeriod.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
+                FilterPeriod.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
+            }
+
+            if (filterOption.type == FilterPeriod.All) {
+                updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
+            } else {
+                updateCircleChart(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn
+            }
         }
 
         monthBack.setOnClickListener {
@@ -103,7 +119,9 @@ class StatisticFragment : Fragment() {
         _binding = null
     }
 
-    private fun updateChart(statType: CategoryType, list: List<Transaction>) {
+    private fun updateLineChart(categoryType: CategoryType, list: List<Transaction>) {}
+
+    private fun updateCircleChart(statType: CategoryType, list: List<Transaction>) {
         val filtered = when (statType) {
             CategoryType.EXPENSE -> list.filter { !it.isIncome }
             CategoryType.INCOME -> list.filter { it.isIncome }
@@ -163,7 +181,7 @@ class StatisticFragment : Fragment() {
             setUsePercentValues(true)
             isDrawHoleEnabled = true
             setCenterTextSize(16f)
-            setEntryLabelColor(Color.BLACK)
+            setEntryLabelColor(Color.WHITE)
             setEntryLabelTextSize(12f)
             description.isEnabled = false
             legend.isEnabled = false
