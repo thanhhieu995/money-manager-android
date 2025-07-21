@@ -42,9 +42,9 @@ class MonthlyFragment : Fragment() {
         // Gán layoutManager nếu chưa có
         binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
 
-        viewModel.currentMonthYear.observe(viewLifecycleOwner) {
+        viewModel.currentFilterDate.observe(viewLifecycleOwner) {
             val listGroupTransaction = viewModel.groupedTransactions.value ?: emptyList()
-            val currentYear = viewModel.currentMonthYear.value
+            val currentYear = viewModel.currentFilterDate.value
             val filterTransactionYear = currentYear?.let { it1 ->
                 com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listGroupTransaction ,
                     it1

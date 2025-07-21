@@ -27,7 +27,7 @@ class TransactionAdapter(
 ) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>(), Filterable {
 
     private var filterResultListener: OnFilterResultListener? = null
-    var filterPeriod: FilterPeriod = FilterPeriod.All
+    var filterPeriod: FilterPeriodSearch = FilterPeriodSearch.All
     var isSelected: ((Transaction) -> Boolean)? = null
 
     private var filteredTransactions: List<Transaction> = transactions
@@ -119,22 +119,22 @@ class TransactionAdapter(
                 if (queryRaw?.isEmpty() == true) {
                     // Nếu người dùng không nhập gì (hoặc chỉ nhập khoảng trắng), trả về toàn bộ hoặc rỗng tùy ý
                     val filtered = when (filterPeriod) {
-                        FilterPeriod.All -> transactions
+                        FilterPeriodSearch.All -> transactions
                         else -> transactions.filter { tx ->
                             val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
                             val txDate = LocalDate.parse(tx.date.substringBefore(" "), formatter)
                             when (filterPeriod) {
-                                FilterPeriod.Weekly -> {
+                                FilterPeriodSearch.Weekly -> {
                                     val now = LocalDate.now()
                                     val startOfWeek = now.with(DayOfWeek.MONDAY)
                                     val endOfWeek = startOfWeek.plusDays(6)
                                     !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
                                 }
-                                FilterPeriod.Monthly -> {
+                                FilterPeriodSearch.Monthly -> {
                                     val now = LocalDate.now()
                                     txDate.monthValue == now.monthValue && txDate.year == now.year
                                 }
-                                FilterPeriod.Yearly -> {
+                                FilterPeriodSearch.Yearly -> {
                                     val now = LocalDate.now()
                                     txDate.year == now.year
                                 }
@@ -166,10 +166,10 @@ class TransactionAdapter(
                             || amount.contains(query)
 
                     val matchPeriod = when (filterPeriod) {
-                        FilterPeriod.All -> true
-                        FilterPeriod.Weekly -> !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
-                        FilterPeriod.Monthly -> txDate.monthValue == currentMonth && txDate.year == currentYear
-                        FilterPeriod.Yearly -> txDate.year == currentYear
+                        FilterPeriodSearch.All -> true
+                        FilterPeriodSearch.Weekly -> !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
+                        FilterPeriodSearch.Monthly -> txDate.monthValue == currentMonth && txDate.year == currentYear
+                        FilterPeriodSearch.Yearly -> txDate.year == currentYear
                     }
 
                     matchQuery && matchPeriod
