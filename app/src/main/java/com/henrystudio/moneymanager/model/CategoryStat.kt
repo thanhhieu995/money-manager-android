@@ -5,5 +5,5 @@ data class CategoryStat(
     val percent: Float,
     val amount: Float,
     val color: Int
-)
+) : java.io.Serializable
 

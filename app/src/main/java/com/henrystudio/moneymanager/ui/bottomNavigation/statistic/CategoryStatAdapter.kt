@@ -1,6 +1,5 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -11,9 +10,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.CategoryStat
+import com.henrystudio.moneymanager.model.Transaction
 
 class CategoryStatAdapter(private val items: List<CategoryStat>) : RecyclerView.Adapter<CategoryStatAdapter.ViewHolder>() {
-
+    var onClickListener: ((CategoryStat) -> Boolean) ?= null
     inner class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
         val colorBox: View = view.findViewById(R.id.item_statistic_category_colorBox)
         val percentText: TextView = view.findViewById(R.id.item_statistic_category_percent)
@@ -35,6 +35,10 @@ class CategoryStatAdapter(private val items: List<CategoryStat>) : RecyclerView.
         holder.nameText.text = item.name
         holder.percentText.text = "${"%.1f".format(item.percent)}%"
         holder.amountText.text = Helper.formatCurrency(item.amount.toDouble())
+
+        holder.itemView.setOnClickListener {
+            onClickListener?.invoke(item)
+        }
     }
 
     override fun getItemCount(): Int = items.size

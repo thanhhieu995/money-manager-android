@@ -1,12 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
     <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/add_transaction_toolbar"
+        android:id="@+id/fragment_statistic_category_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/purple_200"
@@ -14,14 +15,14 @@
         app:contentInsetStartWithNavigation="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/add_transaction_toolbarContainer"
+            android:id="@+id/fragment_statistic_category_toolbarContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingHorizontal="16dp">
 
             <!-- Back Button (Góc trái) -->
             <ImageButton
-                android:id="@+id/add_transaction_backButton"
+                android:id="@+id/fragment_statistic_category_backButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_baseline_navigate_before_24"
@@ -32,7 +33,7 @@
 
             <!-- Title hiện tại -->
             <TextView
-                android:id="@+id/add_transaction_titleCurrent"
+                android:id="@+id/fragment_statistic_category_titleCurrent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Title"
@@ -47,7 +48,7 @@
 
             <!-- Title tiếp theo -->
             <TextView
-                android:id="@+id/add_transaction_titleIncoming"
+                android:id="@+id/fragment_statistic_category_titleIncoming"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Incoming"
@@ -61,21 +62,9 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
-            <!-- Icon Star (góc phải) -->
-            <ImageButton
-                android:id="@+id/add_transaction_starButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_baseline_star_border_24"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:visibility="gone"
-                app:layout_constraintEnd_toStartOf="@id/add_transaction_addButton"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-
             <!-- Icon Add (góc phải) -->
             <ImageButton
-                android:id="@+id/add_transaction_addButton"
+                android:id="@+id/fragment_statistic_category_addButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_baseline_add_24"
@@ -88,14 +77,41 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.appbar.MaterialToolbar>
 
-    <FrameLayout
-        android:id="@+id/fragment_container_add_transaction"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fragment_statistic_category_lineChartContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/fragment_statistic_noDataText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="16dp"
+            android:text="No data available"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/fragment_statistic_category_lineChart"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/fragment_statistic_category_lineChart"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="2:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Danh sách phân loại -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/fragment_statistic_category_statsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bookmark_toolbar" />
-
+        android:layout_weight="1"/>
 </LinearLayout>

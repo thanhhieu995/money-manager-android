@@ -149,6 +149,7 @@ class StatisticFragment : Fragment() {
         drawPieChart(pieEntries, categoryTotals, statType)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun drawPieChart(entries: List<PieEntry>, categoryTotals: List<CategoryTotal>, categoryType: CategoryType) {
         val dataSet = PieDataSet(entries, "")
         val colors = listOf(
@@ -217,6 +218,25 @@ class StatisticFragment : Fragment() {
         }
 
         val adapter = CategoryStatAdapter(statList)
+        adapter.onClickListener = { categoryStat ->
+            val bundle =  Bundle().apply {
+                putSerializable("item_click_statistic_category_stat", categoryStat)
+                putSerializable("item_click_filterOption", filterOptionTemp)
+            }
+            val fragment = StatisticCategoryFragment()
+            fragment.arguments = bundle
+            requireActivity().supportFragmentManager.beginTransaction().replace(R.id.fragment_statistic_viewPager_frameLayout, fragment)
+                .setReorderingAllowed(true)
+                .setCustomAnimations(
+                    R.anim.slide_in_right,  // enter
+                    R.anim.no_animation,    // exit
+                    R.anim.no_animation,    // popEnter (khi quay lại)
+                    R.anim.slide_out_right  // popExit (khi quay lại)
+                )
+                .addToBackStack(null)
+                .commit()
+            true
+        }
         binding.fragmentStatisticStatsRecyclerView.adapter = adapter
         binding.fragmentStatisticStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
     }
@@ -272,7 +292,7 @@ class StatisticFragment : Fragment() {
         updateMonthText(filterOption)
         updateTextButton(list)
         filteredListTransaction = list
-        if (filterOption.type == FilterPeriodStatistic.List) {
+        if (filterOption.type == FilterPeriodStatistic.Trend) {
             updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
         } else {
             updateCircleChart(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn

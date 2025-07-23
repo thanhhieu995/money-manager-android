@@ -1,46 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fragment_statistic_view_pager_stats_root"
-    android:layout_width="match_parent"
+    android:id="@+id/fragment_statistic_viewPager_frameLayout"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:orientation="vertical">
-
+    android:layout_width="match_parent">
     <LinearLayout
+        android:id="@+id/fragment_statistic_view_pager_stats_root"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="4dp"
-        android:orientation="horizontal">
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/fragment_statistic_view_pager_tabLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:background="@drawable/bg_filter_dropdown"
-            app:tabIndicatorColor="@color/teal_700"
-            app:tabSelectedTextColor="@color/teal_700"
-            app:tabTextColor="@android:color/darker_gray"
-            app:tabMode="fixed"/>
-        <TextView
-            android:id="@+id/statistic_filter_dropdown"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
-            android:padding="4dp"
-            android:gravity="center"
-            android:text="Monthly"
-            android:textColor="@android:color/black"
-            android:background="@drawable/bg_filter_dropdown"
-            android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_down_24"
-            android:drawablePadding="4dp"/>
-    </LinearLayout>
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:orientation="vertical">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/fragment_statistic_viewPager"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:orientation="horizontal">
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/fragment_statistic_view_pager_tabLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="4dp"
+                android:background="@drawable/bg_filter_dropdown"
+                app:tabIndicatorColor="@color/teal_700"
+                app:tabSelectedTextColor="@color/teal_700"
+                app:tabTextColor="@android:color/darker_gray"
+                app:tabMode="fixed"/>
+            <TextView
+                android:id="@+id/statistic_filter_dropdown"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:padding="4dp"
+                android:gravity="center"
+                android:text="Monthly"
+                android:textColor="@android:color/black"
+                android:background="@drawable/bg_filter_dropdown"
+                android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_down_24"
+                android:drawablePadding="4dp"/>
+        </LinearLayout>
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/fragment_statistic_viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+    </LinearLayout>
+</FrameLayout>
