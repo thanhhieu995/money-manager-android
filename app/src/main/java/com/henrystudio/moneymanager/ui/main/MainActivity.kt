@@ -23,11 +23,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var viewModel: TransactionViewModel
+    private lateinit var categoryViewModel: CategoryViewModel
     @RequiresApi(Build.VERSION_CODES.O)
     private val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
     val transactionDao by lazy {
         AppDatabase.getDatabase(application).transactionDao()
+    }
+
+    val categoryDao by lazy {
+        AppDatabase.getDatabase(application).categoryDao()
     }
 
     @SuppressLint("MissingInflatedId")
@@ -42,6 +47,9 @@ class MainActivity : AppCompatActivity() {
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        val categoryDao = AppDatabase.getDatabase(application).categoryDao()
+        val categoryFactory = CategoryViewModelFactory(categoryDao)
+        categoryViewModel = ViewModelProvider(this, categoryFactory)[CategoryViewModel::class.java]
 
         viewModel.currentFilterDate.observe(this) { month ->
             bottomNav.menu.findItem(R.id.nav_daily).title = month.format(formatterMonth)

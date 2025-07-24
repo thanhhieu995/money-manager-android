@@ -125,6 +125,7 @@ class StatisticFragment : Fragment() {
 
     private fun updateLineChart(categoryType: CategoryType, list: List<Transaction>) {}
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun updateCircleChart(statType: CategoryType, list: List<Transaction>) {
         val filtered = when (statType) {
             CategoryType.EXPENSE -> list.filter { !it.isIncome }
@@ -220,7 +221,8 @@ class StatisticFragment : Fragment() {
         val adapter = CategoryStatAdapter(statList)
         adapter.onClickListener = { categoryStat ->
             val bundle =  Bundle().apply {
-                putSerializable("item_click_statistic_category_stat", categoryStat)
+                putSerializable("item_click_statistic_category_name", categoryStat.name)
+                putSerializable("item_click_statistic_category_type", categoryType)
                 putSerializable("item_click_filterOption", filterOptionTemp)
             }
             val fragment = StatisticCategoryFragment()

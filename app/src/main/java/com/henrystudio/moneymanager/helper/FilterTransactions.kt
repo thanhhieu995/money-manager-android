@@ -98,5 +98,24 @@ class FilterTransactions {
                 LocalDate.parse(cleanedDate, inputFormatter)
             }
         }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun filterTransactionsByCategoryNameAndMonth(
+            transactions: List<Transaction>,
+            categoryName: String,
+            selectedMonth: LocalDate
+        ): List<Transaction> {
+            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+            return transactions.filter { tx ->
+                val cleanedDate = tx.date.substringBefore(" ")
+                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                tx.category.equals(categoryName, ignoreCase = true) &&
+                        date.monthValue == selectedMonth.monthValue &&
+                        date.year == selectedMonth.year
+            }.sortedByDescending {
+                val cleanedDate = it.date.substringBefore(" ")
+                LocalDate.parse(cleanedDate, inputFormatter)
+            }
+        }
     }
 }
