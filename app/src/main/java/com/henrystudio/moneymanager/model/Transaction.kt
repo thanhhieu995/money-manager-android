@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
 data class Transaction(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
-    val category: String,
+    val categoryParentName: String,
+    val categorySubName: String,
     val note: String,
     val account: String,
     val amount: Double,

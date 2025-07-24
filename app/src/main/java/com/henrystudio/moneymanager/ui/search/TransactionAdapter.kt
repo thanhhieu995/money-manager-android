@@ -71,7 +71,7 @@ class TransactionAdapter(
         holder.amountText.text = Helper.formatCurrency(tx.amount)
         holder.childCategory.text = ""
         holder.account.text = tx.account
-        holder.category.text = tx.category
+        holder.category.text = tx.categoryParentName
 
         holder.amountText.setTextColor(
             if (tx.isIncome)

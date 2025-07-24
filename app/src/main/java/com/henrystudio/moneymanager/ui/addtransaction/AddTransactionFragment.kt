@@ -237,12 +237,13 @@ class AddTransactionFragment : Fragment() {
         val amount = edtAmount.text.toString()
             .replace("[^\\d]".toRegex(), "")
             .toDoubleOrNull() ?: 0.0
-
+        val categoryParts = Helper.splitCategoryName(edtCategory.text.toString())
         if(isEditMode) {
             transactionFromIntent?.let { original ->
                 val updatedTransaction = original.copy(
                     title = "",
-                    category = edtCategory.text.toString(),
+                    categoryParentName = categoryParts.parent,
+                    categorySubName = categoryParts.sub,
                     note = edtNote.text.toString().trim(),
                     account = edtAccount.text.toString(),
                     amount = amount,
@@ -254,7 +255,8 @@ class AddTransactionFragment : Fragment() {
         } else {
             val transaction = Transaction(
                 title = "",
-                category = edtCategory.text.toString(),
+                categoryParentName = categoryParts.parent,
+                categorySubName = categoryParts.sub,
                 note = edtNote.text.toString().trim(),
                 account = edtAccount.text.toString(),
                 amount = amount,
@@ -490,7 +492,7 @@ class AddTransactionFragment : Fragment() {
 
     private fun populateTransactionFields(transaction: Transaction) {
         edtAmount.setText(Helper.formatCurrency(transaction.amount))
-        edtCategory.setText(transaction.category)
+        edtCategory.setText(if (transaction.categorySubName.isNotEmpty()) transaction.categoryParentName + "/" + transaction.categorySubName else transaction.categoryParentName)
         edtAccount.setText(transaction.account)
         edtNote.setText(transaction.note)
         dateTextView.text = transaction.date

@@ -133,7 +133,7 @@ class StatisticFragment : Fragment() {
         }
 
         val categoryTotals = filtered
-            .groupBy { it.category }
+            .groupBy { it.categoryParentName }
             .map { (category, transactions) ->
                 CategoryTotal(
                     categoryName = category,

@@ -109,7 +109,7 @@ class FilterTransactions {
             return transactions.filter { tx ->
                 val cleanedDate = tx.date.substringBefore(" ")
                 val date = LocalDate.parse(cleanedDate, inputFormatter)
-                tx.category.equals(categoryName, ignoreCase = true) &&
+                tx.categoryParentName.equals(categoryName, ignoreCase = true) &&
                         date.monthValue == selectedMonth.monthValue &&
                         date.year == selectedMonth.year
             }.sortedByDescending {

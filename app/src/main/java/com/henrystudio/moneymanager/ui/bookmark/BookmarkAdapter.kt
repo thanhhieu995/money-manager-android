@@ -46,7 +46,7 @@ class BookmarkAdapter(
 
         fun bind(item: Transaction) {
             date.text = item.date
-            category.text = item.category
+            category.text = item.categoryParentName
             content.text = item.title
             account.text = item.account
             amount.text = Helper.formatCurrency(item.amount)

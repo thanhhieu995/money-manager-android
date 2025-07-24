@@ -20,6 +20,7 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModelFactory
@@ -44,7 +45,9 @@ class StatisticCategoryFragment : Fragment() {
 
     private var allTransactions: List<Transaction> = emptyList()
     private var allCategories: List<Category> = emptyList()
+    private var listTransactionMonth: List<Transaction>? = null
     private var listChildCategories: List<Category> = emptyList()
+    private var listChildCategoryStat : List<CategoryStat> = emptyList()
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
 
@@ -77,6 +80,7 @@ class StatisticCategoryFragment : Fragment() {
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
+        val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
 
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
         categoryType =
@@ -121,13 +125,14 @@ class StatisticCategoryFragment : Fragment() {
                         // Ví dụ xử lý thêm:
                         // openDetailForDate(selectedDate)
                     }
-                    val listTransactionMonth = point?.let {
+                    listTransactionMonth = point?.let {
                         FilterTransactions.filterTransactionsByCategoryNameAndMonth(
                             allTransactions,
                             categoryName,
                             it.date
                         )
                     }
+                    listChildCategoryStat = Helper.convertToCategoryStats(allCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
                 }
 
                 override fun onNothingSelected() {
@@ -185,7 +190,7 @@ class StatisticCategoryFragment : Fragment() {
     ): List<LineChartPoint> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
         val filtered = transactions.filter {
-            it.category.equals(categoryName, ignoreCase = true) &&
+            it.categoryParentName.equals(categoryName, ignoreCase = true) &&
                     it.isIncome == isIncome
         }
 

@@ -3,8 +3,10 @@ package com.henrystudio.moneymanager.helper
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.Category
+import com.henrystudio.moneymanager.model.CategoryStat
 import com.henrystudio.moneymanager.model.CategoryType
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
@@ -68,6 +70,52 @@ class Helper {
                 type = type,
                 parentId = null // hoặc truyền thêm nếu cần
             )
+        }
+
+        fun convertToCategoryStats(
+            categories: List<Category>,
+            transactions: List<Transaction>,
+            isIncome: Boolean,
+            colorList: List<Int> // danh sách màu cho từng category
+        ): List<CategoryStat> {
+            // Lọc giao dịch theo loại (thu/chi)
+            val filteredTransactions = transactions.filter { it.isIncome == isIncome }
+            // Tính tổng toàn bộ
+            val totalAmount = filteredTransactions.sumOf { it.amount }
+
+            return categories.mapIndexedNotNull { index, category ->
+                val categoryTransactions = filteredTransactions.filter {
+                   it.categoryParentName.substringBefore("/").trim() == (category.emoji.trim() + " " + category.name.trim())
+                }
+                val categoryAmount = categoryTransactions.sumOf { it.amount }
+                if (categoryAmount > 0) {
+                    CategoryStat(
+                        name = category.name,
+                        amount = categoryAmount.toFloat(),
+                        percent = (categoryAmount / totalAmount).toFloat() * 100f,
+                        color = colorList.getOrNull(index) ?: Color.GRAY
+                    )
+                } else {
+                    null // Không có giao dịch, bỏ qua
+                }
+            }
+        }
+
+        data class CategoryParts(val parent: String, val sub: String)
+
+        fun splitCategoryName(fullCategory: String): CategoryParts {
+            return if ("/" in fullCategory) {
+                val parts = fullCategory.split("/")
+                CategoryParts(
+                    parent = parts[0].trim(),
+                    sub = parts.getOrNull(1)?.trim() ?: ""
+                )
+            } else {
+                CategoryParts(
+                    parent = fullCategory.trim(),
+                    sub = ""
+                )
+            }
         }
     }
 }
