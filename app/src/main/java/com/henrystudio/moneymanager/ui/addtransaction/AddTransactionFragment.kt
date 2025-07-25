@@ -5,6 +5,7 @@ import android.app.DatePickerDialog
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -17,8 +18,10 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -38,7 +41,6 @@ class AddTransactionFragment : Fragment() {
     private var _binding: FragmentAddTransactionBinding?= null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: TransactionViewModel
     private lateinit var categoryViewModel: CategoryViewModel
     private lateinit var accountViewModel: AccountViewModel
     private var isIncome: Boolean = false
@@ -61,6 +63,9 @@ class AddTransactionFragment : Fragment() {
     private var transactionFromIntent: Transaction? = null
 
     private var isEditMode = false
+    private val viewModel: TransactionViewModel by activityViewModels {
+        TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -70,6 +75,7 @@ class AddTransactionFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -104,10 +110,6 @@ class AddTransactionFragment : Fragment() {
         val currentDate = Calendar.getInstance().time
         val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Locale.getDefault())
         formattedDate = dateFormat.format(currentDate)
-
-        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
         val daoCategory = AppDatabase.getDatabase(requireActivity().application).categoryDao()
         val factoryCategory = CategoryViewModelFactory(daoCategory)
@@ -178,12 +180,14 @@ class AddTransactionFragment : Fragment() {
 
         saveButton.setOnClickListener {
             saveTransaction {
+                SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
                 (saveButton.context as? AddTransactionActivity)?.onTransactionSaved()
             }
         }
 
         continueButton.setOnClickListener {
             saveTransaction {
+                SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
                 Toast.makeText(context, "Giao dịch đã được lưu!", Toast.LENGTH_SHORT).show()
                 // Reset các trường
                 edtAmount.setText("")

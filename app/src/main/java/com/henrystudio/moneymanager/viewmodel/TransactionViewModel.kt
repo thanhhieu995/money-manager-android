@@ -7,6 +7,7 @@ import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     private val repository = TransactionRepository(dao)
@@ -45,6 +46,15 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
 
     fun getBookmarkedTransactions(): LiveData<List<Transaction>> {
         return repository.getBookmarkedTransactions()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setCurrentFilterDate(date: String) {
+        val cleanedDate = date.substringBefore(" ")
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+        val localDate = LocalDate.parse(cleanedDate, formatter)
+
+        _currentFilterDate.value = localDate
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

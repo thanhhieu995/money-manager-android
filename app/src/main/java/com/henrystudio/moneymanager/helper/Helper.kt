@@ -3,7 +3,6 @@ package com.henrystudio.moneymanager.helper
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.Category
 import com.henrystudio.moneymanager.model.CategoryStat
@@ -85,7 +84,7 @@ class Helper {
 
             return categories.mapIndexedNotNull { index, category ->
                 val categoryTransactions = filteredTransactions.filter {
-                   it.categoryParentName.substringBefore("/").trim() == (category.emoji.trim() + " " + category.name.trim())
+                   it.categorySubName.trim() == (category.emoji.trim() + " " + category.name.trim())
                 }
                 val categoryAmount = categoryTransactions.sumOf { it.amount }
                 if (categoryAmount > 0) {
@@ -93,7 +92,7 @@ class Helper {
                         name = category.name,
                         amount = categoryAmount.toFloat(),
                         percent = (categoryAmount / totalAmount).toFloat() * 100f,
-                        color = colorList.getOrNull(index) ?: Color.GRAY
+                        color = colorList[index % colorList.size]
                     )
                 } else {
                     null // Không có giao dịch, bỏ qua

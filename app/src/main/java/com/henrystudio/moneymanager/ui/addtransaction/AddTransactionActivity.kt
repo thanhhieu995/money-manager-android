@@ -9,9 +9,12 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bookmark.BookmarkActivity
+import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
+import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
 class AddTransactionActivity : AppCompatActivity() {
     lateinit var titleCurrent: TextView
@@ -33,12 +36,20 @@ class AddTransactionActivity : AppCompatActivity() {
 
     val titleStack = ArrayDeque<String>()
 
+    private lateinit var viewModel: TransactionViewModel
+    val transactionDao by lazy {
+        AppDatabase.getDatabase(application).transactionDao()
+    }
+
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_transaction)
 
         init()
+        val dao = AppDatabase.getDatabase(application).transactionDao()
+        val factory = TransactionViewModelFactory(dao)
+        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
         bookmarkIcon.setOnClickListener {

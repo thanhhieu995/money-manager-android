@@ -22,6 +22,7 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.fragment.app.activityViewModels
+import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 
 class DailyFragment : Fragment() {
     private lateinit var adapter: TransactionGroupAdapter
@@ -135,6 +136,15 @@ class DailyFragment : Fragment() {
             }
 
             selectedList = selectedTransactions
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onResume() {
+        super.onResume()
+        val dateShare = SharedTransactionHolder.currentFilterDate
+        if (dateShare != null) {
+            viewModel.setCurrentFilterDate(dateShare)
         }
     }
 

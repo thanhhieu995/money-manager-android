@@ -10,6 +10,8 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -18,6 +20,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
@@ -50,6 +53,8 @@ class StatisticCategoryFragment : Fragment() {
     private var listChildCategoryStat : List<CategoryStat> = emptyList()
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var toolbar: MaterialToolbar
 
     val viewModel: TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
@@ -75,17 +80,25 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        toolbar = binding.fragmentStatisticCategoryToolbar
         btnBack = binding.fragmentStatisticCategoryBackButton
         lineChart = binding.fragmentStatisticCategoryLineChart
+        recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
+
         val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
 
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
         filterOption = arguments?.getSerializable("item_click_filterOption") as FilterOption
+        toolbar.title = categoryName
+
+        val adapter = CategoryStatAdapter(listChildCategoryStat)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
 
         categoryViewModel.getAll().observe(viewLifecycleOwner) { list ->
             allCategories = list
@@ -96,8 +109,14 @@ class StatisticCategoryFragment : Fragment() {
                 }
             }
             if (parentId != -1) {
-                categoryViewModel.getChildCategories(parentId).observe(viewLifecycleOwner) { list ->
-                    listChildCategories = list
+                categoryViewModel.getChildCategories(parentId).observe(viewLifecycleOwner) { listChild ->
+                    listChildCategories = listChild
+                    listTransactionMonth = FilterTransactions.filterTransactionsByCategoryNameAndMonth(viewModel.allTransactions.value?: emptyList(),
+                        categoryName, LocalDate.now())
+                    listChildCategoryStat = Helper.convertToCategoryStats(listChild,
+                        listTransactionMonth ?: emptyList(), categoryType == CategoryType.INCOME, colors)
+
+                    adapter.submitList(listChildCategoryStat)
                 }
             }
         }
@@ -132,7 +151,8 @@ class StatisticCategoryFragment : Fragment() {
                             it.date
                         )
                     }
-                    listChildCategoryStat = Helper.convertToCategoryStats(allCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
+                    listChildCategoryStat = Helper.convertToCategoryStats(listChildCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
+                    adapter.submitList(listChildCategoryStat)
                 }
 
                 override fun onNothingSelected() {

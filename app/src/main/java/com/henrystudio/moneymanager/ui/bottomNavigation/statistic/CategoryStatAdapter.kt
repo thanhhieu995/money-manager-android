@@ -10,9 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.CategoryStat
-import com.henrystudio.moneymanager.model.Transaction
 
-class CategoryStatAdapter(private val items: List<CategoryStat>) : RecyclerView.Adapter<CategoryStatAdapter.ViewHolder>() {
+class CategoryStatAdapter(private var items: List<CategoryStat>) : RecyclerView.Adapter<CategoryStatAdapter.ViewHolder>() {
     var onClickListener: ((CategoryStat) -> Boolean) ?= null
     inner class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
         val colorBox: View = view.findViewById(R.id.item_statistic_category_colorBox)
@@ -42,4 +41,9 @@ class CategoryStatAdapter(private val items: List<CategoryStat>) : RecyclerView.
     }
 
     override fun getItemCount(): Int = items.size
+
+    fun submitList(newList: List<CategoryStat>) {
+        items = newList
+        notifyDataSetChanged()
+    }
 }
