@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -31,7 +32,9 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
 import java.time.Month
+import java.time.Year
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.*
 
 class StatisticCategoryFragment : Fragment() {
@@ -62,7 +65,7 @@ class StatisticCategoryFragment : Fragment() {
         )
     }
 
-    val categoryViewModel: CategoryViewModel by activityViewModels {
+    private val categoryViewModel: CategoryViewModel by activityViewModels {
         CategoryViewModelFactory(
             AppDatabase.getDatabase(requireActivity().application).categoryDao()
         )
@@ -94,7 +97,10 @@ class StatisticCategoryFragment : Fragment() {
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
         filterOption = arguments?.getSerializable("item_click_filterOption") as FilterOption
-        toolbar.title = categoryName
+        (requireActivity() as AppCompatActivity).setSupportActionBar(toolbar)
+        // Đặt title ở đây nếu cần
+        (requireActivity() as AppCompatActivity).supportActionBar?.title = "Toolbar in Fragment"
+        toolbar.title = "new title"
 
         val adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -131,7 +137,7 @@ class StatisticCategoryFragment : Fragment() {
             )
 
             // Cập nhật chart tại đây luôn
-            updateLineChart(chartPoints)
+            updateLineChart(chartPoints, filterOption.type)
 
             lineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
                 override fun onValueSelected(e: Entry?, h: Highlight?) {
@@ -162,15 +168,32 @@ class StatisticCategoryFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateLineChart(chartPoints: List<LineChartPoint>) {
+    private fun updateLineChart(chartPoints: List<LineChartPoint>, chartMode: FilterPeriodStatistic) {
         val entries = chartPoints.mapIndexed { index, point ->
             Entry(index.toFloat(), point.amount.toFloat())
         }
 
         val labels = chartPoints.map { point ->
-            val month = Month.of(point.label.toInt())
-            // Hiển thị tháng tên tiếng Anh, ví dụ "April"
-            month.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)
+            when(chartMode) {
+                FilterPeriodStatistic.Monthly -> {
+                    val month = Month.of(point.label.toInt())
+                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                }
+                FilterPeriodStatistic.Weekly -> {
+                    point.label
+                }
+                FilterPeriodStatistic.Yearly -> {
+                    point.label
+                }
+                FilterPeriodStatistic.List -> {
+                    val month = Month.of(point.label.toInt())
+                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                }
+                FilterPeriodStatistic.Trend -> {
+                    val month = Month.of(point.label.toInt())
+                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                }
+            }
         }
 
         val dataSet = LineDataSet(entries, categoryName)

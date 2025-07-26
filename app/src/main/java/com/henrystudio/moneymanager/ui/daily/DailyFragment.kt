@@ -90,6 +90,12 @@ class DailyFragment : Fragment() {
             val filtered = com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
             adapter.submitList(filtered)
             binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+
+            // 🟡 Scroll đến ngày vừa thêm
+            val targetPosition = findPositionForDate(filtered, selectedMonth)
+            if (targetPosition >= 0) {
+                binding.transactionList.scrollToPosition(targetPosition)
+            }
         }
 
         adapter.onTransactionLongClick = { transaction ->
@@ -180,6 +186,16 @@ class DailyFragment : Fragment() {
             if (childAdapter != null && transactionIndex != -1) {
                 childAdapter.notifyItemChanged(transactionIndex)
             }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun findPositionForDate(transactions: List<TransactionGroup>, date: LocalDate): Int {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+        return transactions.indexOfFirst { tx ->
+            val cleanedDate = tx.date.substringBefore(" ")
+            val txDate = LocalDate.parse(cleanedDate, formatter)
+            txDate == date
         }
     }
 }
