@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -165,14 +166,14 @@ class StatisticCategoryFragment : Fragment() {
         binding.fragmentStatisticCategoryMonthBack.setOnClickListener {
             if (currentIndex > 0) {
                 currentIndex--
-                showChartAt(currentIndex)
+                highlightChartPoint(currentIndex)
             }
         }
 
         binding.fragmentStatisticCategoryMonthNext.setOnClickListener {
             if (currentIndex < chartPoints.lastIndex) {
                 currentIndex++
-                showChartAt(currentIndex)
+                highlightChartPoint(currentIndex)
             }
         }
     }
@@ -323,11 +324,8 @@ class StatisticCategoryFragment : Fragment() {
 
                 val xIndex = e.x.toInt() // Vị trí trên trục X
                 val point = chartPoints.getOrNull(xIndex)
-                point?.let {
-                    val selectedDate = it
-                    // Ví dụ xử lý thêm:
-                    // openDetailForDate(selectedDate)
-                }
+                showChartAt(xIndex)
+                currentIndex = xIndex
                 listTransactionMonth = point?.let {
                     FilterTransactions.filterTransactionsByCategoryNameAndMonth(
                         allTransactions,
@@ -367,5 +365,13 @@ class StatisticCategoryFragment : Fragment() {
         // Enable / disable back/next button
         binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
         binding.fragmentStatisticCategoryMonthNext.isEnabled = index < chartPoints.lastIndex
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun highlightChartPoint(index: Int) {
+        lineChart.highlightValue(Highlight(index.toFloat(), 0f, 0)) // Highlight theo x index
+        lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 500)
+
+        showChartAt(index) // Cập nhật text + disable nút nếu cần
     }
 }
