@@ -77,6 +77,40 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.appbar.MaterialToolbar>
 
+    <LinearLayout
+        android:id="@+id/fragment_statistic_category_layout_topYear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/fragment_daily_navigate_search">
+
+        <ImageView
+            android:id="@+id/fragment_statistic_category_month_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_baseline_navigate_before_24" />
+
+        <TextView
+            android:id="@+id/fragment_statistic_category_month_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Apr 2025"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/fragment_statistic_category_month_next"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_baseline_navigate_next_24" />
+    </LinearLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/fragment_statistic_category_lineChartContainer"
         android:layout_width="match_parent"

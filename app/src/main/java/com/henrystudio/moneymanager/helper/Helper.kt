@@ -3,14 +3,16 @@ package com.henrystudio.moneymanager.helper
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.widget.TextView
+import androidx.annotation.RequiresApi
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.model.Category
-import com.henrystudio.moneymanager.model.CategoryStat
-import com.henrystudio.moneymanager.model.CategoryType
-import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.ui.addtransaction.CategoryItem
 import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
 import java.util.*
 
 class Helper {
@@ -114,6 +116,26 @@ class Helper {
                     parent = fullCategory.trim(),
                     sub = ""
                 )
+            }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun updateMonthText(filterOption: FilterOption, monthText: TextView) {
+            val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            // ✅ Cập nhật text phù hợp
+            monthText.text = when (filterOption.type) {
+                FilterPeriodStatistic.Monthly -> filterOption.date.format(formatterMonth)
+                FilterPeriodStatistic.Weekly -> {
+                    val formatterFirst = DateTimeFormatter.ofPattern("dd/MM")
+                    val formatterLast = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    val weekFields = WeekFields.of(Locale.getDefault())
+                    val firstDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 1) // Monday
+                    val lastDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 7) // Sunday
+                    "${firstDayOfWeek.format(formatterFirst)} ~ ${lastDayOfWeek.format(formatterLast)}"
+                }
+                FilterPeriodStatistic.Yearly -> filterOption.date.year.toString()
+                FilterPeriodStatistic.List -> "Not code now"
+                FilterPeriodStatistic.Trend -> "Not code now"
             }
         }
     }

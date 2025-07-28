@@ -26,6 +26,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.helper.Helper.Companion.updateMonthText
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -55,8 +56,6 @@ class StatisticFragment : Fragment() {
             AppDatabase.getDatabase(requireActivity().application).transactionDao()
         )
     }
-    @RequiresApi(Build.VERSION_CODES.O)
-    private val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -103,7 +102,7 @@ class StatisticFragment : Fragment() {
                 FilterPeriodStatistic.List -> {}
                 FilterPeriodStatistic.Trend -> {}
             }
-            updateMonthText(filterOptionTemp)
+            updateMonthText(filterOptionTemp, monthText)
         }
 
         monthNext.setOnClickListener {
@@ -114,7 +113,7 @@ class StatisticFragment : Fragment() {
                 FilterPeriodStatistic.List -> {}
                 FilterPeriodStatistic.Trend -> {}
             }
-            updateMonthText(filterOptionTemp)
+            updateMonthText(filterOptionTemp, monthText)
         }
     }
 
@@ -264,25 +263,6 @@ class StatisticFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateMonthText(filterOption: FilterOption) {
-        // ✅ Cập nhật text phù hợp
-        monthText.text = when (filterOption.type) {
-            FilterPeriodStatistic.Monthly -> filterOption.date.format(formatterMonth)
-            FilterPeriodStatistic.Weekly -> {
-                val formatterFirst = DateTimeFormatter.ofPattern("dd/MM")
-                val formatterLast = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                val weekFields = WeekFields.of(Locale.getDefault())
-                val firstDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 1) // Monday
-                val lastDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 7) // Sunday
-                "${firstDayOfWeek.format(formatterFirst)} ~ ${lastDayOfWeek.format(formatterLast)}"
-            }
-            FilterPeriodStatistic.Yearly -> filterOption.date.year.toString()
-            FilterPeriodStatistic.List -> "Not code now"
-            FilterPeriodStatistic.Trend -> "Not code now"
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getListUpdateChart(filterOption: FilterOption) {
         val list = when (filterOption.type) {
             FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
@@ -291,7 +271,7 @@ class StatisticFragment : Fragment() {
             FilterPeriodStatistic.List -> emptyList()
             FilterPeriodStatistic.Trend -> emptyList()
         }
-        updateMonthText(filterOption)
+        updateMonthText(filterOption, monthText)
         updateTextButton(list)
         filteredListTransaction = list
         if (filterOption.type == FilterPeriodStatistic.Trend) {

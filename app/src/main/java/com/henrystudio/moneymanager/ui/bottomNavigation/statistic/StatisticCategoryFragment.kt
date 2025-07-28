@@ -8,6 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.activityViewModels
@@ -25,16 +27,18 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.helper.Helper.Companion.updateMonthText
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModelFactory
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
-import java.time.Year
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import java.time.temporal.WeekFields
 import java.util.*
 
 class StatisticCategoryFragment : Fragment() {
@@ -58,6 +62,16 @@ class StatisticCategoryFragment : Fragment() {
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
     private lateinit var toolbar: MaterialToolbar
+    private lateinit var monthBack: ImageView
+    private lateinit var monthNext: ImageView
+    private lateinit var monthText: TextView
+    private lateinit var chartPoints: List<LineChartPoint>
+    private var currentIndex = 0
+    private lateinit var adapter: CategoryStatAdapter
+    private val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
+    @RequiresApi(Build.VERSION_CODES.O)
+    private var filterOptionTemp : FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
+
 
     val viewModel: TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
@@ -70,6 +84,10 @@ class StatisticCategoryFragment : Fragment() {
             AppDatabase.getDatabase(requireActivity().application).categoryDao()
         )
     }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val formatterWeek: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM")
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/yyyy")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -83,15 +101,10 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbar = binding.fragmentStatisticCategoryToolbar
-        btnBack = binding.fragmentStatisticCategoryBackButton
-        lineChart = binding.fragmentStatisticCategoryLineChart
-        recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
+        init()
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-
-        val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
 
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
         categoryType =
@@ -102,7 +115,7 @@ class StatisticCategoryFragment : Fragment() {
         (requireActivity() as AppCompatActivity).supportActionBar?.title = "Toolbar in Fragment"
         toolbar.title = "new title"
 
-        val adapter = CategoryStatAdapter(listChildCategoryStat)
+        adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
@@ -127,9 +140,13 @@ class StatisticCategoryFragment : Fragment() {
             }
         }
 
+        viewModel.filterOption.observe(viewLifecycleOwner) { option ->
+            filterOptionTemp = option
+        }
+
         viewModel.allTransactions.observe(viewLifecycleOwner) { list ->
             allTransactions = list
-            val chartPoints = getCategoryLinePoints(
+            chartPoints = getCategoryLinePoints(
                 list,
                 categoryName,
                 categoryType == CategoryType.INCOME,
@@ -138,32 +155,25 @@ class StatisticCategoryFragment : Fragment() {
 
             // Cập nhật chart tại đây luôn
             updateLineChart(chartPoints, filterOption.type)
+            if (chartPoints.isNotEmpty()) {
+                currentIndex = chartPoints.lastIndex // hoặc 0 tùy mặc định
+                showChartAt(currentIndex)
+            }
+            clickLineChart()
+        }
 
-            lineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
-                override fun onValueSelected(e: Entry?, h: Highlight?) {
-                    if (e == null) return
+        binding.fragmentStatisticCategoryMonthBack.setOnClickListener {
+            if (currentIndex > 0) {
+                currentIndex--
+                showChartAt(currentIndex)
+            }
+        }
 
-                    val xIndex = e.x.toInt() // Vị trí trên trục X
-                    val point = chartPoints.getOrNull(xIndex)
-                    point?.let {
-                        val selectedDate = it
-                        // Ví dụ xử lý thêm:
-                        // openDetailForDate(selectedDate)
-                    }
-                    listTransactionMonth = point?.let {
-                        FilterTransactions.filterTransactionsByCategoryNameAndMonth(
-                            allTransactions,
-                            categoryName,
-                            it.date
-                        )
-                    }
-                    listChildCategoryStat = Helper.convertToCategoryStats(listChildCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
-                    adapter.submitList(listChildCategoryStat)
-                }
-
-                override fun onNothingSelected() {
-                }
-            })
+        binding.fragmentStatisticCategoryMonthNext.setOnClickListener {
+            if (currentIndex < chartPoints.lastIndex) {
+                currentIndex++
+                showChartAt(currentIndex)
+            }
         }
     }
 
@@ -242,7 +252,7 @@ class StatisticCategoryFragment : Fragment() {
                 // Nhóm theo ngày (dd/MM)
                 filtered.groupBy {
                     val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter)
+                    val date = LocalDate.parse(dateSub, formatter).with(DayOfWeek.MONDAY)
                     date.format(DateTimeFormatter.ofPattern("dd/MM"))
                 }
             }
@@ -280,7 +290,7 @@ class StatisticCategoryFragment : Fragment() {
             }
         }
 
-        return grouped.entries.sortedBy { it.key }.map { (label, group) ->
+        return grouped.entries.map { (label, group) ->
             val anyDate = group.first().date.substringBefore(" ")
             val localDate = LocalDate.parse(anyDate, formatter)
 
@@ -292,6 +302,70 @@ class StatisticCategoryFragment : Fragment() {
             }
 
             LineChartPoint(label = label, amount = group.sumOf { it.amount }, date = chartDate)
+        }.sortedBy { it.date }
+    }
+
+    private fun init() {
+        toolbar = binding.fragmentStatisticCategoryToolbar
+        monthBack = binding.fragmentStatisticCategoryMonthBack
+        monthNext = binding.fragmentStatisticCategoryMonthNext
+        monthText = binding.fragmentStatisticCategoryMonthText
+        btnBack = binding.fragmentStatisticCategoryBackButton
+        lineChart = binding.fragmentStatisticCategoryLineChart
+        recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
+    }
+
+    private fun clickLineChart() {
+        lineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onValueSelected(e: Entry?, h: Highlight?) {
+                if (e == null) return
+
+                val xIndex = e.x.toInt() // Vị trí trên trục X
+                val point = chartPoints.getOrNull(xIndex)
+                point?.let {
+                    val selectedDate = it
+                    // Ví dụ xử lý thêm:
+                    // openDetailForDate(selectedDate)
+                }
+                listTransactionMonth = point?.let {
+                    FilterTransactions.filterTransactionsByCategoryNameAndMonth(
+                        allTransactions,
+                        categoryName,
+                        it.date
+                    )
+                }
+                listChildCategoryStat = Helper.convertToCategoryStats(listChildCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
+                adapter.submitList(listChildCategoryStat)
+            }
+
+            override fun onNothingSelected() {
+            }
+        })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun showChartAt(index: Int) {
+        val point = chartPoints[index]
+
+        val label = when (filterOption.type) {
+            FilterPeriodStatistic.Monthly -> {
+                val date = point.date
+                "${date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${date.year}"
+            }
+            FilterPeriodStatistic.Weekly -> {
+                val start = point.date
+                val end = start.plusDays(6)
+                "${start.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))} ~ ${end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}"
+            }
+            FilterPeriodStatistic.Yearly -> point.date.year.toString()
+            else -> point.label
         }
+
+        binding.fragmentStatisticCategoryMonthText.text = label
+
+        // Enable / disable back/next button
+        binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
+        binding.fragmentStatisticCategoryMonthNext.isEnabled = index < chartPoints.lastIndex
     }
 }
