@@ -28,7 +28,6 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.helper.Helper.Companion.updateMonthText
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModelFactory
@@ -39,7 +38,6 @@ import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.time.temporal.WeekFields
 import java.util.*
 
 class StatisticCategoryFragment : Fragment() {
@@ -157,8 +155,7 @@ class StatisticCategoryFragment : Fragment() {
             // Cập nhật chart tại đây luôn
             updateLineChart(chartPoints, filterOption.type)
             if (chartPoints.isNotEmpty()) {
-                currentIndex = chartPoints.lastIndex // hoặc 0 tùy mặc định
-                showChartAt(currentIndex)
+                selectCurrentPeriodPoint()
             }
             clickLineChart()
         }
@@ -227,6 +224,15 @@ class StatisticCategoryFragment : Fragment() {
             textSize = 12f
             labelRotationAngle = 0f // hoặc 45f nếu label dài
         }
+
+        lineChart.setTouchEnabled(true)
+        lineChart.isDragEnabled = true
+        lineChart.setScaleEnabled(true)
+        lineChart.setPinchZoom(true)
+
+        lineChart.xAxis.isGranularityEnabled = true
+        lineChart.xAxis.granularity = 1f // mỗi bước 1 label
+        lineChart.setVisibleXRangeMaximum(5f) // CHỈ HIỆN 5 điểm 1 lần
 
         // Các thiết lập khác (nếu cần)
         lineChart.axisRight.isEnabled = false // tắt trục Y bên phải
@@ -373,5 +379,29 @@ class StatisticCategoryFragment : Fragment() {
         lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 500)
 
         showChartAt(index) // Cập nhật text + disable nút nếu cần
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun selectCurrentPeriodPoint() {
+        val today = LocalDate.now()
+        val localDate = when (filterOption.type) {
+            FilterPeriodStatistic.Monthly -> filterOption.date.withDayOfMonth(1)
+            FilterPeriodStatistic.Weekly -> filterOption.date.with(DayOfWeek.MONDAY)
+            FilterPeriodStatistic.Yearly -> filterOption.date.withDayOfYear(1)
+            else -> today
+        }
+
+        val index = chartPoints.indexOfFirst { it.date == localDate }
+        if (index != -1) {
+            currentIndex = index
+            highlightChartPoint(index)
+        } else {
+            // Optional: chọn điểm gần nhất trước hôm nay
+            val fallbackIndex = chartPoints.indexOfLast { it.date.isBefore(localDate) }
+            if (fallbackIndex != -1) {
+                currentIndex = fallbackIndex
+                highlightChartPoint(fallbackIndex)
+            }
+        }
     }
 }
