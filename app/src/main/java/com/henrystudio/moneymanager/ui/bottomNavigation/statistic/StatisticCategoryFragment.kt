@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -25,10 +26,12 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.appbar.MaterialToolbar
+import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.ui.daily.DailyFragment
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModelFactory
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
@@ -48,10 +51,6 @@ class StatisticCategoryFragment : Fragment() {
     private var categoryName: String = ""
     private var categoryType: CategoryType = CategoryType.EXPENSE
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOption: FilterOption =
-        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-
     private var allTransactions: List<Transaction> = emptyList()
     private var allCategories: List<Category> = emptyList()
     private var listTransactionMonth: List<Transaction>? = null
@@ -60,6 +59,7 @@ class StatisticCategoryFragment : Fragment() {
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
+    private lateinit var dailyContainer: FrameLayout
     private lateinit var toolbar: MaterialToolbar
     private lateinit var monthBack: ImageView
     private lateinit var monthNext: ImageView
@@ -83,11 +83,6 @@ class StatisticCategoryFragment : Fragment() {
             AppDatabase.getDatabase(requireActivity().application).categoryDao()
         )
     }
-    @RequiresApi(Build.VERSION_CODES.O)
-    private val formatterWeek: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM")
-    @RequiresApi(Build.VERSION_CODES.O)
-    private val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/yyyy")
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -108,7 +103,6 @@ class StatisticCategoryFragment : Fragment() {
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
-        filterOption = arguments?.getSerializable("item_click_filterOption") as FilterOption
         (requireActivity() as AppCompatActivity).setSupportActionBar(toolbar)
         // Đặt title ở đây nếu cần
         (requireActivity() as AppCompatActivity).supportActionBar?.title = "Toolbar in Fragment"
@@ -133,8 +127,20 @@ class StatisticCategoryFragment : Fragment() {
                         categoryName, LocalDate.now())
                     listChildCategoryStat = Helper.convertToCategoryStats(listChild,
                         listTransactionMonth ?: emptyList(), categoryType == CategoryType.INCOME, colors)
+                    if (listChildCategoryStat.isNotEmpty()) {
+                        recyclerView.visibility = View.VISIBLE
+                        dailyContainer.visibility = View.GONE
+                        adapter.submitList(listChildCategoryStat)
+                    } else {
+                        recyclerView.visibility = View.GONE
+                        dailyContainer.visibility = View.VISIBLE
+                        // Gửi category id hoặc name vào DailyFragment nếu cần
+                        val fragment = DailyFragment.newDailyInstance(categoryName = categoryName)
 
-                    adapter.submitList(listChildCategoryStat)
+                        childFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_statistic_category_dailyContainer, fragment)
+                            .commit()
+                    }
                 }
             }
         }
@@ -149,11 +155,11 @@ class StatisticCategoryFragment : Fragment() {
                 list,
                 categoryName,
                 categoryType == CategoryType.INCOME,
-                filterOption
+                filterOptionTemp
             )
 
             // Cập nhật chart tại đây luôn
-            updateLineChart(chartPoints, filterOption.type)
+            updateLineChart(chartPoints, filterOptionTemp.type)
             if (chartPoints.isNotEmpty()) {
                 selectCurrentPeriodPoint()
             }
@@ -320,6 +326,7 @@ class StatisticCategoryFragment : Fragment() {
         btnBack = binding.fragmentStatisticCategoryBackButton
         lineChart = binding.fragmentStatisticCategoryLineChart
         recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
+        dailyContainer = binding.fragmentStatisticCategoryDailyContainer
     }
 
     private fun clickLineChart() {
@@ -330,6 +337,7 @@ class StatisticCategoryFragment : Fragment() {
 
                 val xIndex = e.x.toInt() // Vị trí trên trục X
                 updateDateList(xIndex)
+                showChartAt(xIndex)
             }
 
             override fun onNothingSelected() {
@@ -340,8 +348,8 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showChartAt(index: Int) {
         val point = chartPoints[index]
-
-        val label = when (filterOption.type) {
+        viewModel.setTime(point.date)
+        val label = when (filterOptionTemp.type) {
             FilterPeriodStatistic.Monthly -> {
                 val date = point.date
                 "${date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${date.year}"
@@ -366,7 +374,6 @@ class StatisticCategoryFragment : Fragment() {
     private fun highlightChartPoint(index: Int) {
         lineChart.highlightValue(Highlight(index.toFloat(), 0f, 0)) // Highlight theo x index
         lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 500)
-
         showChartAt(index) // Cập nhật text + disable nút nếu cần
         updateDateList(index)
     }
@@ -374,10 +381,10 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun selectCurrentPeriodPoint() {
         val today = LocalDate.now()
-        val localDate = when (filterOption.type) {
-            FilterPeriodStatistic.Monthly -> filterOption.date.withDayOfMonth(1)
-            FilterPeriodStatistic.Weekly -> filterOption.date.with(DayOfWeek.MONDAY)
-            FilterPeriodStatistic.Yearly -> filterOption.date.withDayOfYear(1)
+        val localDate = when (filterOptionTemp.type) {
+            FilterPeriodStatistic.Monthly -> filterOptionTemp.date.withDayOfMonth(1)
+            FilterPeriodStatistic.Weekly -> filterOptionTemp.date.with(DayOfWeek.MONDAY)
+            FilterPeriodStatistic.Yearly -> filterOptionTemp.date.withDayOfYear(1)
             else -> today
         }
 
@@ -398,7 +405,6 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updateDateList(index: Int) {
         val point = chartPoints.getOrNull(index)
-        showChartAt(index)
         currentIndex = index
         listTransactionMonth = point?.let {
             FilterTransactions.filterTransactionsByCategoryNameAndMonth(

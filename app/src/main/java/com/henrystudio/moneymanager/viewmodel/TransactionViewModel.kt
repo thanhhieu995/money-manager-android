@@ -27,6 +27,8 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val navigateToWeekFromMonthly: LiveData<LocalDate?> = _navigateToWeekFromMonthly
     private val _filterOption = MutableLiveData<FilterOption>()
     val filterOption: LiveData<FilterOption> = _filterOption
+    private val _selectedTime = MutableLiveData<LocalDate>()
+    val selectedTime : LiveData<LocalDate> = _selectedTime
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
@@ -108,5 +110,9 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun setFilter(type: FilterPeriodStatistic, date: LocalDate) {
         _filterOption.value = FilterOption(type, date)
+    }
+
+    fun setTime(month: LocalDate) {
+        _selectedTime.value = month
     }
 }

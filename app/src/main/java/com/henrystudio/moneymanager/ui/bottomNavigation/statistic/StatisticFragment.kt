@@ -31,8 +31,6 @@ import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.temporal.WeekFields
 import java.util.*
 
 class StatisticFragment : Fragment() {
@@ -222,7 +220,6 @@ class StatisticFragment : Fragment() {
             val bundle =  Bundle().apply {
                 putSerializable("item_click_statistic_category_name", categoryStat.name)
                 putSerializable("item_click_statistic_category_type", categoryType)
-                putSerializable("item_click_filterOption", filterOptionTemp)
             }
             val fragment = StatisticCategoryFragment()
             fragment.arguments = bundle

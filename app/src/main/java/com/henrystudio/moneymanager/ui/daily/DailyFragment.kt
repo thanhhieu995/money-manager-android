@@ -22,6 +22,7 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.fragment.app.activityViewModels
+import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 
 class DailyFragment : Fragment() {
@@ -51,6 +52,8 @@ class DailyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val categoryName = arguments?.getString(ARG_CATEGORY_NAME, "")
+
         adapter = TransactionGroupAdapter()
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
@@ -76,10 +79,31 @@ class DailyFragment : Fragment() {
         binding.transactionList.addItemDecoration(decoration)
 
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
-            allTransactions = transactions
-            // Sắp xếp ngày giảm dần
+            allTransactions = if (categoryName?.isNotEmpty() == true) {
+
+                transactions.mapNotNull { group ->
+                    val filteredTransactions = group.transactions.filter { it.categoryParentName.trim() == categoryName.trim() }
+                    if (filteredTransactions.isNotEmpty()) {
+                        group.copy(
+                            income = filteredTransactions.filter { it.amount > 0 }.sumOf { it.amount },
+                            expense = filteredTransactions.filter { it.amount < 0 }.sumOf { it.amount },
+                            transactions = filteredTransactions
+                        )
+                    } else null
+                }
+            } else {
+                transactions
+            }
             val filteredList =
-                month?.let { com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(transactions, it) } ?: emptyList()
+                month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) } ?: emptyList()
+            transactionGroupListFilter = filteredList
+            adapter.submitList(filteredList)
+            binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
+        }
+
+        viewModel.selectedTime.observe(viewLifecycleOwner) { date ->
+            val filteredList =
+                date?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) } ?: emptyList()
             transactionGroupListFilter = filteredList
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
@@ -87,7 +111,7 @@ class DailyFragment : Fragment() {
 
         viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
             month = selectedMonth
-            val filtered = com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+            val filtered = FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
             adapter.submitList(filtered)
             binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
 
@@ -196,6 +220,18 @@ class DailyFragment : Fragment() {
             val cleanedDate = tx.date.substringBefore(" ")
             val txDate = LocalDate.parse(cleanedDate, formatter)
             txDate == date
+        }
+    }
+
+    companion object {
+        const val ARG_CATEGORY_NAME = "arg_category_name"
+
+        fun newDailyInstance(categoryName: String?): DailyFragment {
+            val fragment = DailyFragment()
+            val args = Bundle()
+            args.putString(ARG_CATEGORY_NAME, categoryName ?: "")
+            fragment.arguments = args
+            return fragment
         }
     }
 }
