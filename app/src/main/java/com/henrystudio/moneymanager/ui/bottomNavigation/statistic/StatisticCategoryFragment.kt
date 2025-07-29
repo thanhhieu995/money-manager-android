@@ -329,18 +329,7 @@ class StatisticCategoryFragment : Fragment() {
                 if (e == null) return
 
                 val xIndex = e.x.toInt() // Vị trí trên trục X
-                val point = chartPoints.getOrNull(xIndex)
-                showChartAt(xIndex)
-                currentIndex = xIndex
-                listTransactionMonth = point?.let {
-                    FilterTransactions.filterTransactionsByCategoryNameAndMonth(
-                        allTransactions,
-                        categoryName,
-                        it.date
-                    )
-                }
-                listChildCategoryStat = Helper.convertToCategoryStats(listChildCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
-                adapter.submitList(listChildCategoryStat)
+                updateDateList(xIndex)
             }
 
             override fun onNothingSelected() {
@@ -379,6 +368,7 @@ class StatisticCategoryFragment : Fragment() {
         lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 500)
 
         showChartAt(index) // Cập nhật text + disable nút nếu cần
+        updateDateList(index)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -403,5 +393,21 @@ class StatisticCategoryFragment : Fragment() {
                 highlightChartPoint(fallbackIndex)
             }
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun updateDateList(index: Int) {
+        val point = chartPoints.getOrNull(index)
+        showChartAt(index)
+        currentIndex = index
+        listTransactionMonth = point?.let {
+            FilterTransactions.filterTransactionsByCategoryNameAndMonth(
+                allTransactions,
+                categoryName,
+                it.date
+            )
+        }
+        listChildCategoryStat = Helper.convertToCategoryStats(listChildCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
+        adapter.submitList(listChildCategoryStat)
     }
 }
