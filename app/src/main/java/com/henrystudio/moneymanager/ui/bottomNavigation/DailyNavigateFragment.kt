@@ -193,7 +193,7 @@ class DailyNavigateFragment : Fragment() {
 
         // observe selectionMode && id
         viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
-            binding.fragmentDailyNavigateLayoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
+            layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
         }
 
         viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->

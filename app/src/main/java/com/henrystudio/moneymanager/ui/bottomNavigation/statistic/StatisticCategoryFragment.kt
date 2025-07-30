@@ -7,10 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.activityViewModels
@@ -56,6 +53,7 @@ class StatisticCategoryFragment : Fragment() {
     private var listTransactionMonth: List<Transaction>? = null
     private var listChildCategories: List<Category> = emptyList()
     private var listChildCategoryStat : List<CategoryStat> = emptyList()
+    private var selectedTransactionList: List<Transaction> = emptyList()
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
@@ -64,6 +62,9 @@ class StatisticCategoryFragment : Fragment() {
     private lateinit var monthBack: ImageView
     private lateinit var monthNext: ImageView
     private lateinit var monthText: TextView
+    private lateinit var btnEditClose: ImageView
+    private lateinit var btnEditDelete: ImageView
+    private lateinit var layoutEdit: LinearLayout
     private lateinit var chartPoints: List<LineChartPoint>
     private var currentIndex = 0
     private lateinit var adapter: CategoryStatAdapter
@@ -147,6 +148,35 @@ class StatisticCategoryFragment : Fragment() {
 
         viewModel.filterOption.observe(viewLifecycleOwner) { option ->
             filterOptionTemp = option
+        }
+
+        // observe selectionMode && id
+        viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
+            layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
+            lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
+        }
+
+        viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
+            selectedTransactionList = selectedTransactions
+            // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
+            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
+                "${selectedTransactions.size} selected"
+            val totalAmount = selectedTransactions.sumOf {
+                if(it.isIncome) it.amount else -it.amount
+            }
+            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
+                "Total: ${Helper.formatCurrency(totalAmount)}"
+        }
+
+        btnEditClose.setOnClickListener {
+            viewModel.exitSelectionMode()
+        }
+
+        btnEditDelete.setOnClickListener {
+            if (selectedTransactionList.isNotEmpty()) {
+                viewModel.deleteAll(selectedTransactionList)
+                viewModel.exitSelectionMode()
+            }
         }
 
         viewModel.allTransactions.observe(viewLifecycleOwner) { list ->
@@ -327,6 +357,9 @@ class StatisticCategoryFragment : Fragment() {
         lineChart = binding.fragmentStatisticCategoryLineChart
         recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
         dailyContainer = binding.fragmentStatisticCategoryDailyContainer
+        btnEditClose = binding.fragmentDailyNavigateLayoutEditLineOneBtnClose
+        btnEditDelete = binding.fragmentDailyNavigateLayoutEditLineOneBtnDelete
+        layoutEdit = binding.fragmentDailyNavigateLayoutEdit
     }
 
     private fun clickLineChart() {
