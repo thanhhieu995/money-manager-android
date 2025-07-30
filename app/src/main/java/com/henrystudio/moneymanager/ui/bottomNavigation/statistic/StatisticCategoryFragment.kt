@@ -41,7 +41,6 @@ import java.time.format.TextStyle
 import java.util.*
 
 class StatisticCategoryFragment : Fragment() {
-    private lateinit var btnBack: ImageButton
     private var _binding: FragmentStatisticCategoryBinding? = null
     private val binding get() = _binding!!
 
@@ -58,7 +57,6 @@ class StatisticCategoryFragment : Fragment() {
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
     private lateinit var dailyContainer: FrameLayout
-    private lateinit var toolbar: MaterialToolbar
     private lateinit var monthBack: ImageView
     private lateinit var monthNext: ImageView
     private lateinit var monthText: TextView
@@ -97,18 +95,10 @@ class StatisticCategoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
-        btnBack.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
 
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
-        (requireActivity() as AppCompatActivity).setSupportActionBar(toolbar)
-        // Đặt title ở đây nếu cần
-        (requireActivity() as AppCompatActivity).supportActionBar?.title = "Toolbar in Fragment"
-        toolbar.title = "new title"
-
         adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -349,11 +339,9 @@ class StatisticCategoryFragment : Fragment() {
     }
 
     private fun init() {
-        toolbar = binding.fragmentStatisticCategoryToolbar
         monthBack = binding.fragmentStatisticCategoryMonthBack
         monthNext = binding.fragmentStatisticCategoryMonthNext
         monthText = binding.fragmentStatisticCategoryMonthText
-        btnBack = binding.fragmentStatisticCategoryBackButton
         lineChart = binding.fragmentStatisticCategoryLineChart
         recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
         dailyContainer = binding.fragmentStatisticCategoryDailyContainer

@@ -6,76 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:orientation="vertical">
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/fragment_statistic_category_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/purple_200"
-        app:title=""
-        app:contentInsetStartWithNavigation="0dp">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/fragment_statistic_category_toolbarContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingHorizontal="16dp">
-
-            <!-- Back Button (Góc trái) -->
-            <ImageButton
-                android:id="@+id/fragment_statistic_category_backButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_baseline_navigate_before_24"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-
-            <!-- Title hiện tại -->
-            <TextView
-                android:id="@+id/fragment_statistic_category_titleCurrent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Title"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:maxLines="1"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-
-            <!-- Title tiếp theo -->
-            <TextView
-                android:id="@+id/fragment_statistic_category_titleIncoming"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Incoming"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:maxLines="1"
-                android:alpha="0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-
-            <!-- Icon Add (góc phải) -->
-            <ImageButton
-                android:id="@+id/fragment_statistic_category_addButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_baseline_add_24"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.appbar.MaterialToolbar>
     <LinearLayout
         android:id="@+id/fragment_daily_navigate_layout_edit"
         android:layout_width="match_parent"
@@ -174,15 +104,16 @@
 
         <ImageView
             android:id="@+id/fragment_statistic_category_month_back"
-            android:layout_width="24dp"
+            android:layout_width="0dp"
             android:layout_height="24dp"
+            android:layout_weight="1"
             android:src="@drawable/ic_baseline_navigate_before_24" />
 
         <TextView
             android:id="@+id/fragment_statistic_category_month_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="5"
             android:gravity="center"
             android:text="Apr 2025"
             android:textSize="18sp"
@@ -190,8 +121,9 @@
 
         <ImageView
             android:id="@+id/fragment_statistic_category_month_next"
-            android:layout_width="24dp"
+            android:layout_width="0dp"
             android:layout_height="24dp"
+            android:layout_weight="1"
             android:src="@drawable/ic_baseline_navigate_next_24" />
     </LinearLayout>
 

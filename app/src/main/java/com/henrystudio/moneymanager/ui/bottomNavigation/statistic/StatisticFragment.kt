@@ -1,5 +1,6 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -217,22 +218,11 @@ class StatisticFragment : Fragment() {
 
         val adapter = CategoryStatAdapter(statList)
         adapter.onClickListener = { categoryStat ->
-            val bundle =  Bundle().apply {
-                putSerializable("item_click_statistic_category_name", categoryStat.name)
-                putSerializable("item_click_statistic_category_type", categoryType)
-            }
-            val fragment = StatisticCategoryFragment()
-            fragment.arguments = bundle
-            requireActivity().supportFragmentManager.beginTransaction().replace(R.id.fragment_statistic_viewPager_frameLayout, fragment)
-                .setReorderingAllowed(true)
-                .setCustomAnimations(
-                    R.anim.slide_in_right,  // enter
-                    R.anim.no_animation,    // exit
-                    R.anim.no_animation,    // popEnter (khi quay lại)
-                    R.anim.slide_out_right  // popExit (khi quay lại)
-                )
-                .addToBackStack(null)
-                .commit()
+            val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
+            intent.putExtra("item_click_statistic_category_name", categoryStat.name)
+            intent.putExtra("item_click_statistic_category_type", categoryType)
+            startActivity(intent)
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
             true
         }
         binding.fragmentStatisticStatsRecyclerView.adapter = adapter
