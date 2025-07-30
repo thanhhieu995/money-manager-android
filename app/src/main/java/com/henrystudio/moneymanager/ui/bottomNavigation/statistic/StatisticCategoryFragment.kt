@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,7 +21,6 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
-import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
@@ -52,7 +50,6 @@ class StatisticCategoryFragment : Fragment() {
     private var listTransactionMonth: List<Transaction>? = null
     private var listChildCategories: List<Category> = emptyList()
     private var listChildCategoryStat : List<CategoryStat> = emptyList()
-    private var selectedTransactionList: List<Transaction> = emptyList()
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
@@ -60,9 +57,6 @@ class StatisticCategoryFragment : Fragment() {
     private lateinit var monthBack: ImageView
     private lateinit var monthNext: ImageView
     private lateinit var monthText: TextView
-    private lateinit var btnEditClose: ImageView
-    private lateinit var btnEditDelete: ImageView
-    private lateinit var layoutEdit: LinearLayout
     private lateinit var chartPoints: List<LineChartPoint>
     private var currentIndex = 0
     private lateinit var adapter: CategoryStatAdapter
@@ -99,6 +93,7 @@ class StatisticCategoryFragment : Fragment() {
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
+        filterOptionTemp = arguments?.getSerializable("item_click_statistic_filterOption") as FilterOption
         adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -140,33 +135,8 @@ class StatisticCategoryFragment : Fragment() {
             filterOptionTemp = option
         }
 
-        // observe selectionMode && id
         viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
-            layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
             lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
-        }
-
-        viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
-            selectedTransactionList = selectedTransactions
-            // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
-            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
-                "${selectedTransactions.size} selected"
-            val totalAmount = selectedTransactions.sumOf {
-                if(it.isIncome) it.amount else -it.amount
-            }
-            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
-                "Total: ${Helper.formatCurrency(totalAmount)}"
-        }
-
-        btnEditClose.setOnClickListener {
-            viewModel.exitSelectionMode()
-        }
-
-        btnEditDelete.setOnClickListener {
-            if (selectedTransactionList.isNotEmpty()) {
-                viewModel.deleteAll(selectedTransactionList)
-                viewModel.exitSelectionMode()
-            }
         }
 
         viewModel.allTransactions.observe(viewLifecycleOwner) { list ->
@@ -345,9 +315,6 @@ class StatisticCategoryFragment : Fragment() {
         lineChart = binding.fragmentStatisticCategoryLineChart
         recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
         dailyContainer = binding.fragmentStatisticCategoryDailyContainer
-        btnEditClose = binding.fragmentDailyNavigateLayoutEditLineOneBtnClose
-        btnEditDelete = binding.fragmentDailyNavigateLayoutEditLineOneBtnDelete
-        layoutEdit = binding.fragmentDailyNavigateLayoutEdit
     }
 
     private fun clickLineChart() {
@@ -384,7 +351,7 @@ class StatisticCategoryFragment : Fragment() {
             else -> point.label
         }
 
-        binding.fragmentStatisticCategoryMonthText.text = label
+        monthText.text = label
 
         // Enable / disable back/next button
         binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
