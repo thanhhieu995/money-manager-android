@@ -131,10 +131,6 @@ class StatisticCategoryFragment : Fragment() {
             }
         }
 
-        viewModel.filterOption.observe(viewLifecycleOwner) { option ->
-            filterOptionTemp = option
-        }
-
         viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
             lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
         }
@@ -156,18 +152,42 @@ class StatisticCategoryFragment : Fragment() {
             clickLineChart()
         }
 
-        binding.fragmentStatisticCategoryMonthBack.setOnClickListener {
+        monthBack.setOnClickListener {
             if (currentIndex > 0) {
                 currentIndex--
                 highlightChartPoint(currentIndex)
             }
         }
 
-        binding.fragmentStatisticCategoryMonthNext.setOnClickListener {
+        monthNext.setOnClickListener {
             if (currentIndex < chartPoints.lastIndex) {
                 currentIndex++
                 highlightChartPoint(currentIndex)
             }
+        }
+
+        adapter.onClickListener = { categoryStat ->
+            // Gửi category id hoặc name vào DailyFragment nếu cần
+            val fragment = StatisticCategoryFragment()
+            val bundle = Bundle().apply {
+                putSerializable("item_click_statistic_category_name", categoryStat.name)
+                putSerializable("item_click_statistic_category_type", categoryType)
+                putSerializable("item_click_statistic_filterOption", filterOptionTemp)
+            }
+            fragment.apply {
+                arguments = bundle
+            }
+            parentFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.slide_in_right,  // enter
+                    R.anim.no_animation,    // exit
+                    R.anim.no_animation,    // popEnter (khi quay lại)
+                    R.anim.slide_out_right  // popExit (khi quay lại)
+                )
+                .replace(R.id.activity_statistic_category_container, fragment)
+                .addToBackStack(null)
+                .commit()
+            true
         }
     }
 
@@ -336,7 +356,7 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showChartAt(index: Int) {
         val point = chartPoints[index]
-        viewModel.setTime(point.date)
+        viewModel.setLocalDateCurrentFilterDate(point.date)
         val label = when (filterOptionTemp.type) {
             FilterPeriodStatistic.Monthly -> {
                 val date = point.date

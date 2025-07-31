@@ -94,16 +94,7 @@ class DailyFragment : Fragment() {
             } else {
                 transactions
             }
-            val filteredList =
-                month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) } ?: emptyList()
-            transactionGroupListFilter = filteredList
-            adapter.submitList(filteredList)
-            binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
-        }
-
-        viewModel.selectedTime.observe(viewLifecycleOwner) { date ->
-            val filteredList =
-                date?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) } ?: emptyList()
+            val filteredList = month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) } ?: emptyList()
             transactionGroupListFilter = filteredList
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
