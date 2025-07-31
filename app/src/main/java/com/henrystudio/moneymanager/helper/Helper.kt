@@ -86,7 +86,7 @@ class Helper {
 
             return categories.mapIndexedNotNull { index, category ->
                 val categoryTransactions = filteredTransactions.filter {
-                   it.categorySubName.trim() == (category.emoji.trim() + " " + category.name.trim())
+                   it.categorySubName.trim() == (category.emoji + category.name).trim()
                 }
                 val categoryAmount = categoryTransactions.sumOf { it.amount }
                 if (categoryAmount > 0) {

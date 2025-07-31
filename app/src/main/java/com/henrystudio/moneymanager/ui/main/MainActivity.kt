@@ -107,9 +107,9 @@ class MainActivity : AppCompatActivity() {
                     Category(emoji = "💻", name = "Investment", type = typeExpense),
                     Category(emoji = "🎨", name = "Culture", type = typeExpense),
                     Category(emoji = "🚲", name = "Bicycle", type = typeExpense),
-                    Category(emoji = "\uD83C\uDF73 ☕", name = "Breakfast", type = typeExpense, parentId = 1),
-                    Category(emoji = "\uD83E\uDD57 \uD83C\uDF71", name = "Lunch", type = typeExpense, parentId = 1),
-                    Category(emoji = "\uD83C\uDF72 \uD83C\uDF56", name = "Dinner", type = typeExpense, parentId = 1),
+                    Category(emoji = "", name = "Breakfast", type = typeExpense, parentId = 1),
+                    Category(emoji = "", name = "Lunch", type = typeExpense, parentId = 1),
+                    Category(emoji = "", name = "Dinner", type = typeExpense, parentId = 1),
                     // income
                     Category(emoji = "💸", name = "Allowance", type = typeIncome),
                     Category(emoji = "💼", name = "Salary", type = typeIncome),

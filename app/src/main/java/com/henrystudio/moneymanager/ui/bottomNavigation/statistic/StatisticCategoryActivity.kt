@@ -3,6 +3,7 @@ package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -20,7 +21,8 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 class StatisticCategoryActivity : AppCompatActivity() {
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnBack: ImageButton
-    private lateinit var title: TextView
+    lateinit var titleCurrent: TextView
+    lateinit var titleIncoming: TextView
     private lateinit var container: FrameLayout
     private lateinit var statisticCategoryFragment: StatisticCategoryFragment
     private lateinit var layoutEdit: LinearLayout
@@ -28,6 +30,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
     private lateinit var btnEditDelete: ImageView
     private lateinit var selectedCount: TextView
     private lateinit var selectedTotal: TextView
+    val titleStack = ArrayDeque<String>()
 
     private var selectedTransactionList: List<Transaction> = emptyList()
     private lateinit var viewModel: TransactionViewModel
@@ -42,14 +45,23 @@ class StatisticCategoryActivity : AppCompatActivity() {
         init()
 
         btnBack.setOnClickListener {
-            finish()
+            if (supportFragmentManager.backStackEntryCount > 0) {
+                supportFragmentManager.popBackStack()
+                val previousTitle = if (titleStack.isNotEmpty()) titleStack.removeLast() else ""
+                // Áp dụng animation cho title khi quay lại
+                animateBackTitleTransition(previousTitle)
+            } else {
+                finish()
+            }
             overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
         }
 
         val name = intent.getStringExtra("item_click_statistic_category_name")
         val categoryType = intent.getSerializableExtra("item_click_statistic_category_type")
         val filterOption = intent.getSerializableExtra("item_click_statistic_filterOption")
-        title.text = name
+        if (name != null) {
+            updateTransactionTitle(name)
+        }
         val bundle =  Bundle().apply {
             putSerializable("item_click_statistic_category_name", name)
             putSerializable("item_click_statistic_category_type", categoryType)
@@ -59,7 +71,6 @@ class StatisticCategoryActivity : AppCompatActivity() {
             arguments = bundle
         }
         supportFragmentManager.beginTransaction()
-            .addToBackStack(null)
             .replace(R.id.activity_statistic_category_container, statisticCategoryFragment)
             .commit()
 
@@ -95,8 +106,9 @@ class StatisticCategoryActivity : AppCompatActivity() {
 
     private fun init() {
         toolbar = findViewById(R.id.activity_statistic_category_toolbar)
+        titleCurrent = findViewById(R.id.activity_statistic_category_titleCurrent)
+        titleIncoming = findViewById(R.id.activity_statistic_category_titleIncoming)
         btnBack = findViewById(R.id.activity_statistic_category_backButton)
-        title = findViewById(R.id.activity_statistic_category_titleCurrent)
         container = findViewById(R.id.activity_statistic_category_container)
         layoutEdit = findViewById(R.id.activity_statistic_category_layout_edit)
         btnEditClose = findViewById(R.id.activity_statistic_category_layout_edit_line_one_btn_close)
@@ -104,5 +116,93 @@ class StatisticCategoryActivity : AppCompatActivity() {
         selectedCount = findViewById(R.id.activity_statistic_category_layout_edit_line_two_selected_count)
         selectedTotal = findViewById(R.id.activity_statistic_category_layout_edit_line_two_selected_total)
         statisticCategoryFragment = StatisticCategoryFragment()
+    }
+
+    private fun updateTransactionTitle(title: String) {
+        titleCurrent.text = title
+    }
+
+    fun animateIncomingTitleToCenter(titleView: TextView, newText: String) {
+        titleView.text = newText
+        titleView.visibility = View.VISIBLE
+        titleView.alpha = 1f
+
+        titleView.post {
+            val screenWidth = toolbar.width
+            val centerX = screenWidth / 2f
+            val textCenterX = titleView.left + titleView.width / 2f
+            val offsetToCenter = centerX - textCenterX
+
+            // Bắt đầu từ bên phải ngoài màn hình
+            titleView.translationX = screenWidth.toFloat()
+
+            // Animate vào giữa
+            titleView.animate()
+                .translationX(offsetToCenter)
+                .setDuration(300)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .withEndAction {
+                    // Sau khi vào giữa, cập nhật lại titleCurrent
+                    titleCurrent.text = newText
+                    titleCurrent.translationX = 0f
+
+                    // Ẩn và reset titleIncoming
+                    titleView.visibility = View.GONE
+                    titleView.translationX = 0f
+                }
+                .start()
+        }
+    }
+
+    private fun animateBackTitleTransition(previousTitle: String) {
+        val toolbarWidth = toolbar.width.toFloat()
+
+        // 1. Animate titleCurrent trượt sang phải và ẩn
+        titleCurrent.animate()
+            .translationX(toolbarWidth) // trượt ra bên phải
+            .setDuration(300)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .withEndAction {
+                titleCurrent.visibility = View.GONE
+                titleCurrent.translationX = 0f // reset để dùng lại
+            }
+            .start()
+
+        // 2. titleIncoming xuất hiện từ bên trái
+        titleIncoming.text = previousTitle
+        titleIncoming.visibility = View.VISIBLE
+        titleIncoming.translationX = -toolbarWidth // bắt đầu từ ngoài trái
+
+        // 3. Animate titleIncoming vào giữa
+        titleIncoming.animate()
+            .translationX(0f)
+            .setDuration(300)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .withEndAction {
+                // Khi animation kết thúc: cập nhật titleCurrent
+                titleCurrent.text = previousTitle
+                titleCurrent.translationX = 0f
+                titleCurrent.visibility = View.VISIBLE
+
+                // Reset titleIncoming
+                titleIncoming.visibility = View.GONE
+                titleIncoming.translationX = 0f
+            }
+            .start()
+    }
+
+    fun animateTitleToLeftOfIcon(titleView: TextView) {
+        titleView.post {
+            val iconStart = btnBack.left
+            val titleCenterX = titleView.left + titleView.width / 2f
+            val iconCenterX = iconStart + btnBack.width / 2f
+            val targetTranslationX = iconCenterX - titleCenterX
+
+            titleView.animate()
+                .translationX(targetTranslationX)
+                .setDuration(300)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .start()
+        }
     }
 }

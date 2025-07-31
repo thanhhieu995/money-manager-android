@@ -50,6 +50,7 @@ class StatisticCategoryFragment : Fragment() {
     private var listTransactionMonth: List<Transaction>? = null
     private var listChildCategories: List<Category> = emptyList()
     private var listChildCategoryStat : List<CategoryStat> = emptyList()
+    private var childCategoryClick: Boolean = false
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
@@ -94,6 +95,7 @@ class StatisticCategoryFragment : Fragment() {
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
         filterOptionTemp = arguments?.getSerializable("item_click_statistic_filterOption") as FilterOption
+        childCategoryClick = arguments?.getBoolean("item_click_statistic_category_child") as Boolean
         adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -121,7 +123,7 @@ class StatisticCategoryFragment : Fragment() {
                         recyclerView.visibility = View.GONE
                         dailyContainer.visibility = View.VISIBLE
                         // Gửi category id hoặc name vào DailyFragment nếu cần
-                        val fragment = DailyFragment.newDailyInstance(categoryName = categoryName)
+                        val fragment = DailyFragment.newDailyInstance(categoryName = categoryName, childCategoryClick)
 
                         childFragmentManager.beginTransaction()
                             .replace(R.id.fragment_statistic_category_dailyContainer, fragment)
@@ -165,14 +167,20 @@ class StatisticCategoryFragment : Fragment() {
                 highlightChartPoint(currentIndex)
             }
         }
-
+        // click into child category item
         adapter.onClickListener = { categoryStat ->
+            (requireActivity() as StatisticCategoryActivity).titleStack.addLast(categoryName)
+            val titleCurrent = (requireActivity() as StatisticCategoryActivity).titleCurrent
+            val titleIncoming = (requireActivity() as StatisticCategoryActivity).titleIncoming
+            (requireActivity() as StatisticCategoryActivity).animateTitleToLeftOfIcon(titleCurrent)
+            (requireActivity() as StatisticCategoryActivity).animateIncomingTitleToCenter(titleIncoming, categoryStat.name)
             // Gửi category id hoặc name vào DailyFragment nếu cần
             val fragment = StatisticCategoryFragment()
             val bundle = Bundle().apply {
                 putSerializable("item_click_statistic_category_name", categoryStat.name)
                 putSerializable("item_click_statistic_category_type", categoryType)
                 putSerializable("item_click_statistic_filterOption", filterOptionTemp)
+                putBoolean("item_click_statistic_category_child", true)
             }
             fragment.apply {
                 arguments = bundle
@@ -265,7 +273,10 @@ class StatisticCategoryFragment : Fragment() {
         filterOption: FilterOption
     ): List<LineChartPoint> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
-        val filtered = transactions.filter {
+        val filtered = if (childCategoryClick) transactions.filter {
+            it.categorySubName.trim().equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isIncome
+        }
+        else transactions.filter {
             it.categoryParentName.equals(categoryName, ignoreCase = true) &&
                     it.isIncome == isIncome
         }
