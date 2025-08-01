@@ -8,13 +8,11 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.model.Account
-import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.Category
-import com.henrystudio.moneymanager.model.CategoryType
+import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bottomNavigation.DailyNavigateFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.viewmodel.*
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -41,15 +39,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        init()
-        defaultCategory()
-        defaultAccount()
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
         val categoryDao = AppDatabase.getDatabase(application).categoryDao()
         val categoryFactory = CategoryViewModelFactory(categoryDao)
         categoryViewModel = ViewModelProvider(this, categoryFactory)[CategoryViewModel::class.java]
+        init()
+        defaultCategory()
+        defaultAccount()
+        defaultTransactions()
 
         viewModel.currentFilterDate.observe(this) { month ->
             bottomNav.menu.findItem(R.id.nav_daily).title = month.format(formatterMonth)
@@ -136,5 +135,87 @@ class MainActivity : AppCompatActivity() {
                 defaultAccounts.forEach { accountViewModel.insert(it) }
             }
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun defaultTransactions() {
+        val list = generateDefaultTransactions()
+        viewModel.allTransactions.observe(this) {transactions ->
+            if (transactions.isEmpty()) {
+                list.forEach {
+                    viewModel.insert(it)
+                }
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateDefaultTransactions(
+        monthsBack: Int = 6,
+        locale: Locale = Locale.ENGLISH
+    ): List<Transaction> {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", locale)
+        val today = LocalDate.now()
+        val transactions = mutableListOf<Transaction>()
+
+        val sampleExpenses = listOf(
+            Triple("Food", "Breakfast", 40000.0),
+            Triple("Food", "Lunch", 60000.0),
+            Triple("Food", "Dinner", 70000.0),
+            Triple("Transport", "Bus", 15000.0),
+            Triple("Health", "Medicine", 50000.0)
+        )
+
+        val sampleIncomes = listOf(
+            Triple("Salary", "", 10000000.0),
+            Triple("Bonus", "", 2000000.0),
+            Triple("Allowance", "", 500000.0)
+        )
+
+        repeat(monthsBack) { i ->
+            val monthDate = today.minusMonths(i.toLong()).withDayOfMonth(1)
+            val daysInMonth = monthDate.lengthOfMonth()
+
+            for (day in 1..daysInMonth) {
+                val currentDate = monthDate.withDayOfMonth(day)
+                val dateStr = currentDate.format(formatter)
+
+                // Add expenses
+                sampleExpenses.forEach { (parent, sub, amount) ->
+                    transactions.add(
+                        Transaction(
+                            title = "$parent $sub",
+                            categoryParentName = parent,
+                            categorySubName = sub,
+                            note = "",
+                            account = "Cash",
+                            amount = amount,
+                            isIncome = false,
+                            date = dateStr
+                        )
+                    )
+                }
+
+                // Add incomes on first of the month only
+                if (day == 1) {
+                    sampleIncomes.forEach { (parent, _, amount) ->
+                        transactions.add(
+                            Transaction(
+                                title = parent,
+                                categoryParentName = parent,
+                                categorySubName = "",
+                                note = "",
+                                account = "Bank",
+                                amount = amount,
+                                isIncome = true,
+                                date = dateStr
+                            )
+                        )
+                    }
+                }
+            }
+
+        }
+        return transactions
     }
 }

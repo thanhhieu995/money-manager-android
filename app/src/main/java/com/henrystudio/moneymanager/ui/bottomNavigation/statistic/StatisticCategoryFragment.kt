@@ -100,39 +100,6 @@ class StatisticCategoryFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
-        categoryViewModel.getAll().observe(viewLifecycleOwner) { list ->
-            allCategories = list
-            val name = categoryName.substringBefore("/")
-            for (tx in allCategories) {
-                if ((tx.emoji + " " + tx.name).trim() == name.trim()) {
-                    parentId = tx.id
-                }
-            }
-            if (parentId != -1) {
-                categoryViewModel.getChildCategories(parentId).observe(viewLifecycleOwner) { listChild ->
-                    listChildCategories = listChild
-                    listTransactionMonth = FilterTransactions.filterTransactionsByCategoryNameAndMonth(viewModel.allTransactions.value?: emptyList(),
-                        categoryName, LocalDate.now())
-                    listChildCategoryStat = Helper.convertToCategoryStats(listChild,
-                        listTransactionMonth ?: emptyList(), categoryType == CategoryType.INCOME, colors)
-                    if (listChildCategoryStat.isNotEmpty()) {
-                        recyclerView.visibility = View.VISIBLE
-                        dailyContainer.visibility = View.GONE
-                        adapter.submitList(listChildCategoryStat)
-                    } else {
-                        recyclerView.visibility = View.GONE
-                        dailyContainer.visibility = View.VISIBLE
-                        // Gửi category id hoặc name vào DailyFragment nếu cần
-                        val fragment = DailyFragment.newDailyInstance(categoryName = categoryName, childCategoryClick)
-
-                        childFragmentManager.beginTransaction()
-                            .replace(R.id.fragment_statistic_category_dailyContainer, fragment)
-                            .commit()
-                    }
-                }
-            }
-        }
-
         viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
             lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
         }
@@ -152,6 +119,43 @@ class StatisticCategoryFragment : Fragment() {
                 selectCurrentPeriodPoint()
             }
             clickLineChart()
+        }
+
+        categoryViewModel.getAll().observe(viewLifecycleOwner) { list ->
+            allCategories = list
+            val name = categoryName.substringBefore("/")
+            val nameOnly = name.replace(Regex("^[^\\p{L}\\p{N}]+"), "") // → "Transport"
+            for (tx in allCategories) {
+                val txName = tx.name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
+                if (txName.trim() == nameOnly.trim()) {
+                    parentId = tx.id
+                }
+            }
+            if (parentId != -1) {
+                categoryViewModel.getChildCategories(parentId).observe(viewLifecycleOwner) { listChild ->
+                    listChildCategories = listChild
+                    viewModel.allTransactions.observe(viewLifecycleOwner) { listTransactions ->
+                        listTransactionMonth = FilterTransactions.filterTransactionsByCategoryNameAndMonth(listTransactions,
+                            categoryName, filterOptionTemp.date)
+                        listChildCategoryStat = Helper.convertToCategoryStats(listChild,
+                            listTransactionMonth ?: emptyList(), categoryType == CategoryType.INCOME, colors)
+                        if (listChildCategoryStat.isNotEmpty()) {
+                            recyclerView.visibility = View.VISIBLE
+                            dailyContainer.visibility = View.GONE
+                            adapter.submitList(listChildCategoryStat)
+                        } else {
+                            recyclerView.visibility = View.GONE
+                            dailyContainer.visibility = View.VISIBLE
+                            // Gửi category id hoặc name vào DailyFragment nếu cần
+                            val fragment = DailyFragment.newDailyInstance(categoryName = categoryName, childCategoryClick)
+
+                            childFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_statistic_category_dailyContainer, fragment)
+                                .commit()
+                        }
+                    }
+                }
+            }
         }
 
         monthBack.setOnClickListener {
@@ -330,8 +334,8 @@ class StatisticCategoryFragment : Fragment() {
 
             val chartDate = when (filterOption.type) {
                 FilterPeriodStatistic.Weekly -> localDate
-                FilterPeriodStatistic.Monthly -> localDate.withDayOfMonth(1) // đại diện cho đầu tháng
-                FilterPeriodStatistic.Yearly -> localDate.withDayOfYear(1)   // đại diện cho đầu năm
+                FilterPeriodStatistic.Monthly -> localDate.withDayOfMonth(localDate.dayOfMonth) // đại diện cho đầu tháng
+                FilterPeriodStatistic.Yearly -> localDate.withDayOfYear(localDate.dayOfYear)   // đại diện cho đầu năm
                 else -> localDate
             }
 

@@ -106,7 +106,7 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun navigateToWeekFromMonthly(date: LocalDate) {
-        _currentFilterDate.value = date.withDayOfMonth(1)
+        _currentFilterDate.value = date.withDayOfMonth(date.dayOfMonth)
         _navigateToWeekFromMonthly.value = date // Dùng để scroll sau khi cập nhật
     }
 

@@ -86,8 +86,8 @@ class DailyFragment : Fragment() {
                         else group.transactions.filter { it.categoryParentName.trim() == categoryName.trim() }
                     if (filteredTransactions.isNotEmpty()) {
                         group.copy(
-                            income = filteredTransactions.filter { it.amount > 0 }.sumOf { it.amount },
-                            expense = filteredTransactions.filter { it.amount < 0 }.sumOf { it.amount },
+                            income = filteredTransactions.filter { it.isIncome }.sumOf { it.amount },
+                            expense = filteredTransactions.filter { !it.isIncome }.sumOf { it.amount },
                             transactions = filteredTransactions
                         )
                     } else null
@@ -98,6 +98,7 @@ class DailyFragment : Fragment() {
 
             val filteredList = month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) } ?: emptyList()
             transactionGroupListFilter = filteredList
+
             adapter.submitList(filteredList)
             binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         }
@@ -105,7 +106,6 @@ class DailyFragment : Fragment() {
         viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
             month = selectedMonth
             val filtered = FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
-
             adapter.submitList(filtered)
             binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
 
