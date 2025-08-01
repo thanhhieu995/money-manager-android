@@ -49,7 +49,7 @@ class StatisticCategoryFragment : Fragment() {
     private var allCategories: List<Category> = emptyList()
     private var listTransactionMonth: List<Transaction>? = null
     private var listChildCategories: List<Category> = emptyList()
-    private var listChildCategoryStat : List<CategoryStat> = emptyList()
+    private var listChildCategoryStat: List<CategoryStat> = emptyList()
     private var childCategoryClick: Boolean = false
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
@@ -62,8 +62,10 @@ class StatisticCategoryFragment : Fragment() {
     private var currentIndex = 0
     private lateinit var adapter: CategoryStatAdapter
     private val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
+
     @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOptionTemp : FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
+    private var filterOptionTemp: FilterOption =
+        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
 
     val viewModel: TransactionViewModel by activityViewModels {
@@ -77,6 +79,7 @@ class StatisticCategoryFragment : Fragment() {
             AppDatabase.getDatabase(requireActivity().application).categoryDao()
         )
     }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -94,7 +97,8 @@ class StatisticCategoryFragment : Fragment() {
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
-        filterOptionTemp = arguments?.getSerializable("item_click_statistic_filterOption") as FilterOption
+        filterOptionTemp =
+            arguments?.getSerializable("item_click_statistic_filterOption") as FilterOption
         childCategoryClick = arguments?.getBoolean("item_click_statistic_category_child") as Boolean
         adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -118,8 +122,9 @@ class StatisticCategoryFragment : Fragment() {
             if (chartPoints.isNotEmpty()) {
                 selectCurrentPeriodPoint()
             }
-            clickLineChart()
         }
+
+        clickLineChart()
 
         categoryViewModel.getAll().observe(viewLifecycleOwner) { list ->
             allCategories = list
@@ -132,29 +137,43 @@ class StatisticCategoryFragment : Fragment() {
                 }
             }
             if (parentId != -1) {
-                categoryViewModel.getChildCategories(parentId).observe(viewLifecycleOwner) { listChild ->
-                    listChildCategories = listChild
-                    viewModel.allTransactions.observe(viewLifecycleOwner) { listTransactions ->
-                        listTransactionMonth = FilterTransactions.filterTransactionsByCategoryNameAndMonth(listTransactions,
-                            categoryName, filterOptionTemp.date)
-                        listChildCategoryStat = Helper.convertToCategoryStats(listChild,
-                            listTransactionMonth ?: emptyList(), categoryType == CategoryType.INCOME, colors)
-                        if (listChildCategoryStat.isNotEmpty()) {
-                            recyclerView.visibility = View.VISIBLE
-                            dailyContainer.visibility = View.GONE
-                            adapter.submitList(listChildCategoryStat)
-                        } else {
-                            recyclerView.visibility = View.GONE
-                            dailyContainer.visibility = View.VISIBLE
-                            // Gửi category id hoặc name vào DailyFragment nếu cần
-                            val fragment = DailyFragment.newDailyInstance(categoryName = categoryName, childCategoryClick)
+                categoryViewModel.getChildCategories(parentId)
+                    .observe(viewLifecycleOwner) { listChild ->
+                        listChildCategories = listChild
+                        viewModel.allTransactions.observe(viewLifecycleOwner) { listTransactions ->
+                            listTransactionMonth =
+                                FilterTransactions.filterTransactionsByCategoryNameAndMonth(
+                                    listTransactions,
+                                    categoryName, filterOptionTemp.date
+                                )
+                            listChildCategoryStat = Helper.convertToCategoryStats(
+                                listChild,
+                                listTransactionMonth ?: emptyList(),
+                                categoryType == CategoryType.INCOME,
+                                colors
+                            )
+                            if (listChildCategoryStat.isNotEmpty()) {
+                                recyclerView.visibility = View.VISIBLE
+                                dailyContainer.visibility = View.GONE
+                                adapter.submitList(listChildCategoryStat)
+                            } else {
+                                recyclerView.visibility = View.GONE
+                                dailyContainer.visibility = View.VISIBLE
+                                // Gửi category id hoặc name vào DailyFragment nếu cần
+                                val fragment = DailyFragment.newDailyInstance(
+                                    categoryName = categoryName,
+                                    childCategoryClick
+                                )
 
-                            childFragmentManager.beginTransaction()
-                                .replace(R.id.fragment_statistic_category_dailyContainer, fragment)
-                                .commit()
+                                childFragmentManager.beginTransaction()
+                                    .replace(
+                                        R.id.fragment_statistic_category_dailyContainer,
+                                        fragment
+                                    )
+                                    .commit()
+                            }
                         }
                     }
-                }
             }
         }
 
@@ -177,7 +196,10 @@ class StatisticCategoryFragment : Fragment() {
             val titleCurrent = (requireActivity() as StatisticCategoryActivity).titleCurrent
             val titleIncoming = (requireActivity() as StatisticCategoryActivity).titleIncoming
             (requireActivity() as StatisticCategoryActivity).animateTitleToLeftOfIcon(titleCurrent)
-            (requireActivity() as StatisticCategoryActivity).animateIncomingTitleToCenter(titleIncoming, categoryStat.name)
+            (requireActivity() as StatisticCategoryActivity).animateIncomingTitleToCenter(
+                titleIncoming,
+                categoryStat.name
+            )
             // Gửi category id hoặc name vào DailyFragment nếu cần
             val fragment = StatisticCategoryFragment()
             val bundle = Bundle().apply {
@@ -204,13 +226,16 @@ class StatisticCategoryFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateLineChart(chartPoints: List<LineChartPoint>, chartMode: FilterPeriodStatistic) {
+    private fun updateLineChart(
+        chartPoints: List<LineChartPoint>,
+        chartMode: FilterPeriodStatistic
+    ) {
         val entries = chartPoints.mapIndexed { index, point ->
             Entry(index.toFloat(), point.amount.toFloat())
         }
 
         val labels = chartPoints.map { point ->
-            when(chartMode) {
+            when (chartMode) {
                 FilterPeriodStatistic.Monthly -> {
                     val month = Month.of(point.label.toInt())
                     month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
@@ -278,7 +303,8 @@ class StatisticCategoryFragment : Fragment() {
     ): List<LineChartPoint> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
         val filtered = if (childCategoryClick) transactions.filter {
-            it.categorySubName.trim().equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isIncome
+            it.categorySubName.trim()
+                .equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isIncome
         }
         else transactions.filter {
             it.categoryParentName.equals(categoryName, ignoreCase = true) &&
@@ -287,12 +313,18 @@ class StatisticCategoryFragment : Fragment() {
 
         val grouped: Map<String, List<Transaction>> = when (filterOption.type) {
             FilterPeriodStatistic.Weekly -> {
+                val targetYear = filterOption.date.year
                 // Nhóm theo ngày (dd/MM)
-                filtered.groupBy {
+                filtered.filter {
                     val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter).with(DayOfWeek.MONDAY)
-                    date.format(DateTimeFormatter.ofPattern("dd/MM"))
+                    val date = LocalDate.parse(dateSub, formatter)
+                    date.with(DayOfWeek.MONDAY).year == targetYear // 🟢 chỉ lấy giao dịch trong năm cần
                 }
+                    .groupBy {
+                        val dateSub = it.date.substringBefore(" ")
+                        val date = LocalDate.parse(dateSub, formatter).with(DayOfWeek.MONDAY)
+                        date.format(DateTimeFormatter.ofPattern("dd/MM"))
+                    }
             }
 
             FilterPeriodStatistic.Monthly -> {
@@ -331,11 +363,10 @@ class StatisticCategoryFragment : Fragment() {
         return grouped.entries.map { (label, group) ->
             val anyDate = group.first().date.substringBefore(" ")
             val localDate = LocalDate.parse(anyDate, formatter)
-
             val chartDate = when (filterOption.type) {
-                FilterPeriodStatistic.Weekly -> localDate
-                FilterPeriodStatistic.Monthly -> localDate.withDayOfMonth(localDate.dayOfMonth) // đại diện cho đầu tháng
-                FilterPeriodStatistic.Yearly -> localDate.withDayOfYear(localDate.dayOfYear)   // đại diện cho đầu năm
+                FilterPeriodStatistic.Weekly -> localDate.with(DayOfWeek.MONDAY)
+                FilterPeriodStatistic.Monthly -> localDate.withDayOfMonth(1) // đại diện cho đầu tháng
+                FilterPeriodStatistic.Yearly -> localDate.withDayOfMonth(1)   // đại diện cho đầu năm
                 else -> localDate
             }
 
@@ -380,13 +411,17 @@ class StatisticCategoryFragment : Fragment() {
             FilterPeriodStatistic.Weekly -> {
                 val start = point.date
                 val end = start.plusDays(6)
-                "${start.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))} ~ ${end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}"
+                "${start.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))} ~ ${
+                    end.format(
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    )
+                }"
             }
-            FilterPeriodStatistic.Yearly -> point.date.year.toString()
+            FilterPeriodStatistic.Yearly -> point.date.year
             else -> point.label
         }
 
-        monthText.text = label
+        monthText.text = label.toString()
 
         // Enable / disable back/next button
         binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
@@ -405,13 +440,17 @@ class StatisticCategoryFragment : Fragment() {
     private fun selectCurrentPeriodPoint() {
         val today = LocalDate.now()
         val localDate = when (filterOptionTemp.type) {
-            FilterPeriodStatistic.Monthly -> filterOptionTemp.date.withDayOfMonth(1)
             FilterPeriodStatistic.Weekly -> filterOptionTemp.date.with(DayOfWeek.MONDAY)
-            FilterPeriodStatistic.Yearly -> filterOptionTemp.date.withDayOfYear(1)
+            FilterPeriodStatistic.Monthly -> filterOptionTemp.date.withDayOfMonth(1)
+            FilterPeriodStatistic.Yearly -> filterOptionTemp.date.withDayOfMonth(1)
             else -> today
         }
-
-        val index = chartPoints.indexOfFirst { it.date == localDate }
+        val index = when (filterOptionTemp.type) {
+            FilterPeriodStatistic.Weekly -> chartPoints.indexOfFirst { it.date == localDate }
+            FilterPeriodStatistic.Monthly -> chartPoints.indexOfFirst { it.date.month == localDate.month && it.date.year == localDate.year }
+            FilterPeriodStatistic.Yearly -> chartPoints.indexOfFirst { it.date.year == localDate.year }
+            else -> -1
+        }
         if (index != -1) {
             currentIndex = index
             highlightChartPoint(index)
@@ -436,7 +475,12 @@ class StatisticCategoryFragment : Fragment() {
                 it.date
             )
         }
-        listChildCategoryStat = Helper.convertToCategoryStats(listChildCategories, listTransactionMonth?: allTransactions, categoryType == CategoryType.INCOME, colors)
+        listChildCategoryStat = Helper.convertToCategoryStats(
+            listChildCategories,
+            listTransactionMonth ?: allTransactions,
+            categoryType == CategoryType.INCOME,
+            colors
+        )
         adapter.submitList(listChildCategoryStat)
     }
 }
