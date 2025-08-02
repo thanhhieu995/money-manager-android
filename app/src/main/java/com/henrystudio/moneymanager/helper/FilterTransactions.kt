@@ -4,13 +4,35 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.model.TransactionGroup
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
 
 class FilterTransactions {
-    companion object{
+    companion object {
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun filterTransactionGroupByWeek(
+            transactions: List<TransactionGroup>,
+            localDate: LocalDate
+        ): List<TransactionGroup> {
+            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+            val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
+            val selectedWeek = localDate.get(weekFields.weekOfWeekBasedYear())
+            val selectedYear = localDate.get(weekFields.weekBasedYear())
+            return transactions.filter { group ->
+                val cleanedDate = group.date.substringBefore(" ")
+                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val week = date.get(weekFields.weekOfWeekBasedYear())
+                val year = date.get(weekFields.weekBasedYear())
+                week == selectedWeek && year == selectedYear
+            }.sortedByDescending {
+                val cleanedDate = it.date.substringBefore(" ")
+                LocalDate.parse(cleanedDate, inputFormatter)
+            }
+        }
+
         @RequiresApi(Build.VERSION_CODES.O)
         fun filterTransactionGroupByMonth(
             transactions: List<TransactionGroup>,
@@ -65,7 +87,7 @@ class FilterTransactions {
             selectedDate: LocalDate
         ): List<Transaction> {
             val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-            val weekFields = WeekFields.of(Locale.getDefault())
+            val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
             val selectedWeek = selectedDate.get(weekFields.weekOfWeekBasedYear())
             val selectedYear = selectedDate.get(weekFields.weekBasedYear())
 

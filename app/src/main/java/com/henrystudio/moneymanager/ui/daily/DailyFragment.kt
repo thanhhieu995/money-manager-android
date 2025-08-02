@@ -12,9 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
 import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.Transaction
-import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.ui.main.StickyHeaderItemDecoration
 import com.henrystudio.moneymanager.ui.main.TransactionGroupAdapter
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
@@ -23,6 +20,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.fragment.app.activityViewModels
 import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 
 class DailyFragment : Fragment() {
@@ -33,6 +31,10 @@ class DailyFragment : Fragment() {
     private var allTransactions: List<TransactionGroup> = emptyList()
     private var month: LocalDate? = null
     private var selectedList: List<Transaction> = emptyList()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private var filterOption: FilterOption =
+        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
     private val viewModel: TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
@@ -62,13 +64,16 @@ class DailyFragment : Fragment() {
         val decoration = StickyHeaderItemDecoration(
             isHeader = { position -> true }, // mọi item đều có header riêng
             createHeaderView = {
-                LayoutInflater.from(requireContext()).inflate(R.layout.item_transaction_header, binding.transactionList, false)
+                LayoutInflater.from(requireContext())
+                    .inflate(R.layout.item_transaction_header, binding.transactionList, false)
             },
             bindHeader = { header, position ->
                 val group = adapter.getGroupAt(position)
                 val headerText = header.findViewById<TextView>(R.id.item_transaction_header_date)
-                val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
-                val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
+                val headerIncome =
+                    header.findViewById<TextView>(R.id.item_transaction_header_income)
+                val headerExpense =
+                    header.findViewById<TextView>(R.id.item_transaction_header_expense)
                 val dayPart = group.date.substringBefore("/") // "13"
                 val dayOfWeek = group.date.substringAfterLast(" ") // "(Tue)"
                 headerText.text = "$dayPart $dayOfWeek"
@@ -79,15 +84,22 @@ class DailyFragment : Fragment() {
 
         binding.transactionList.addItemDecoration(decoration)
 
+        viewModel.filterOption.observe(viewLifecycleOwner) { option ->
+            filterOption = option
+        }
+
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
             allTransactions = if (categoryName?.isNotEmpty() == true) {
                 transactions.mapNotNull { group ->
-                    val filteredTransactions = if (childClick) group.transactions.filter { it.categorySubName.trim() == categoryName.trim() }
+                    val filteredTransactions =
+                        if (childClick) group.transactions.filter { it.categorySubName.trim() == categoryName.trim() }
                         else group.transactions.filter { it.categoryParentName.trim() == categoryName.trim() }
                     if (filteredTransactions.isNotEmpty()) {
                         group.copy(
-                            income = filteredTransactions.filter { it.isIncome }.sumOf { it.amount },
-                            expense = filteredTransactions.filter { !it.isIncome }.sumOf { it.amount },
+                            income = filteredTransactions.filter { it.isIncome }
+                                .sumOf { it.amount },
+                            expense = filteredTransactions.filter { !it.isIncome }
+                                .sumOf { it.amount },
                             transactions = filteredTransactions
                         )
                     } else null
@@ -96,7 +108,9 @@ class DailyFragment : Fragment() {
                 transactions
             }
 
-            val filteredList = month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) } ?: emptyList()
+            val filteredList =
+                month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) }
+                    ?: emptyList()
             transactionGroupListFilter = filteredList
 
             adapter.submitList(filteredList)
@@ -105,7 +119,25 @@ class DailyFragment : Fragment() {
 
         viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
             month = selectedMonth
-            val filtered = FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+            val filtered = when (filterOption.type) {
+                FilterPeriodStatistic.Weekly -> {
+                    adapter.setFilterYear(false)
+                    FilterTransactions.filterTransactionGroupByWeek(allTransactions, selectedMonth)
+                }
+                FilterPeriodStatistic.Monthly -> {
+                    adapter.setFilterYear(false)
+                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+                }
+                FilterPeriodStatistic.Yearly -> {
+                    adapter.setFilterYear(true)
+                    FilterTransactions.filterTransactionGroupByYear(allTransactions, selectedMonth)
+                }
+                else -> {
+                    adapter.setFilterYear(false)
+                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+                }
+            }
+
             adapter.submitList(filtered)
             binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
 

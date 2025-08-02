@@ -124,6 +124,8 @@ class StatisticCategoryFragment : Fragment() {
             }
         }
 
+        viewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
+
         clickLineChart()
 
         categoryViewModel.getAll().observe(viewLifecycleOwner) { list ->

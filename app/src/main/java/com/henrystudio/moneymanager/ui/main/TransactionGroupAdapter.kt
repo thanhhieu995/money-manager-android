@@ -19,6 +19,7 @@ import com.henrystudio.moneymanager.ui.daily.TransactionDailyAdapter
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
     private var groups: List<TransactionGroup> = listOf()
+    private var filterYear: Boolean = false
 
     var isTransactionSelected: ((Transaction) -> Boolean)? = null
     private val childAdapters = mutableMapOf<String, TransactionDailyAdapter>() // key = group.date
@@ -60,9 +61,14 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         val group = groups[position]
         val fullDate = group.date // "13/05/25 (Tue)"
         val dayPart = fullDate.substringBefore("/") // "13"
+        val monthYear = fullDate.substringAfter("/").substringBefore(" ") // "05/25"
         val dayOfWeek = fullDate.substringAfterLast(" ") // "(Tue)"
 
-        holder.date.text = "$dayPart $dayOfWeek"
+        if (filterYear) {
+            holder.date.text = "$dayPart $dayOfWeek $monthYear"
+        } else {
+            holder.date.text = "$dayPart $dayOfWeek"
+        }
         holder.income.text = Helper.formatCurrency(group.income)
         holder.expense.text = Helper.formatCurrency(group.expense)
 
@@ -96,5 +102,9 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
 
     override fun getItemId(position: Int): Long {
         return groups[position].id.toLong()
+    }
+
+    fun setFilterYear(isYear: Boolean) {
+        filterYear = isYear
     }
 }
