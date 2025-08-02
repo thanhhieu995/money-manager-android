@@ -47,7 +47,8 @@ class StatisticCategoryFragment : Fragment() {
 
     private var allTransactions: List<Transaction> = emptyList()
     private var allCategories: List<Category> = emptyList()
-    private var listTransactionMonth: List<Transaction>? = null
+    private var transactionList: List<Transaction> = emptyList()
+    private var listTransactionsFilterCategoryName: List<Transaction> = emptyList()
     private var listChildCategories: List<Category> = emptyList()
     private var listChildCategoryStat: List<CategoryStat> = emptyList()
     private var childCategoryClick: Boolean = false
@@ -143,14 +144,18 @@ class StatisticCategoryFragment : Fragment() {
                     .observe(viewLifecycleOwner) { listChild ->
                         listChildCategories = listChild
                         viewModel.allTransactions.observe(viewLifecycleOwner) { listTransactions ->
-                            listTransactionMonth =
-                                FilterTransactions.filterTransactionsByCategoryNameAndMonth(
+                            listTransactionsFilterCategoryName =
+                                FilterTransactions.filterTransactionsByCategoryName(
                                     listTransactions,
-                                    categoryName, filterOptionTemp.date
+                                    categoryName
                                 )
+                            transactionList = getListTransactionsFilterType(
+                                listTransactionsFilterCategoryName, filterOptionTemp,
+                                filterOptionTemp.date
+                            )
                             listChildCategoryStat = Helper.convertToCategoryStats(
                                 listChild,
-                                listTransactionMonth ?: emptyList(),
+                                transactionList ?: emptyList(),
                                 categoryType == CategoryType.INCOME,
                                 colors
                             )
@@ -470,19 +475,53 @@ class StatisticCategoryFragment : Fragment() {
     private fun updateDateList(index: Int) {
         val point = chartPoints.getOrNull(index)
         currentIndex = index
-        listTransactionMonth = point?.let {
-            FilterTransactions.filterTransactionsByCategoryNameAndMonth(
-                allTransactions,
-                categoryName,
+        transactionList = point?.let {
+            getListTransactionsFilterType(
+                listTransactionsFilterCategoryName,
+                filterOptionTemp,
                 it.date
             )
-        }
+        } ?: emptyList()
         listChildCategoryStat = Helper.convertToCategoryStats(
             listChildCategories,
-            listTransactionMonth ?: allTransactions,
+            transactionList,
             categoryType == CategoryType.INCOME,
             colors
         )
         adapter.submitList(listChildCategoryStat)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getListTransactionsFilterType(
+        listTransactionsFilterCategoryName: List<Transaction>,
+        filterOption: FilterOption,
+        date: LocalDate
+    ): List<Transaction> {
+        return when (filterOption.type) {
+            FilterPeriodStatistic.Weekly -> {
+                FilterTransactions.filterTransactionsByWeek(
+                    listTransactionsFilterCategoryName,
+                    date
+                )
+            }
+            FilterPeriodStatistic.Monthly -> {
+                FilterTransactions.filterTransactionsByMonth(
+                    listTransactionsFilterCategoryName,
+                    date
+                )
+            }
+            FilterPeriodStatistic.Yearly -> {
+                FilterTransactions.filterTransactionsByYear(
+                    listTransactionsFilterCategoryName,
+                    date
+                )
+            }
+            else -> {
+                FilterTransactions.filterTransactionsByMonth(
+                    listTransactionsFilterCategoryName,
+                    date
+                )
+            }
+        }
     }
 }

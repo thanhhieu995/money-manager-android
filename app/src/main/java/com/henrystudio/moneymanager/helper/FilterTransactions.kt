@@ -122,21 +122,12 @@ class FilterTransactions {
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
-        fun filterTransactionsByCategoryNameAndMonth(
-            transactions: List<Transaction>,
-            categoryName: String,
-            selectedMonth: LocalDate
-        ): List<Transaction> {
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-            return transactions.filter { tx ->
-                val cleanedDate = tx.date.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
-                tx.categoryParentName.equals(categoryName, ignoreCase = true) &&
-                        date.monthValue == selectedMonth.monthValue &&
-                        date.year == selectedMonth.year
-            }.sortedByDescending {
-                val cleanedDate = it.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
+        fun filterTransactionsByCategoryName(
+            allTransactions: List<Transaction>,
+            categoryName: String
+        ) : List<Transaction> {
+            return allTransactions.filter { tx ->
+                tx.categoryParentName.equals(categoryName, ignoreCase = true)
             }
         }
     }
