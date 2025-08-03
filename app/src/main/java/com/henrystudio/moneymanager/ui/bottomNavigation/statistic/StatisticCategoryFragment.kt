@@ -343,8 +343,14 @@ class StatisticCategoryFragment : Fragment() {
             }
 
             FilterPeriodStatistic.Monthly -> {
+                val targetYear = filterOption.date.year
                 // Nhóm theo tháng trong năm (Tháng 1, Tháng 2, ...)
-                filtered.groupBy {
+                filtered.filter {
+                    val dateSub = it.date.substringBefore(" ")
+                    val date = LocalDate.parse(dateSub, formatter)
+                    date.year == targetYear
+                }
+                    .groupBy {
                     val dateSub = it.date.substringBefore(" ")
                     val date = LocalDate.parse(dateSub, formatter)
                     date.monthValue.toString()
