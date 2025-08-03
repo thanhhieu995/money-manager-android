@@ -11,6 +11,7 @@ import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.ui.addtransaction.CategoryItem
 import java.text.NumberFormat
+import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
@@ -128,7 +129,8 @@ class Helper {
                 FilterPeriodStatistic.Weekly -> {
                     val formatterFirst = DateTimeFormatter.ofPattern("dd/MM")
                     val formatterLast = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                    val weekFields = WeekFields.of(Locale.getDefault())
+                    // Ép tuần bắt đầu từ thứ Hai
+                    val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
                     val firstDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 1) // Monday
                     val lastDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 7) // Sunday
                     "${firstDayOfWeek.format(formatterFirst)} ~ ${lastDayOfWeek.format(formatterLast)}"
