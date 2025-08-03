@@ -43,7 +43,6 @@ class StatisticCategoryFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var categoryName: String = ""
-    private var categoryAmount: Float = -1f
     private var categoryType: CategoryType = CategoryType.EXPENSE
 
     private var allTransactions: List<Transaction> = emptyList()
@@ -100,7 +99,6 @@ class StatisticCategoryFragment : Fragment() {
         init()
 
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
-        categoryAmount = arguments?.getFloat("item_click_statistic_category_amount") ?: 0f
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
         filterOptionTemp =
@@ -166,8 +164,6 @@ class StatisticCategoryFragment : Fragment() {
                             )
                             if (listChildCategoryStat.isNotEmpty()) {
                                 layoutCategorySum.visibility = View.VISIBLE
-                                categorySumName.text = categoryName
-                                categorySumAmount.text = Helper.formatCurrency(categoryAmount.toDouble())
                                 recyclerView.visibility = View.VISIBLE
                                 dailyContainer.visibility = View.GONE
                                 adapter.submitList(listChildCategoryStat)
