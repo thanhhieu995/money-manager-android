@@ -57,6 +57,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
         }
 
         val name = intent.getStringExtra("item_click_statistic_category_name")
+        val amount = intent.getSerializableExtra("item_click_statistic_category_amount")
         val categoryType = intent.getSerializableExtra("item_click_statistic_category_type")
         val filterOption = intent.getSerializableExtra("item_click_statistic_filterOption")
         if (name != null) {
@@ -64,6 +65,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
         }
         val bundle =  Bundle().apply {
             putSerializable("item_click_statistic_category_name", name)
+            putSerializable("item_click_statistic_category_amount", amount)
             putSerializable("item_click_statistic_category_type", categoryType)
             putSerializable("item_click_statistic_filterOption", filterOption)
         }

@@ -220,6 +220,7 @@ class StatisticFragment : Fragment() {
         adapter.onClickListener = { categoryStat ->
             val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
             intent.putExtra("item_click_statistic_category_name", categoryStat.name)
+            intent.putExtra("item_click_statistic_category_amount", categoryStat.amount)
             intent.putExtra("item_click_statistic_category_type", categoryType)
             intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
             startActivity(intent)

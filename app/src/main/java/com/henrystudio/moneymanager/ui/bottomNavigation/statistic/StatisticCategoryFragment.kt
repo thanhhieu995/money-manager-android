@@ -43,6 +43,7 @@ class StatisticCategoryFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var categoryName: String = ""
+    private var categoryAmount: Float = -1f
     private var categoryType: CategoryType = CategoryType.EXPENSE
 
     private var allTransactions: List<Transaction> = emptyList()
@@ -55,6 +56,9 @@ class StatisticCategoryFragment : Fragment() {
     private var parentId: Int = -1
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
+    private lateinit var layoutCategorySum: LinearLayout
+    private lateinit var categorySumName: TextView
+    private lateinit var categorySumAmount: TextView
     private lateinit var dailyContainer: FrameLayout
     private lateinit var monthBack: ImageView
     private lateinit var monthNext: ImageView
@@ -96,6 +100,7 @@ class StatisticCategoryFragment : Fragment() {
         init()
 
         categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
+        categoryAmount = arguments?.getFloat("item_click_statistic_category_amount") ?: 0f
         categoryType =
             arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
         filterOptionTemp =
@@ -160,10 +165,14 @@ class StatisticCategoryFragment : Fragment() {
                                 colors
                             )
                             if (listChildCategoryStat.isNotEmpty()) {
+                                layoutCategorySum.visibility = View.VISIBLE
+                                categorySumName.text = categoryName
+                                categorySumAmount.text = Helper.formatCurrency(categoryAmount.toDouble())
                                 recyclerView.visibility = View.VISIBLE
                                 dailyContainer.visibility = View.GONE
                                 adapter.submitList(listChildCategoryStat)
                             } else {
+                                layoutCategorySum.visibility = View.GONE
                                 recyclerView.visibility = View.GONE
                                 dailyContainer.visibility = View.VISIBLE
                                 // Gửi category id hoặc name vào DailyFragment nếu cần
@@ -386,6 +395,9 @@ class StatisticCategoryFragment : Fragment() {
         monthNext = binding.fragmentStatisticCategoryMonthNext
         monthText = binding.fragmentStatisticCategoryMonthText
         lineChart = binding.fragmentStatisticCategoryLineChart
+        layoutCategorySum = binding.fragmentStatisticCategoryLayoutCategorySum
+        categorySumName = binding.fragmentStatisticCategoryLayoutCategorySumName
+        categorySumAmount = binding.fragmentStatisticCategoryLayoutCategorySumAmount
         recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
         dailyContainer = binding.fragmentStatisticCategoryDailyContainer
     }
@@ -488,6 +500,7 @@ class StatisticCategoryFragment : Fragment() {
             categoryType == CategoryType.INCOME,
             colors
         )
+        updateCategorySum(categoryName, point?.amount ?: -1.0)
         adapter.submitList(listChildCategoryStat)
     }
 
@@ -523,5 +536,10 @@ class StatisticCategoryFragment : Fragment() {
                 )
             }
         }
+    }
+
+    private fun updateCategorySum(name: String, amount: Double) {
+        categorySumName.text = name
+        categorySumAmount.text = Helper.formatCurrency(amount)
     }
 }

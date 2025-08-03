@@ -22,6 +22,7 @@ import androidx.fragment.app.activityViewModels
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
+import com.henrystudio.moneymanager.ui.main.MainActivity
 
 class DailyFragment : Fragment() {
     private lateinit var adapter: TransactionGroupAdapter
@@ -119,25 +120,29 @@ class DailyFragment : Fragment() {
 
         viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
             month = selectedMonth
-            val filtered = when (filterOption.type) {
-                FilterPeriodStatistic.Weekly -> {
-                    adapter.setFilterYear(false)
-                    FilterTransactions.filterTransactionGroupByWeek(allTransactions, selectedMonth)
-                }
-                FilterPeriodStatistic.Monthly -> {
-                    adapter.setFilterYear(false)
-                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
-                }
-                FilterPeriodStatistic.Yearly -> {
-                    adapter.setFilterYear(true)
-                    FilterTransactions.filterTransactionGroupByYear(allTransactions, selectedMonth)
-                }
-                else -> {
-                    adapter.setFilterYear(false)
-                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+            val filtered = if (requireActivity() is MainActivity) {
+                adapter.setFilterYear(false)
+                FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+            } else {
+                when (filterOption.type) {
+                    FilterPeriodStatistic.Weekly -> {
+                        adapter.setFilterYear(false)
+                        FilterTransactions.filterTransactionGroupByWeek(allTransactions, selectedMonth)
+                    }
+                    FilterPeriodStatistic.Monthly -> {
+                        adapter.setFilterYear(false)
+                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+                    }
+                    FilterPeriodStatistic.Yearly -> {
+                        adapter.setFilterYear(true)
+                        FilterTransactions.filterTransactionGroupByYear(allTransactions, selectedMonth)
+                    }
+                    else -> {
+                        adapter.setFilterYear(false)
+                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+                    }
                 }
             }
-
             adapter.submitList(filtered)
             binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
 

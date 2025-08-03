@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.databinding.FragmentMonthlyBinding
@@ -19,12 +20,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class MonthlyFragment : Fragment() {
-    private lateinit var viewModel: TransactionViewModel
     private var _binding: FragmentMonthlyBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: MonthlyAdapter
     private var listMonthlyData: List<MonthlyData> = emptyList()
-
+    private val viewModel: TransactionViewModel by activityViewModels {
+        TransactionViewModelFactory(
+            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+        )
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -36,9 +40,6 @@ class MonthlyFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
         // Gán layoutManager nếu chưa có
         binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
 

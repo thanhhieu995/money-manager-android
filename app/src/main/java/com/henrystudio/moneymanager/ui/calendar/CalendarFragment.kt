@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,8 +35,12 @@ class CalendarFragment : Fragment() {
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: TransactionViewModel
     private lateinit var calendarResume: Calendar
+    private val viewModel: TransactionViewModel by activityViewModels {
+        TransactionViewModelFactory(
+            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+        )
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -50,9 +55,6 @@ class CalendarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val events = mutableListOf<EventDay>()
-        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(requireActivity(), factory)[TransactionViewModel::class.java]
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
             for (group in list) {
                 val calendar = Calendar.getInstance()
