@@ -53,6 +53,7 @@ class StatisticCategoryFragment : Fragment() {
     private var listChildCategoryStat: List<CategoryStat> = emptyList()
     private var childCategoryClick: Boolean = false
     private var parentId: Int = -1
+    private var colorSetLine: Int = Color.RED
     private lateinit var lineChart: LineChart
     private lateinit var recyclerView: RecyclerView
     private lateinit var layoutCategorySum: LinearLayout
@@ -107,6 +108,8 @@ class StatisticCategoryFragment : Fragment() {
         adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
+
+        colorSetLine =  if (categoryType == CategoryType.INCOME)  Color.GREEN else Color.RED
 
         viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
             lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
@@ -270,10 +273,10 @@ class StatisticCategoryFragment : Fragment() {
         }
 
         val dataSet = LineDataSet(entries, categoryName)
-        dataSet.color = Color.BLUE
+        dataSet.color = colorSetLine
         dataSet.valueTextColor = Color.BLACK
         dataSet.circleRadius = 4f
-        dataSet.setCircleColor(Color.BLUE)
+        dataSet.setCircleColor(colorSetLine)
         dataSet.lineWidth = 2f
         dataSet.valueTextSize = 10f
 
@@ -445,10 +448,19 @@ class StatisticCategoryFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun highlightChartPoint(index: Int) {
-        lineChart.highlightValue(Highlight(index.toFloat(), 0f, 0)) // Highlight theo x index
+        val dataSet = lineChart.data.getDataSetByIndex(0) as LineDataSet
+
+        // Đổi màu highlight line
+        dataSet.highLightColor = colorSetLine
+//        // Đổi màu vòng tròn của tất cả điểm
+        dataSet.setCircleColor(colorSetLine)
+
+        lineChart.highlightValue(Highlight(index.toFloat(), 0f, 0))
         lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 500)
-        showChartAt(index) // Cập nhật text + disable nút nếu cần
+        showChartAt(index)
         updateDateList(index)
+
+        lineChart.invalidate()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
