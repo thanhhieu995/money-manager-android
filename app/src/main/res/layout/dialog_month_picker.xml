@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="0dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:background="#2E3B8E"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/tvTitle"
+            android:text="Date"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true" />
+
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/btnThisMonth"
+            android:text="This month"
+            android:textColor="@android:color/white"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true" />
+    </RelativeLayout>
+
+    <!-- Year navigation -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/btnPrevYear"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_baseline_navigate_before_24" />
+
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/tvYear"
+            android:text="2025"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginHorizontal="16dp" />
+
+        <ImageButton
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/btnNextYear"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_baseline_navigate_next_24" />
+    </LinearLayout>
+
+    <!-- Months grid -->
+    <GridLayout
+        android:id="@+id/gridMonths"
+        android:columnCount="4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp" />
+</LinearLayout>

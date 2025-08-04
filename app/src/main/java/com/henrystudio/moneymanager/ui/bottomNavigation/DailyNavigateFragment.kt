@@ -14,12 +14,14 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.helper.MonthPickerDialogFragment
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.model.TransactionGroup
@@ -32,7 +34,9 @@ import com.henrystudio.moneymanager.ui.search.SearchActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
+import java.time.Month
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.*
 
 class DailyNavigateFragment : Fragment() {
@@ -131,6 +135,16 @@ class DailyNavigateFragment : Fragment() {
                     }
                 }
             }
+        }
+
+        monthText.setOnClickListener {
+            MonthPickerDialogFragment { month, year ->
+                val monthName = Month.of(month).getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                monthText.text = "$monthName $year"
+                // Parse thành LocalDate (ngày 1 của tháng)
+                val selectedDate = LocalDate.of(year, month, 1)
+                viewModel.setLocalDateCurrentFilterDate(selectedDate)
+            }.show(parentFragmentManager, "monthPicker")
         }
 
         monthBack.setOnClickListener {
