@@ -24,7 +24,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.databinding.FragmentStatisticBinding
+import com.henrystudio.moneymanager.databinding.FragmentStatisticStatsBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.helper.Helper.Companion.updateMonthText
@@ -34,8 +34,8 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
 import java.util.*
 
-class StatisticFragment : Fragment() {
-    private var _binding: FragmentStatisticBinding? = null
+class StatisticStatsFragment : Fragment() {
+    private var _binding: FragmentStatisticStatsBinding? = null
     private val binding get() = _binding!!
     private lateinit var monthBack: ImageView
     private lateinit var monthNext: ImageView
@@ -60,7 +60,7 @@ class StatisticFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentStatisticBinding.inflate(inflater, container, false)
+        _binding = FragmentStatisticStatsBinding.inflate(inflater, container, false)
         // Inflate the layout for this fragment
         return binding.root
     }
