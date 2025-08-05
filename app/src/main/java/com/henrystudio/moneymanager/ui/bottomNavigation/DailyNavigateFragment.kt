@@ -142,7 +142,8 @@ class DailyNavigateFragment : Fragment() {
                 val monthName = Month.of(month).getDisplayName(TextStyle.SHORT, Locale.getDefault())
                 monthText.text = "$monthName $year"
                 // Parse thành LocalDate (ngày 1 của tháng)
-                val selectedDate = LocalDate.of(year, month, 1)
+                val lastDay = LocalDate.of(year, month, 1).lengthOfMonth()
+                val selectedDate = LocalDate.of(year, month, lastDay)
                 viewModel.setLocalDateCurrentFilterDate(selectedDate)
             }.show(parentFragmentManager, "monthPicker")
         }

@@ -123,7 +123,6 @@ class StatisticCategoryFragment : Fragment() {
                 categoryType == CategoryType.INCOME,
                 filterOptionTemp
             )
-
             // Cập nhật chart tại đây luôn
             updateLineChart(chartPoints, filterOptionTemp.type)
             if (chartPoints.isNotEmpty()) {
@@ -386,8 +385,13 @@ class StatisticCategoryFragment : Fragment() {
             val localDate = LocalDate.parse(anyDate, formatter)
             val chartDate = when (filterOption.type) {
                 FilterPeriodStatistic.Weekly -> localDate.with(DayOfWeek.MONDAY)
-                FilterPeriodStatistic.Monthly -> localDate.withDayOfMonth(1) // đại diện cho đầu tháng
-                FilterPeriodStatistic.Yearly -> localDate.withDayOfMonth(1)   // đại diện cho đầu năm
+                FilterPeriodStatistic.Monthly -> localDate.withDayOfMonth(localDate.lengthOfMonth()) // đại diện cho cuối tháng
+                FilterPeriodStatistic.Yearly -> {
+                    val targetMonth = localDate.monthValue
+                    val targetYear = localDate.year
+                    LocalDate.of(targetYear, targetMonth, 1)
+                        .withDayOfMonth(LocalDate.of(targetYear, targetMonth, 1).lengthOfMonth())
+                }   // đại diện cho cuối năm
                 else -> localDate
             }
 
@@ -458,7 +462,7 @@ class StatisticCategoryFragment : Fragment() {
 
         // Đổi màu highlight line
         dataSet.highLightColor = colorSetLine
-//        // Đổi màu vòng tròn của tất cả điểm
+        // Đổi màu vòng tròn của tất cả điểm
         dataSet.setCircleColor(colorSetLine)
 
         lineChart.highlightValue(Highlight(index.toFloat(), 0f, 0))

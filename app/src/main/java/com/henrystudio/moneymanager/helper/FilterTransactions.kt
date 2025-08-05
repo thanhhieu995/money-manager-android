@@ -19,13 +19,15 @@ class FilterTransactions {
         ): List<TransactionGroup> {
             val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
-            val selectedWeek = localDate.get(weekFields.weekOfWeekBasedYear())
-            val selectedYear = localDate.get(weekFields.weekBasedYear())
+            val startOfWeek = localDate.with(DayOfWeek.MONDAY)
+            val selectedWeek = startOfWeek.get(weekFields.weekOfWeekBasedYear())
+            val selectedYear = startOfWeek.get(weekFields.weekBasedYear())
             return transactions.filter { group ->
                 val cleanedDate = group.date.substringBefore(" ")
                 val date = LocalDate.parse(cleanedDate, inputFormatter)
-                val week = date.get(weekFields.weekOfWeekBasedYear())
-                val year = date.get(weekFields.weekBasedYear())
+                val startOfWeekDate = date.with(DayOfWeek.MONDAY)
+                val week = startOfWeekDate.get(weekFields.weekOfWeekBasedYear())
+                val year = startOfWeekDate.get(weekFields.weekBasedYear())
                 week == selectedWeek && year == selectedYear
             }.sortedByDescending {
                 val cleanedDate = it.date.substringBefore(" ")

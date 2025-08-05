@@ -181,6 +181,7 @@ class AddTransactionFragment : Fragment() {
         saveButton.setOnClickListener {
             saveTransaction {
                 SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
+                SharedTransactionHolder.scrollToAddedTransaction  = true
                 (saveButton.context as? AddTransactionActivity)?.onTransactionSaved()
             }
         }

@@ -119,10 +119,12 @@ class DailyFragment : Fragment() {
         }
 
         viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
-            month = selectedMonth
+            val firstDayOfMonth = LocalDate.of(selectedMonth.year, selectedMonth.month, 1)
+            val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
+            month = lastDayOfMonth
             val filtered = if (requireActivity() is MainActivity) {
                 adapter.setFilterYear(false)
-                FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+                FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
             } else {
                 when (filterOption.type) {
                     FilterPeriodStatistic.Weekly -> {
@@ -131,25 +133,28 @@ class DailyFragment : Fragment() {
                     }
                     FilterPeriodStatistic.Monthly -> {
                         adapter.setFilterYear(false)
-                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
                     }
                     FilterPeriodStatistic.Yearly -> {
                         adapter.setFilterYear(true)
-                        FilterTransactions.filterTransactionGroupByYear(allTransactions, selectedMonth)
+                        FilterTransactions.filterTransactionGroupByYear(allTransactions, lastDayOfMonth)
                     }
                     else -> {
                         adapter.setFilterYear(false)
-                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, selectedMonth)
+                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
                     }
                 }
             }
             adapter.submitList(filtered)
             binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
 
-            // 🟡 Scroll đến ngày vừa thêm
-            val targetPosition = findPositionForDate(filtered, selectedMonth)
-            if (targetPosition >= 0) {
-                binding.transactionList.scrollToPosition(targetPosition)
+            if (SharedTransactionHolder.scrollToAddedTransaction) {
+                // 🟡 Scroll đến ngày vừa thêm
+                val targetPosition = findPositionForDate(filtered, selectedMonth)
+                if (targetPosition >= 0) {
+                    binding.transactionList.scrollToPosition(targetPosition)
+                }
+                SharedTransactionHolder.scrollToAddedTransaction = false
             }
         }
 
