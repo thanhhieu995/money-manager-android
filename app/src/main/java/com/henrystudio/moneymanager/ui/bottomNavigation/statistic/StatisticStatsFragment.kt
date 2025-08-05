@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
@@ -21,13 +20,9 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.button.MaterialButtonToggleGroup
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticStatsBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
-import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.helper.Helper.Companion.updateMonthText
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -37,13 +32,7 @@ import java.util.*
 class StatisticStatsFragment : Fragment() {
     private var _binding: FragmentStatisticStatsBinding? = null
     private val binding get() = _binding!!
-    private lateinit var monthBack: ImageView
-    private lateinit var monthNext: ImageView
-    private lateinit var monthText: TextView
     private lateinit var noDataText: TextView
-    private lateinit var toggleGroupButton: MaterialButtonToggleGroup
-    private lateinit var incomeBtn: MaterialButton
-    private lateinit var expenseBtn: MaterialButton
     private var allTransactions: List<Transaction> = emptyList()
     private var filteredListTransaction : List<Transaction> = emptyList()
     private var currentStatType = CategoryType.EXPENSE
@@ -70,14 +59,8 @@ class StatisticStatsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         init()
 
-        toggleGroupButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                currentStatType = when (checkedId) {
-                    binding.fragmentStatisticBtnIncome.id -> CategoryType.INCOME
-                    else -> CategoryType.EXPENSE
-                }
-                updateCircleChart(currentStatType, filteredListTransaction)
-            }
+        viewModel.statisticCategoryType.observe(viewLifecycleOwner) {type ->
+            updateCircleChart(type, filteredListTransaction)
         }
 
         viewModel.allTransactions.observe(viewLifecycleOwner) { transactionList->
@@ -91,28 +74,6 @@ class StatisticStatsFragment : Fragment() {
         viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
             filterOptionTemp = filterOption
             getListUpdateChart(filterOption)
-        }
-
-        monthBack.setOnClickListener {
-            when(filterOptionTemp.type) {
-                FilterPeriodStatistic.Monthly -> viewModel.changeMonth(-1)
-                FilterPeriodStatistic.Weekly -> viewModel.changeWeek(-1)
-                FilterPeriodStatistic.Yearly -> viewModel.changeYear(-1)
-                FilterPeriodStatistic.List -> {}
-                FilterPeriodStatistic.Trend -> {}
-            }
-            updateMonthText(filterOptionTemp, monthText)
-        }
-
-        monthNext.setOnClickListener {
-            when(filterOptionTemp.type) {
-                FilterPeriodStatistic.Monthly -> viewModel.changeMonth(1)
-                FilterPeriodStatistic.Weekly -> viewModel.changeWeek(1)
-                FilterPeriodStatistic.Yearly -> viewModel.changeYear(1)
-                FilterPeriodStatistic.List -> {}
-                FilterPeriodStatistic.Trend -> {}
-            }
-            updateMonthText(filterOptionTemp, monthText)
         }
     }
 
@@ -231,23 +192,7 @@ class StatisticStatsFragment : Fragment() {
     }
 
     fun init() {
-        monthNext = binding.fragmentStatisticMonthNext
-        monthBack = binding.fragmentStatisticMonthBack
-        monthText = binding.fragmentStatisticMonthText
         noDataText = binding.fragmentStatisticNoDataText
-        toggleGroupButton = binding.fragmentStatisticToggleGroup
-        incomeBtn = binding.fragmentStatisticBtnIncome
-        expenseBtn = binding.fragmentStatisticBtnExpense
-    }
-
-    private fun updateTextButton(filteredList: List<Transaction>) {
-        val incomeList = filteredList.filter { it.isIncome }
-        val expenseList = filteredList.filter { !it.isIncome }
-
-        val totalIncome = incomeList.sumOf { it.amount }
-        val totalExpense = expenseList.sumOf { it.amount }
-        incomeBtn.text = "Income " + Helper.formatCurrency(totalIncome)
-        expenseBtn.text = "Exp " + Helper.formatCurrency(totalExpense)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -259,8 +204,7 @@ class StatisticStatsFragment : Fragment() {
             FilterPeriodStatistic.List -> emptyList()
             FilterPeriodStatistic.Trend -> emptyList()
         }
-        updateMonthText(filterOption, monthText)
-        updateTextButton(list)
+        viewModel.setStatisticTransactionFilter(list)
         filteredListTransaction = list
         if (filterOption.type == FilterPeriodStatistic.Trend) {
             updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường

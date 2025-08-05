@@ -42,6 +42,85 @@
                 android:drawablePadding="4dp"/>
         </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/fragment_statistic_view_pager_root_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:padding="8dp">
+        <LinearLayout
+            android:id="@+id/fragment_statistic_view_pager_layout_topYear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/fragment_daily_navigate_search">
+
+            <ImageView
+                android:id="@+id/fragment_statistic_view_pager_month_back"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_baseline_navigate_before_24" />
+
+            <TextView
+                android:id="@+id/fragment_statistic_view_pager_month_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Apr 2025"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/fragment_statistic_view_pager_month_next"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_baseline_navigate_next_24" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/fragment_statistic_view_pager_toggleGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center"
+            app:singleSelection="true"
+            app:selectionRequired="true"
+            app:checkedButton="@+id/fragment_statistic_view_pager_btnExpense"
+            android:backgroundTint="@android:color/transparent">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fragment_statistic_view_pager_btnIncome"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                style="@style/ToggleButtonStyle"
+                android:text="Income"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/income"
+                app:strokeWidth="2dp"
+                android:textColor="@color/toggle_button_income_text_selector"
+                android:backgroundTint="@color/toggle_button_income_background_selector"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fragment_statistic_view_pager_btnExpense"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                style="@style/ToggleButtonStyle"
+                android:text="Expense"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/red"
+                app:strokeWidth="2dp"
+                android:textColor="@color/toggle_button_expense_text_selector"
+                android:backgroundTint="@color/toggle_button_expense_background_selector"/>
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+    </LinearLayout>
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/fragment_statistic_viewPager"
             android:layout_width="match_parent"
