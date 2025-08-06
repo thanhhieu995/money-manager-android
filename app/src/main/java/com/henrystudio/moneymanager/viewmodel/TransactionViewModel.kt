@@ -17,8 +17,8 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     private val _currentFilterDate = MutableLiveData(LocalDate.now())
     @RequiresApi(Build.VERSION_CODES.O)
     val currentFilterDate: LiveData<LocalDate> = _currentFilterDate
-    private val _currentTabPosition = MutableLiveData<Int>()
-    val currentTabPosition: LiveData<Int> get() = _currentTabPosition
+    private val _currentDailyNavigateTabPosition = MutableLiveData<Int>()
+    val currentDailyNavigateTabPosition: LiveData<Int> get() = _currentDailyNavigateTabPosition
     private val _selectionMode = MutableLiveData<Boolean>(false)
     val selectionMode: LiveData<Boolean> = _selectionMode
     private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
@@ -42,6 +42,13 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
             }
             .sortedByDescending { it.amount } // Tuỳ sắp xếp theo amount hoặc count
     }
+
+    val allTransactionsWithNote: LiveData<List<Transaction>> = allTransactions.map { list ->
+        list.filter { it.note.isNotBlank() }
+    }
+
+    private val _currentStatisticTabPosition = MutableLiveData<Int>()
+    val currentStatisticTabPosition: LiveData<Int> = _currentStatisticTabPosition
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
@@ -92,8 +99,8 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         _currentFilterDate.value = _currentFilterDate.value?.plusYears(offset)
     }
 
-    fun setCurrentTab(position: Int) {
-        _currentTabPosition.value = position
+    fun setCurrentDailyNavigateTab(position: Int) {
+        _currentDailyNavigateTabPosition.value = position
     }
 
     fun toggleTransactionSelection(transaction: Transaction) {
@@ -136,5 +143,9 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
 
     fun setStatisticTransactionFilter(list: List<Transaction>) {
         _statisticListTransactionFilter.value = list
+    }
+
+    fun setCurrentStatisticTab(position: Int) {
+        _currentStatisticTabPosition.value = position
     }
 }

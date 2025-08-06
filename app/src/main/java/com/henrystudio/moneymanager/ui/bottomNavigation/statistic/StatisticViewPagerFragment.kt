@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
+import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
@@ -40,6 +41,7 @@ class StatisticViewPagerFragment : Fragment() {
     private lateinit var adapter: StatisticPagerAdapter
     private var _binding: FragmentStatisticViewPagerBinding?= null
     private val binding get() = _binding!!
+    private var listTransactionFilter: List<Transaction> = emptyList()
 
     private val viewModel : TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
@@ -72,6 +74,33 @@ class StatisticViewPagerFragment : Fragment() {
             }
         }.attach()
 
+        viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                viewModel.setCurrentStatisticTab(position)
+            }
+        })
+
+        viewModel.statisticListTransactionFilter.observe(viewLifecycleOwner) {list ->
+            listTransactionFilter = list
+        }
+
+        viewModel.currentStatisticTabPosition.observe(viewLifecycleOwner) {position ->
+            when(position) {
+                0 -> {
+                    updateTextButton(listTransactionFilter)
+                }
+                1 -> {
+                    updateTextButton(listTransactionFilter)
+                }
+                2 -> {
+                    viewModel.allTransactionsWithNote.observe(viewLifecycleOwner) {list ->
+                        updateTextButton(list)
+                    }
+                }
+            }
+        }
+
         filterDropdown.setOnClickListener {
             showDialogOption()
         }
@@ -88,7 +117,7 @@ class StatisticViewPagerFragment : Fragment() {
 
         viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
             filterOptionTemp = filterOption
-            Helper.updateMonthText(filterOptionTemp, monthText)
+            Helper.updateMonthText(filterOption, monthText)
         }
 
         viewModel.statisticListTransactionFilter.observe(viewLifecycleOwner) {listFilter->

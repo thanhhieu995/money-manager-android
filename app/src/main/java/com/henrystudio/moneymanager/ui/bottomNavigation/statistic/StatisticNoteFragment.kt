@@ -11,10 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticNoteBinding
-import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.Note
-import com.henrystudio.moneymanager.model.SortField
-import com.henrystudio.moneymanager.model.SortOrder
+import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 

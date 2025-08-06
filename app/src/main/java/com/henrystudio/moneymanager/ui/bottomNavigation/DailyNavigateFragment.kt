@@ -14,7 +14,6 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -98,11 +97,11 @@ class DailyNavigateFragment : Fragment() {
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                viewModel.setCurrentTab(position)
+                viewModel.setCurrentDailyNavigateTab(position)
             }
         })
 
-        viewModel.currentTabPosition.observe(viewLifecycleOwner) { position ->
+        viewModel.currentDailyNavigateTabPosition.observe(viewLifecycleOwner) { position ->
             val filteredMonth = month?.let {
                 com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
                     it
