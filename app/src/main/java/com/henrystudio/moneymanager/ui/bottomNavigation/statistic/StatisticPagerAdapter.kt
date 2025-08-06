@@ -10,7 +10,7 @@ class StatisticPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment)
         return when (position) {
             0 -> StatisticStatsFragment()
             1 -> StatisticStatsFragment()
-            2 -> StatisticStatsFragment()
+            2 -> StatisticNoteFragment()
             else -> StatisticStatsFragment()
         }
     }

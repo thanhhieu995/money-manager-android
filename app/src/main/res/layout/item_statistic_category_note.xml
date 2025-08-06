@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fragment_statistic_note_sortHeader"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingVertical="8dp"
+    android:paddingHorizontal="16dp"
+    android:background="@color/white">
+
+    <TextView
+        android:id="@+id/item_statistic_note_name"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="BreakFast"
+        android:textStyle="bold"
+        android:gravity="start"
+        android:drawablePadding="4dp" />
+
+    <TextView
+        android:id="@+id/item_statistic_note_count"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="23"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/item_statistic_note_amount"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="150.000đ"
+        android:textStyle="bold"
+        android:gravity="end"
+        android:drawablePadding="4dp" />
+</LinearLayout>

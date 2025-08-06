@@ -1,14 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.bottomNavigation.statistic.StatisticNoteFragment">
-
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    android:orientation="vertical">
+    <LinearLayout
+        android:id="@+id/fragment_statistic_note_sortHeader"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="8dp"
+        android:paddingHorizontal="16dp"
+        android:background="@color/white">
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/fragment_statistic_note_headerNote"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Note"
+            android:textStyle="bold"
+            android:gravity="start"
+            android:drawableEnd="@drawable/ic_baseline_arrow_downward_24"
+            android:drawablePadding="4dp" />
+
+        <TextView
+            android:id="@+id/fragment_statistic_note_headerCount"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="1->9"
+            android:drawableEnd="@drawable/ic_baseline_arrow_downward_24"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/fragment_statistic_note_headerAmount"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Amount"
+            android:textStyle="bold"
+            android:gravity="end"
+            android:drawableEnd="@drawable/ic_baseline_arrow_downward_24"
+            android:drawablePadding="4dp" />
+    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/fragment_statistic_note_recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

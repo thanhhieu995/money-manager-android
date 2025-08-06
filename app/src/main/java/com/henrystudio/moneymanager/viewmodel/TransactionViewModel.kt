@@ -31,6 +31,17 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val statisticCategoryType: LiveData<CategoryType> = _statisticCategoryType
     private val _statisticListTransactionFilter = MutableLiveData<List<Transaction>>(emptyList())
     val statisticListTransactionFilter : LiveData<List<Transaction>> = _statisticListTransactionFilter
+    val noteList: LiveData<List<Note>> = allTransactions.map { list ->
+        list
+            .filter { it.note.isNotBlank() } // Bỏ qua note rỗng nếu cần
+            .groupBy { it.note }
+            .map { (note, transactions) ->
+                val count = transactions.size
+                val totalAmount = transactions.sumOf { it.amount }
+                Note(note = note, count = count, amount = totalAmount)
+            }
+            .sortedByDescending { it.amount } // Tuỳ sắp xếp theo amount hoặc count
+    }
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         repository.insert(transaction)
