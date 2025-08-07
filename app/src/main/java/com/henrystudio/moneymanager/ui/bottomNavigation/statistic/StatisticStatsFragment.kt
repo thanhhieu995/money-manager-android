@@ -67,13 +67,13 @@ class StatisticStatsFragment : Fragment() {
             allTransactions = transactionList
         }
 
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { filterDate ->
-            viewModel.setFilter(filterOptionTemp.type, filterDate)
-        }
-
         viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
             filterOptionTemp = filterOption
             getListUpdateChart(filterOption)
+        }
+
+        viewModel.currentFilterDate.observe(viewLifecycleOwner) { filterDate ->
+            viewModel.setFilter(filterOptionTemp.type, filterDate)
         }
     }
 

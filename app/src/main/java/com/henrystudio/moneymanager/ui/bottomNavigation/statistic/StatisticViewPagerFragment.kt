@@ -87,17 +87,9 @@ class StatisticViewPagerFragment : Fragment() {
 
         viewModel.currentStatisticTabPosition.observe(viewLifecycleOwner) {position ->
             when(position) {
-                0 -> {
-                    updateTextButton(listTransactionFilter)
-                }
-                1 -> {
-                    updateTextButton(listTransactionFilter)
-                }
-                2 -> {
-                    viewModel.allTransactionsWithNote.observe(viewLifecycleOwner) {list ->
-                        updateTextButton(list)
-                    }
-                }
+                0 -> {}
+                1 -> {}
+                2 -> {}
             }
         }
 
@@ -108,7 +100,7 @@ class StatisticViewPagerFragment : Fragment() {
         toggleGroupButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 currentStatType = when (checkedId) {
-                    binding.fragmentStatisticViewPagerBtnIncome.id -> CategoryType.INCOME
+                    incomeBtn.id -> CategoryType.INCOME
                     else -> CategoryType.EXPENSE
                 }
                 viewModel.setStatisticCategoryType(currentStatType)
@@ -132,7 +124,6 @@ class StatisticViewPagerFragment : Fragment() {
                 FilterPeriodStatistic.List -> {}
                 FilterPeriodStatistic.Trend -> {}
             }
-            Helper.updateMonthText(filterOptionTemp, monthText)
         }
 
         monthNext.setOnClickListener {
@@ -143,7 +134,6 @@ class StatisticViewPagerFragment : Fragment() {
                 FilterPeriodStatistic.List -> {}
                 FilterPeriodStatistic.Trend -> {}
             }
-            Helper.updateMonthText(filterOptionTemp, monthText)
         }
     }
 

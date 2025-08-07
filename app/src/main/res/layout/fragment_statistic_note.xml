@@ -44,6 +44,16 @@
             android:drawableEnd="@drawable/ic_baseline_arrow_downward_24"
             android:drawablePadding="4dp" />
     </LinearLayout>
+    <TextView
+        android:id="@+id/fragment_statistic_note_noDataText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:paddingTop="16dp"
+        android:text="No data available"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:visibility="gone"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/fragment_statistic_note_recyclerView"
         android:layout_width="match_parent"

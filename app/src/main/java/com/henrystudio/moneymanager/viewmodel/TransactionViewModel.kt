@@ -31,20 +31,23 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val statisticCategoryType: LiveData<CategoryType> = _statisticCategoryType
     private val _statisticListTransactionFilter = MutableLiveData<List<Transaction>>(emptyList())
     val statisticListTransactionFilter : LiveData<List<Transaction>> = _statisticListTransactionFilter
-    val noteList: LiveData<List<Note>> = allTransactions.map { list ->
-        list
-            .filter { it.note.isNotBlank() } // Bỏ qua note rỗng nếu cần
-            .groupBy { it.note }
-            .map { (note, transactions) ->
-                val count = transactions.size
-                val totalAmount = transactions.sumOf { it.amount }
-                Note(note = note, count = count, amount = totalAmount)
-            }
-            .sortedByDescending { it.amount } // Tuỳ sắp xếp theo amount hoặc count
-    }
 
-    val allTransactionsWithNote: LiveData<List<Transaction>> = allTransactions.map { list ->
-        list.filter { it.note.isNotBlank() }
+    // noteFragment
+    val combinedFilter: MediatorLiveData<Pair<CategoryType, List<Transaction>>> = MediatorLiveData()
+
+    init {
+        var currentType: CategoryType? = null
+        var currentList: List<Transaction>? = null
+
+        combinedFilter.addSource(statisticCategoryType) { type ->
+            currentType = type
+            currentList?.let { combinedFilter.value = Pair(type, it) }
+        }
+
+        combinedFilter.addSource(statisticListTransactionFilter) { list ->
+            currentList = list
+            currentType?.let { combinedFilter.value = Pair(it, list) }
+        }
     }
 
     private val _currentStatisticTabPosition = MutableLiveData<Int>()

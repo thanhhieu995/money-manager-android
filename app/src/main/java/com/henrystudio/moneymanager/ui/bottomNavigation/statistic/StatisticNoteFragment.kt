@@ -21,6 +21,7 @@ class StatisticNoteFragment : Fragment() {
     private lateinit var tvNote: TextView
     private lateinit var tvCount: TextView
     private lateinit var tvAmount: TextView
+    private lateinit var tvNoData: TextView
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: NoteAdapter
     private var listNotes: List<Note> = emptyList()
@@ -49,9 +50,12 @@ class StatisticNoteFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 
-        viewModel.noteList.observe(viewLifecycleOwner) {list ->
-            listNotes = list
-            adapter.submitList(list)
+        viewModel.combinedFilter.observe(viewLifecycleOwner) { (type, filterList) ->
+            val transactionsType = when (type) {
+                CategoryType.INCOME -> filterList.filter { it.isIncome }
+                CategoryType.EXPENSE -> filterList.filter { !it.isIncome }
+            }
+            listNotes = getListNoteFilter(transactionsType)
             sortAndUpdate()
             updateSortIndicators()
         }
@@ -92,6 +96,7 @@ class StatisticNoteFragment : Fragment() {
         tvNote = binding.fragmentStatisticNoteHeaderNote
         tvCount = binding.fragmentStatisticNoteHeaderCount
         tvAmount = binding.fragmentStatisticNoteHeaderAmount
+        tvNoData = binding.fragmentStatisticNoteNoDataText
         recyclerView = binding.fragmentStatisticNoteRecyclerView
     }
 
@@ -110,6 +115,7 @@ class StatisticNoteFragment : Fragment() {
                 else listNotes.sortedByDescending { it.amount }
             }
         }
+        tvNoData.visibility = if (sortedList.isEmpty()) View.VISIBLE else View.GONE
         adapter.submitList(sortedList)
     }
 
@@ -131,5 +137,15 @@ class StatisticNoteFragment : Fragment() {
         setDrawable(tvNote, currentSortField == SortField.NOTE)
         setDrawable(tvCount, currentSortField == SortField.COUNT)
         setDrawable(tvAmount, currentSortField == SortField.AMOUNT)
+    }
+
+    private fun getListNoteFilter(listTransactionFilter: List<Transaction>) : List<Note> {
+        return listTransactionFilter
+            .groupBy { it.note }
+            .map { (note, transactions) ->
+                val count = transactions.size
+                val totalAmount = transactions.sumOf { it.amount }
+                Note(note = note, count = count, amount = totalAmount)
+            }.sortedByDescending { it.amount }
     }
 }
