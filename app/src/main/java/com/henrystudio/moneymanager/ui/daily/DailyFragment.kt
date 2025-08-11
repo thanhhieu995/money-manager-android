@@ -33,6 +33,7 @@ class DailyFragment : Fragment() {
     private var month: LocalDate? = null
     private var selectedList: List<Transaction> = emptyList()
     private var keyFilter: KeyFilter = KeyFilter.CategoryParent
+    private var categoryType : CategoryType = CategoryType.EXPENSE
 
     @RequiresApi(Build.VERSION_CODES.O)
     private var filterOption: FilterOption =
@@ -56,7 +57,8 @@ class DailyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val categoryName = arguments?.getString(ARG_CATEGORY_NAME, "")
+        val categoryName = arguments?.getString(ARG_CATEGORY_NAME)
+        categoryType = arguments?.getSerializable(ARG_CATEGORY_TYPE) as? CategoryType ?: CategoryType.EXPENSE
         keyFilter = arguments?.getSerializable(ARG_CATEGORY_CHILD_CLICK) as? KeyFilter ?: KeyFilter.CategoryParent
 
         adapter = TransactionGroupAdapter()
@@ -91,7 +93,7 @@ class DailyFragment : Fragment() {
         }
 
         viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(transactions, selectedMonth) ->
-            updateAllTransactions(transactions, categoryName)
+            updateAllTransactions(transactions, categoryName, categoryType)
             filterAndDisplay(selectedMonth)
         }
 
@@ -199,20 +201,22 @@ class DailyFragment : Fragment() {
     companion object {
         const val ARG_CATEGORY_NAME = "arg_category_name"
         const val ARG_CATEGORY_CHILD_CLICK = "item_click_statistic_keyWord"
+        const val ARG_CATEGORY_TYPE = "item_click_statistic_category_type"
 
-        fun newDailyInstance(categoryName: String?, keyFilter: KeyFilter): DailyFragment {
+        fun newDailyInstance(categoryName: String?, keyFilter: KeyFilter, categoryType: CategoryType): DailyFragment {
             val fragment = DailyFragment()
             val args = Bundle()
             args.putString(ARG_CATEGORY_NAME, categoryName ?: "")
             args.putSerializable(ARG_CATEGORY_CHILD_CLICK, keyFilter)
+            args.putSerializable(ARG_CATEGORY_TYPE, categoryType)
             fragment.arguments = args
             return fragment
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateAllTransactions(transactions: List<TransactionGroup>, categoryName: String?) {
-        allTransactions = if (categoryName?.isNotEmpty() == true) {
+    private fun updateAllTransactions(transactions: List<TransactionGroup>, categoryName: String?, categoryType: CategoryType) {
+        allTransactions = if (categoryName != null) {
             transactions.mapNotNull { group ->
                 val filteredTransactions = when (keyFilter) {
                     KeyFilter.CategoryParent -> {
@@ -226,13 +230,14 @@ class DailyFragment : Fragment() {
                         }
                     }
                     KeyFilter.Note -> {
+                        val isInCome = categoryType == CategoryType.INCOME
                         group.transactions.filter {
-                            it.note?.contains(categoryName ?: "", ignoreCase = true) == true
+                            it.note.trim().equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isInCome
                         }
                     }
                     KeyFilter.Account -> {
                         group.transactions.filter {
-                            it.account?.contains(categoryName, ignoreCase = true) == true
+                            it.account.trim().equals(categoryName.trim(), ignoreCase = true)
                         }
                     }
                 }

@@ -177,7 +177,8 @@ class StatisticCategoryFragment : Fragment() {
                                 val fragment = keyFilter?.let {
                                     DailyFragment.newDailyInstance(
                                         categoryName = categoryName,
-                                        it
+                                        it,
+                                        categoryType
                                     )
                                 }
 
@@ -208,7 +209,8 @@ class StatisticCategoryFragment : Fragment() {
                 val fragment = keyFilter?.let {
                     DailyFragment.newDailyInstance(
                         categoryName = categoryName,
-                        it
+                        it,
+                        categoryType
                     )
                 }
 
