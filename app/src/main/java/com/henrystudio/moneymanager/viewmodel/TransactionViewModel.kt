@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     private val repository = TransactionRepository(dao)
     val allTransactions: LiveData<List<Transaction>> = repository.allTransactions
@@ -47,6 +48,19 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         combinedFilter.addSource(statisticListTransactionFilter) { list ->
             currentList = list
             currentType?.let { combinedFilter.value = Pair(it, list) }
+        }
+    }
+
+    val combineGroupAndDate = MediatorLiveData<Pair<List<TransactionGroup>, LocalDate>>()
+
+    init {
+        combineGroupAndDate.addSource(groupedTransactions) { transactions ->
+            val date = currentFilterDate.value
+            if (date != null) combineGroupAndDate.value = transactions to date
+        }
+        combineGroupAndDate.addSource(currentFilterDate) { date ->
+            val transactions = groupedTransactions.value
+            if (transactions != null) combineGroupAndDate.value = transactions to date
         }
     }
 

@@ -183,6 +183,7 @@ class StatisticStatsFragment : Fragment() {
             intent.putExtra("item_click_statistic_category_name", categoryStat.name)
             intent.putExtra("item_click_statistic_category_type", categoryType)
             intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
+            intent.putExtra("item_click_statistic_keyWord", KeyFilter.CategoryParent)
             startActivity(intent)
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
             true

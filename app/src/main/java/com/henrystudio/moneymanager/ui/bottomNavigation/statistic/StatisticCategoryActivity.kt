@@ -1,5 +1,6 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -9,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
@@ -35,6 +37,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
     private var selectedTransactionList: List<Transaction> = emptyList()
     private lateinit var viewModel: TransactionViewModel
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistic_category)
@@ -59,6 +62,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
         val name = intent.getStringExtra("item_click_statistic_category_name")
         val categoryType = intent.getSerializableExtra("item_click_statistic_category_type")
         val filterOption = intent.getSerializableExtra("item_click_statistic_filterOption")
+        val keyFilter = intent.getSerializableExtra("item_click_statistic_keyWord")
         if (name != null) {
             updateTransactionTitle(name)
         }
@@ -66,6 +70,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
             putSerializable("item_click_statistic_category_name", name)
             putSerializable("item_click_statistic_category_type", categoryType)
             putSerializable("item_click_statistic_filterOption", filterOption)
+            putSerializable("item_click_statistic_keyWord", keyFilter)
         }
         statisticCategoryFragment.apply {
             arguments = bundle

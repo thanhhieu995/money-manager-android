@@ -1,11 +1,14 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +17,7 @@ import com.henrystudio.moneymanager.databinding.FragmentStatisticNoteBinding
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
+import java.time.LocalDate
 
 class StatisticNoteFragment : Fragment() {
     private var _binding: FragmentStatisticNoteBinding? = null
@@ -27,6 +31,9 @@ class StatisticNoteFragment : Fragment() {
     private var listNotes: List<Note> = emptyList()
     private var currentSortField = SortField.AMOUNT
     private var currentSortOrder = SortOrder.DESC
+    private var categoryType: CategoryType = CategoryType.EXPENSE
+    @RequiresApi(Build.VERSION_CODES.O)
+    private var filterOptionTemp : FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
     private val viewModel: TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
@@ -43,6 +50,7 @@ class StatisticNoteFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
@@ -51,6 +59,7 @@ class StatisticNoteFragment : Fragment() {
         recyclerView.adapter = adapter
 
         viewModel.combinedFilter.observe(viewLifecycleOwner) { (type, filterList) ->
+            categoryType = type
             val transactionsType = when (type) {
                 CategoryType.INCOME -> filterList.filter { it.isIncome }
                 CategoryType.EXPENSE -> filterList.filter { !it.isIncome }
@@ -58,6 +67,10 @@ class StatisticNoteFragment : Fragment() {
             listNotes = getListNoteFilter(transactionsType)
             sortAndUpdate()
             updateSortIndicators()
+        }
+
+        viewModel.filterOption.observe(viewLifecycleOwner) {filterOption ->
+            filterOptionTemp = filterOption
         }
 
         tvNote.setOnClickListener {
@@ -89,6 +102,17 @@ class StatisticNoteFragment : Fragment() {
             }
             sortAndUpdate()
             updateSortIndicators()
+        }
+
+        adapter.onClickListener = { note ->
+            val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
+            intent.putExtra("item_click_statistic_category_name", note.note)
+            intent.putExtra("item_click_statistic_category_type", categoryType)
+            intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
+            intent.putExtra("item_click_statistic_keyWord", KeyFilter.Note)
+            startActivity(intent)
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
+            true
         }
     }
 

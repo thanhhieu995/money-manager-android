@@ -132,5 +132,14 @@ class FilterTransactions {
                 tx.categoryParentName.equals(categoryName, ignoreCase = true)
             }
         }
+
+        fun filterTransactionsByNoteName(
+            allTransactions: List<Transaction>,
+            note: String
+        ) : List<Transaction> {
+            return allTransactions.filter { tx ->
+                tx.note.equals(note, ignoreCase = true)
+            }
+        }
     }
 }

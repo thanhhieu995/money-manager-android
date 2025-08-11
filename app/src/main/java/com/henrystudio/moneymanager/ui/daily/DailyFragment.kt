@@ -32,6 +32,7 @@ class DailyFragment : Fragment() {
     private var allTransactions: List<TransactionGroup> = emptyList()
     private var month: LocalDate? = null
     private var selectedList: List<Transaction> = emptyList()
+    private var keyFilter: KeyFilter = KeyFilter.CategoryParent
 
     @RequiresApi(Build.VERSION_CODES.O)
     private var filterOption: FilterOption =
@@ -56,7 +57,7 @@ class DailyFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val categoryName = arguments?.getString(ARG_CATEGORY_NAME, "")
-        val childClick = arguments?.getBoolean(ARG_CATEGORY_CHILD_CLICK) ?: false
+        keyFilter = arguments?.getSerializable(ARG_CATEGORY_CHILD_CLICK) as? KeyFilter ?: KeyFilter.CategoryParent
 
         adapter = TransactionGroupAdapter()
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
@@ -89,73 +90,9 @@ class DailyFragment : Fragment() {
             filterOption = option
         }
 
-        viewModel.groupedTransactions.observe(viewLifecycleOwner) { transactions ->
-            allTransactions = if (categoryName?.isNotEmpty() == true) {
-                transactions.mapNotNull { group ->
-                    val filteredTransactions =
-                        if (childClick) group.transactions.filter { it.categorySubName.trim() == categoryName.trim() }
-                        else group.transactions.filter { it.categoryParentName.trim() == categoryName.trim() }
-                    if (filteredTransactions.isNotEmpty()) {
-                        group.copy(
-                            income = filteredTransactions.filter { it.isIncome }
-                                .sumOf { it.amount },
-                            expense = filteredTransactions.filter { !it.isIncome }
-                                .sumOf { it.amount },
-                            transactions = filteredTransactions
-                        )
-                    } else null
-                }
-            } else {
-                transactions
-            }
-
-            val filteredList =
-                month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) }
-                    ?: emptyList()
-            transactionGroupListFilter = filteredList
-
-            adapter.submitList(filteredList)
-            binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
-        }
-
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
-            val firstDayOfMonth = LocalDate.of(selectedMonth.year, selectedMonth.month, 1)
-            val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
-            month = lastDayOfMonth
-            val filtered = if (requireActivity() is MainActivity) {
-                adapter.setFilterYear(false)
-                FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
-            } else {
-                when (filterOption.type) {
-                    FilterPeriodStatistic.Weekly -> {
-                        adapter.setFilterYear(false)
-                        FilterTransactions.filterTransactionGroupByWeek(allTransactions, selectedMonth)
-                    }
-                    FilterPeriodStatistic.Monthly -> {
-                        adapter.setFilterYear(false)
-                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
-                    }
-                    FilterPeriodStatistic.Yearly -> {
-                        adapter.setFilterYear(true)
-                        FilterTransactions.filterTransactionGroupByYear(allTransactions, lastDayOfMonth)
-                    }
-                    else -> {
-                        adapter.setFilterYear(false)
-                        FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
-                    }
-                }
-            }
-            adapter.submitList(filtered)
-            binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-
-            if (SharedTransactionHolder.scrollToAddedTransaction) {
-                // 🟡 Scroll đến ngày vừa thêm
-                val targetPosition = findPositionForDate(filtered, selectedMonth)
-                if (targetPosition >= 0) {
-                    binding.transactionList.scrollToPosition(targetPosition)
-                }
-                SharedTransactionHolder.scrollToAddedTransaction = false
-            }
+        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(transactions, selectedMonth) ->
+            updateAllTransactions(transactions, categoryName)
+            filterAndDisplay(selectedMonth)
         }
 
         adapter.onTransactionLongClick = { transaction ->
@@ -261,15 +198,97 @@ class DailyFragment : Fragment() {
 
     companion object {
         const val ARG_CATEGORY_NAME = "arg_category_name"
-        const val ARG_CATEGORY_CHILD_CLICK = "item_click_statistic_category_child"
+        const val ARG_CATEGORY_CHILD_CLICK = "item_click_statistic_keyWord"
 
-        fun newDailyInstance(categoryName: String?, childClick: Boolean): DailyFragment {
+        fun newDailyInstance(categoryName: String?, keyFilter: KeyFilter): DailyFragment {
             val fragment = DailyFragment()
             val args = Bundle()
             args.putString(ARG_CATEGORY_NAME, categoryName ?: "")
-            args.putBoolean(ARG_CATEGORY_CHILD_CLICK, childClick)
+            args.putSerializable(ARG_CATEGORY_CHILD_CLICK, keyFilter)
             fragment.arguments = args
             return fragment
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun updateAllTransactions(transactions: List<TransactionGroup>, categoryName: String?) {
+        allTransactions = if (categoryName?.isNotEmpty() == true) {
+            transactions.mapNotNull { group ->
+                val filteredTransactions = when (keyFilter) {
+                    KeyFilter.CategoryParent -> {
+                        group.transactions.filter {
+                            it.categoryParentName.equals(categoryName, ignoreCase = true)
+                        }
+                    }
+                    KeyFilter.CategorySub -> {
+                        group.transactions.filter {
+                            it.categorySubName.trim().equals(categoryName.trim(), ignoreCase = true)
+                        }
+                    }
+                    KeyFilter.Note -> {
+                        group.transactions.filter {
+                            it.note?.contains(categoryName ?: "", ignoreCase = true) == true
+                        }
+                    }
+                }
+
+                if (filteredTransactions.isNotEmpty()) {
+                    group.copy(
+                        income = filteredTransactions.filter { it.isIncome }.sumOf { it.amount },
+                        expense = filteredTransactions.filter { !it.isIncome }.sumOf { it.amount },
+                        transactions = filteredTransactions
+                    )
+                } else null
+            }
+        } else {
+            transactions
+        }
+        val filteredList =
+            month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) }
+                ?: emptyList()
+        transactionGroupListFilter = filteredList
+        adapter.submitList(filteredList)
+        binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun filterAndDisplay(selectedMonth: LocalDate) {
+        val firstDayOfMonth = LocalDate.of(selectedMonth.year, selectedMonth.month, 1)
+        val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
+        month = lastDayOfMonth
+        val filtered = if (requireActivity() is MainActivity) {
+            adapter.setFilterYear(false)
+            FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
+        } else {
+            when (filterOption.type) {
+                FilterPeriodStatistic.Weekly -> {
+                    adapter.setFilterYear(false)
+                    FilterTransactions.filterTransactionGroupByWeek(allTransactions, selectedMonth)
+                }
+                FilterPeriodStatistic.Monthly -> {
+                    adapter.setFilterYear(false)
+                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
+                }
+                FilterPeriodStatistic.Yearly -> {
+                    adapter.setFilterYear(true)
+                    FilterTransactions.filterTransactionGroupByYear(allTransactions, lastDayOfMonth)
+                }
+                else -> {
+                    adapter.setFilterYear(false)
+                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
+                }
+            }
+        }
+        adapter.submitList(filtered)
+        binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+
+        if (SharedTransactionHolder.scrollToAddedTransaction) {
+            // 🟡 Scroll đến ngày vừa thêm
+            val targetPosition = findPositionForDate(filtered, selectedMonth)
+            if (targetPosition >= 0) {
+                binding.transactionList.scrollToPosition(targetPosition)
+            }
+            SharedTransactionHolder.scrollToAddedTransaction = false
         }
     }
 }
