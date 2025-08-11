@@ -9,7 +9,7 @@ class StatisticPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment)
     override fun createFragment(position: Int): Fragment {
         return when (position) {
             0 -> StatisticStatsFragment()
-            1 -> StatisticStatsFragment()
+            1 -> StatisticAccountFragment()
             2 -> StatisticNoteFragment()
             else -> StatisticStatsFragment()
         }

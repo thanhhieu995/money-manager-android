@@ -68,9 +68,6 @@ class MainActivity : AppCompatActivity() {
                         .commit()
                     true
                 }
-                R.id.nav_accounts -> {
-                    true
-                }
                 R.id.nav_more -> {
                     true
                 }

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -16,23 +17,26 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.databinding.FragmentStatisticStatsBinding
+import com.henrystudio.moneymanager.databinding.FragmentStatisticAccountBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
-import java.util.*
 
-class StatisticStatsFragment : Fragment() {
-    private var _binding: FragmentStatisticStatsBinding? = null
+class StatisticAccountFragment : Fragment() {
+    private var _binding : FragmentStatisticAccountBinding ?= null
     private val binding get() = _binding!!
     private lateinit var noDataText: TextView
+    private lateinit var pieChart: PieChart
+    private lateinit var recyclerView: RecyclerView
     private var allTransactions: List<Transaction> = emptyList()
     private var filteredListTransaction : List<Transaction> = emptyList()
     private var currentStatType = CategoryType.EXPENSE
@@ -49,7 +53,7 @@ class StatisticStatsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentStatisticStatsBinding.inflate(inflater, container, false)
+        _binding = FragmentStatisticAccountBinding.inflate(inflater, container, false)
         // Inflate the layout for this fragment
         return binding.root
     }
@@ -58,9 +62,8 @@ class StatisticStatsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
-
         viewModel.statisticCategoryType.observe(viewLifecycleOwner) {type ->
-            updateCircleChart(type, filteredListTransaction)
+            updateCircleChartByAccount(type, filteredListTransaction)
         }
 
         viewModel.allTransactions.observe(viewLifecycleOwner) { transactionList->
@@ -77,36 +80,36 @@ class StatisticStatsFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun init() {
+        noDataText = binding.fragmentStatisticAccountNoDataText
+        pieChart = binding.fragmentStatisticAccountPieChart
+        recyclerView = binding.fragmentStatisticAccountRecyclerView
     }
 
-    private fun updateLineChart(categoryType: CategoryType, list: List<Transaction>) {}
-
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateCircleChart(statType: CategoryType, list: List<Transaction>) {
+    private fun updateCircleChartByAccount(statType: CategoryType, list: List<Transaction>) {
         val filtered = when (statType) {
             CategoryType.EXPENSE -> list.filter { !it.isIncome }
             CategoryType.INCOME -> list.filter { it.isIncome }
         }
 
-        val categoryTotals = filtered
-            .groupBy { it.categoryParentName }
-            .map { (category, transactions) ->
+        // 🟢 Nhóm theo account thay vì category
+        val accountTotals = filtered
+            .groupBy { it.account ?: "Unknown" } // field accountName cần có trong Transaction
+            .map { (account, transactions) ->
                 CategoryTotal(
-                    categoryName = category,
+                    categoryName = account,
                     totalAmount = transactions.sumOf { it.amount }
                 )
             }
 
-        val totalAmount = categoryTotals.sumOf { it.totalAmount }.takeIf { it > 0 } ?: 1f
+        val totalAmount = accountTotals.sumOf { it.totalAmount }.takeIf { it > 0 } ?: 1f
 
-        val pieEntries = categoryTotals.map {
+        val pieEntries = accountTotals.map {
             PieEntry(((it.totalAmount.toFloat() / totalAmount.toFloat()) * 100f), it.categoryName)
         }
 
-        drawPieChart(pieEntries, categoryTotals, statType)
+        drawPieChart(pieEntries, accountTotals, statType)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -142,7 +145,7 @@ class StatisticStatsFragment : Fragment() {
             )
         }
 
-        binding.fragmentStatisticPieChart.apply {
+        pieChart.apply {
             setUsePercentValues(true)
             isDrawHoleEnabled = true
             setCenterTextSize(16f)
@@ -154,14 +157,14 @@ class StatisticStatsFragment : Fragment() {
             if (entries.isNotEmpty()) {
                 data = pieData
                 centerText = spannable
-                binding.fragmentStatisticNoDataText.visibility = View.GONE
-                binding.fragmentStatisticStatsRecyclerView.visibility = View.VISIBLE
+                noDataText.visibility = View.GONE
+                recyclerView.visibility = View.VISIBLE
                 visibility = View.VISIBLE
                 invalidate()
             } else {
                 clear()
-                binding.fragmentStatisticNoDataText.visibility = View.VISIBLE
-                binding.fragmentStatisticStatsRecyclerView.visibility = View.GONE
+                noDataText.visibility = View.VISIBLE
+                recyclerView.visibility = View.GONE
                 visibility = View.INVISIBLE
             }
         }
@@ -188,12 +191,8 @@ class StatisticStatsFragment : Fragment() {
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
             true
         }
-        binding.fragmentStatisticStatsRecyclerView.adapter = adapter
-        binding.fragmentStatisticStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-    }
-
-    fun init() {
-        noDataText = binding.fragmentStatisticNoDataText
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -211,7 +210,9 @@ class StatisticStatsFragment : Fragment() {
         if (filterOption.type == FilterPeriodStatistic.Trend) {
             updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
         } else {
-            updateCircleChart(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn
+            updateCircleChartByAccount(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn
         }
     }
+
+    private fun updateLineChart(categoryType: CategoryType, list: List<Transaction>) {}
 }

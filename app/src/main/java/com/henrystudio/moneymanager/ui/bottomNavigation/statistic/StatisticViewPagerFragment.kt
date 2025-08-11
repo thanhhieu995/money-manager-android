@@ -68,7 +68,7 @@ class StatisticViewPagerFragment : Fragment() {
         TabLayoutMediator(tabLayout, viewPager) {tab, position ->
             tab.text = when (position) {
                 0 -> "Stats"
-                1 -> "Budget"
+                1 -> "Acc"
                 2 -> "Note"
                 else -> ""
             }
