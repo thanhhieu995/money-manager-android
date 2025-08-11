@@ -348,15 +348,6 @@ class StatisticCategoryFragment : Fragment() {
         filterOption: FilterOption
     ): List<LineChartPoint> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
-//        val filtered = if (childCategoryClick) transactions.filter {
-//            it.categorySubName.trim()
-//                .equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isIncome
-//        }
-//        else transactions.filter {
-//            it.categoryParentName.equals(categoryName, ignoreCase = true) &&
-//                    it.isIncome == isIncome
-//        }
-
         val filtered = when(keyFilter) {
             KeyFilter.CategoryParent -> {
                 transactions.filter {
@@ -373,6 +364,12 @@ class StatisticCategoryFragment : Fragment() {
             KeyFilter.Note -> {
                 transactions.filter {
                     it.note?.contains(categoryName, ignoreCase = true) == true &&
+                            it.isIncome == isIncome
+                }
+            }
+            KeyFilter.Account -> {
+                transactions.filter {
+                    it.account?.contains(categoryName, ignoreCase = true) == true &&
                             it.isIncome == isIncome
                 }
             }

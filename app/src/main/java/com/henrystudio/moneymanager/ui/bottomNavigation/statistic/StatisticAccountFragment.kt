@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -186,7 +185,7 @@ class StatisticAccountFragment : Fragment() {
             intent.putExtra("item_click_statistic_category_name", categoryStat.name)
             intent.putExtra("item_click_statistic_category_type", categoryType)
             intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
-            intent.putExtra("item_click_statistic_keyWord", KeyFilter.CategoryParent)
+            intent.putExtra("item_click_statistic_keyWord", KeyFilter.Account)
             startActivity(intent)
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
             true

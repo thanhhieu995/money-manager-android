@@ -230,6 +230,11 @@ class DailyFragment : Fragment() {
                             it.note?.contains(categoryName ?: "", ignoreCase = true) == true
                         }
                     }
+                    KeyFilter.Account -> {
+                        group.transactions.filter {
+                            it.account?.contains(categoryName, ignoreCase = true) == true
+                        }
+                    }
                 }
 
                 if (filteredTransactions.isNotEmpty()) {

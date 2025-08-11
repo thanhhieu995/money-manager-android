@@ -109,6 +109,8 @@ class StatisticViewPagerFragment : Fragment() {
 
         viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
             filterOptionTemp = filterOption
+            filterDropdown.text = filterOption.type.toString()
+            selectedOption = filterOption.type.toString()
             Helper.updateMonthText(filterOption, monthText)
         }
 
