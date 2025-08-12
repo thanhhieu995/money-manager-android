@@ -353,7 +353,7 @@ class StatisticCategoryFragment : Fragment() {
         val filtered = when(keyFilter) {
             KeyFilter.CategoryParent -> {
                 transactions.filter {
-                    it.categoryParentName.equals(categoryName, ignoreCase = true) &&
+                    it.categoryParentName.equals(categoryName.trim(), ignoreCase = true) &&
                             it.isIncome == isIncome
                 }
             }
@@ -365,13 +365,13 @@ class StatisticCategoryFragment : Fragment() {
             }
             KeyFilter.Note -> {
                 transactions.filter {
-                    it.note?.contains(categoryName, ignoreCase = true) == true &&
+                    it.note.trim().equals(categoryName.trim(), ignoreCase = true) &&
                             it.isIncome == isIncome
                 }
             }
             KeyFilter.Account -> {
                 transactions.filter {
-                    it.account?.contains(categoryName, ignoreCase = true) == true &&
+                    it.account.trim().equals(categoryName.trim(), ignoreCase = true) &&
                             it.isIncome == isIncome
                 }
             }
