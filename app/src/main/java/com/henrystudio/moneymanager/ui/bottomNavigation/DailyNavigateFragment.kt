@@ -102,6 +102,7 @@ class DailyNavigateFragment : Fragment() {
         })
 
         viewModel.currentDailyNavigateTabPosition.observe(viewLifecycleOwner) { position ->
+            viewPager.currentItem = position
             val filteredMonth = month?.let {
                 com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
                     it

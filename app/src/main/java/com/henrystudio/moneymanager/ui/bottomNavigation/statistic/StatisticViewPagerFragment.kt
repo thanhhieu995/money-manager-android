@@ -86,6 +86,7 @@ class StatisticViewPagerFragment : Fragment() {
         }
 
         viewModel.currentStatisticTabPosition.observe(viewLifecycleOwner) {position ->
+            viewPager.currentItem = position
             when(position) {
                 0 -> {}
                 1 -> {}

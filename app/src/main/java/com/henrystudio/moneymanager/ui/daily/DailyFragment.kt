@@ -155,13 +155,7 @@ class DailyFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun scrollToWeek(weekStart: LocalDate) {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-        val weekDates = (0..6).map { weekStart.plusDays(it.toLong()).format(formatter) }
-
-        val matchedIndex = transactionGroupListFilter.indexOfFirst { group ->
-            weekDates.contains(group.date.substringBefore(" "))
-        }
-
+        val matchedIndex = findPositionForDate(getFilterListGroupTransaction(weekStart), weekStart)
         if (matchedIndex != -1) {
             binding.transactionList.scrollToPosition(matchedIndex)
         }
@@ -266,7 +260,25 @@ class DailyFragment : Fragment() {
         val firstDayOfMonth = LocalDate.of(selectedMonth.year, selectedMonth.month, 1)
         val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
         month = lastDayOfMonth
-        val filtered = if (requireActivity() is MainActivity) {
+        val filtered = getFilterListGroupTransaction(selectedMonth)
+        adapter.submitList(filtered)
+        binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+
+        if (SharedTransactionHolder.scrollToAddedTransaction) {
+            // 🟡 Scroll đến ngày vừa thêm
+            val targetPosition = findPositionForDate(filtered, selectedMonth)
+            if (targetPosition >= 0) {
+                binding.transactionList.scrollToPosition(targetPosition)
+            }
+            SharedTransactionHolder.scrollToAddedTransaction = false
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getFilterListGroupTransaction(selectedMonth: LocalDate): List<TransactionGroup> {
+        val firstDayOfMonth = LocalDate.of(selectedMonth.year, selectedMonth.month, 1)
+        val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
+        return if (requireActivity() is MainActivity) {
             adapter.setFilterYear(false)
             FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
         } else {
@@ -288,17 +300,6 @@ class DailyFragment : Fragment() {
                     FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
                 }
             }
-        }
-        adapter.submitList(filtered)
-        binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-
-        if (SharedTransactionHolder.scrollToAddedTransaction) {
-            // 🟡 Scroll đến ngày vừa thêm
-            val targetPosition = findPositionForDate(filtered, selectedMonth)
-            if (targetPosition >= 0) {
-                binding.transactionList.scrollToPosition(targetPosition)
-            }
-            SharedTransactionHolder.scrollToAddedTransaction = false
         }
     }
 }
