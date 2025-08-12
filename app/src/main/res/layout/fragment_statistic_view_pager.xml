@@ -91,7 +91,6 @@
             android:layout_gravity="center"
             app:singleSelection="true"
             app:selectionRequired="true"
-            app:checkedButton="@+id/fragment_statistic_view_pager_btnExpense"
             android:backgroundTint="@android:color/transparent">
 
             <com.google.android.material.button.MaterialButton

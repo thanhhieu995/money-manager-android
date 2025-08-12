@@ -93,10 +93,16 @@ class StatisticViewPagerFragment : Fragment() {
             }
         }
 
+        viewModel.statisticCategoryType.observe(viewLifecycleOwner) {type ->
+            currentStatType = type
+            toggleGroupButton.check(
+                if (currentStatType == CategoryType.INCOME) incomeBtn.id else expenseBtn.id
+            )
+        }
+
         filterDropdown.setOnClickListener {
             showDialogOption()
         }
-
         toggleGroupButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 currentStatType = when (checkedId) {
