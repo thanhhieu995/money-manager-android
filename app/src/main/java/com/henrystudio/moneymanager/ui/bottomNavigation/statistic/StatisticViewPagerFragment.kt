@@ -1,6 +1,7 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -190,6 +191,10 @@ class StatisticViewPagerFragment : Fragment() {
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
                 selectedOption = optionName
                 updateCheckMarks(optionName)
+                if (optionName.trim() == "List" || optionName.trim() == "Trend") {
+                    val intent = Intent(context, StatisticListTrendActivity::class.java)
+                    context?.startActivity(intent)
+                }
                 viewModel.setFilter(filterPeriod, LocalDate.now())
             }
         }
