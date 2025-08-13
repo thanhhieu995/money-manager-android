@@ -189,13 +189,17 @@ class StatisticViewPagerFragment : Fragment() {
         updateCheckMarks(selectedOption) // cập nhật ban đầu
         optionConfigs.forEach { (optionName, layoutId, filterPeriod) ->
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
-                selectedOption = optionName
-                updateCheckMarks(optionName)
-                if (optionName.trim() == "List" || optionName.trim() == "Trend") {
-                    val intent = Intent(context, StatisticListTrendActivity::class.java)
-                    context?.startActivity(intent)
+                if (filterPeriod == FilterPeriodStatistic.List || filterPeriod == FilterPeriodStatistic.Trend) {
+                    val intent = Intent(requireContext(), StatisticListTrendActivity::class.java)
+                    intent.putExtra("filterPeriod", filterPeriod)
+                    startActivity(intent)
+                    requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
+                    bottomSheetDialog.dismiss()
+                } else {
+                    selectedOption = optionName
+                    updateCheckMarks(optionName)
+                    viewModel.setFilter(filterPeriod, LocalDate.now())
                 }
-                viewModel.setFilter(filterPeriod, LocalDate.now())
             }
         }
         view.findViewById<TextView>(R.id.item_statistic_dialog_optionCancel).setOnClickListener {
