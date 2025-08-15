@@ -11,7 +11,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
 
 class WeeklyAdapter(
-    private val weeklyList: List<WeeklyData>,
+    private var weeklyList: List<WeeklyData>,
     private val onWeekClick: (WeeklyData) -> Unit
 ) : RecyclerView.Adapter<WeeklyAdapter.WeekViewHolder>() {
 
@@ -53,4 +53,9 @@ class WeeklyAdapter(
     }
 
     override fun getItemCount(): Int = weeklyList.size
+
+    fun updateData(newList: List<WeeklyData>) {
+        this.weeklyList = newList
+        notifyDataSetChanged() // hoặc dùng DiffUtil để mượt hơn
+    }
 }

@@ -191,7 +191,8 @@ class StatisticViewPagerFragment : Fragment() {
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
                 if (filterPeriod == FilterPeriodStatistic.List || filterPeriod == FilterPeriodStatistic.Trend) {
                     val intent = Intent(requireContext(), StatisticListTrendActivity::class.java)
-                    intent.putExtra("filterPeriod", filterPeriod)
+                    intent.putExtra("filterOption", filterOptionTemp)
+                    intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
                     startActivity(intent)
                     requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
                     bottomSheetDialog.dismiss()
