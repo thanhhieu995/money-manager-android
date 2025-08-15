@@ -31,7 +31,7 @@ class WeeklyFragment : Fragment() {
     private lateinit var tvNoData: TextView
     private lateinit var adapter: WeeklyAdapter
     private var listMonthTransactionGroup: List<TransactionGroup>? = null
-    private var listWeekData: List<WeeklyData>? = null
+    private var listWeekData: List<WeeklyData> = emptyList()
 
     private val viewModel: TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
@@ -59,11 +59,13 @@ class WeeklyFragment : Fragment() {
             onWeekClick = {})
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
-        viewModel.groupedTransactions.observe(viewLifecycleOwner) { allTransactionGroups->
-            listMonthTransactionGroup = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroups ?: emptyList(),
-                filterOptionTemp?.date ?: LocalDate.now())
-            listWeekData = groupTransactionsByWeek(listMonthTransactionGroup!!)
-            adapter.updateData(listWeekData!!)
+
+        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(allTransactionGroups, localDate) ->
+            listMonthTransactionGroup = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroups,
+                localDate)
+            listWeekData = groupTransactionsByWeek(listMonthTransactionGroup?: emptyList())
+            tvNoData.visibility = if (listWeekData.isEmpty()) View.VISIBLE else View.GONE
+            adapter.updateData(listWeekData)
         }
     }
 
