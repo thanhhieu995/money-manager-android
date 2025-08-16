@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
@@ -52,6 +53,10 @@ class StatisticListTrendActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistic_list_trend)
         init()
+        onBackPressedDispatcher.addCallback(this) {
+            finish()
+            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+        }
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
@@ -166,12 +171,6 @@ class StatisticListTrendActivity : AppCompatActivity() {
         expenseCountAll = findViewById(R.id.activity_statistic_list_trend_expense_count_all)
         totalCountAll = findViewById(R.id.activity_statistic_list_trend_total_count)
         layoutSummary = findViewById(R.id.activity_statistic_list_trend_summarySection)
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        finish()
-        overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

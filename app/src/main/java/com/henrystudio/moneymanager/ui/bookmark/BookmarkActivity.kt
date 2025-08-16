@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
 import com.henrystudio.moneymanager.R
 
@@ -27,6 +28,10 @@ class BookmarkActivity : AppCompatActivity() {
         setContentView(R.layout.activity_bookmark)
 
         init()
+        onBackPressedDispatcher.addCallback(this) {
+            finish()
+            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+        }
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 

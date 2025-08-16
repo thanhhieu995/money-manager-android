@@ -3,11 +3,14 @@ package com.henrystudio.moneymanager.ui.addtransaction
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
+import androidx.activity.addCallback
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.henrystudio.moneymanager.R
@@ -41,12 +44,17 @@ class AddTransactionActivity : AppCompatActivity() {
         AppDatabase.getDatabase(application).transactionDao()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_transaction)
 
         init()
+        onBackPressedDispatcher.addCallback(this) {
+            finish()
+            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
+        }
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
@@ -176,12 +184,6 @@ class AddTransactionActivity : AppCompatActivity() {
         if (shouldAnimateExit) {
             overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
             shouldAnimateExit = false
-        }
-    }
-
-    private fun getIsIncome() {
-        supportFragmentManager.setFragmentResultListener("update_title", this) { _, bundle ->
-            isIncome = bundle.getBoolean("is_income", false)
         }
     }
 

@@ -1,10 +1,13 @@
 package com.henrystudio.moneymanager.ui.search
 
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.*
+import androidx.activity.addCallback
+import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -42,11 +45,16 @@ class SearchActivity : AppCompatActivity() {
 
     private var shouldAnimateExit = false
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
         init()
+        onBackPressedDispatcher.addCallback(this) {
+            finish()
+            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+        }
         transactionAdapter = TransactionAdapter(emptyList())
 
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -73,6 +81,7 @@ class SearchActivity : AppCompatActivity() {
         }
 
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onTransactionClick(transaction: Transaction): Boolean {
                 if (viewModel.selectionMode.value == true) {
                     viewModel.toggleTransactionSelection(transaction)
