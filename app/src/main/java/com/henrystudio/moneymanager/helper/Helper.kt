@@ -12,6 +12,7 @@ import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.ui.addtransaction.CategoryItem
 import java.text.NumberFormat
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
@@ -139,6 +140,17 @@ class Helper {
                 FilterPeriodStatistic.List -> "Not code now"
                 FilterPeriodStatistic.Trend -> "Not code now"
             }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun formatDateFromFilterOptionToDateDaily(input: String): String {
+            // Parse từ dạng gốc yyyy-MM-dd
+            val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault())
+            val date = LocalDate.parse(input, inputFormatter)
+
+            // Format sang dạng dd/MM/yy (E)
+            val outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
+            return date.format(outputFormatter)
         }
     }
 }

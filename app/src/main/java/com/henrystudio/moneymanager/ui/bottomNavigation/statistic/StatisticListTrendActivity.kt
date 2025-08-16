@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
@@ -13,6 +14,8 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.FilterPeriodStatistic
@@ -31,6 +34,10 @@ class StatisticListTrendActivity : AppCompatActivity() {
     private lateinit var imgBack: ImageView
     private lateinit var imgNext: ImageView
     private lateinit var tvNoData: TextView
+    private lateinit var incomeCountAll: TextView
+    private lateinit var expenseCountAll: TextView
+    private lateinit var totalCountAll: TextView
+    private lateinit var layoutSummary: LinearLayout
     private lateinit var adapter: StatisticListTrendAdapter
     private lateinit var viewPager: ViewPager2
     private lateinit var tabLayout: TabLayout
@@ -70,14 +77,18 @@ class StatisticListTrendActivity : AppCompatActivity() {
         viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback(){
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
+                val filterMonth = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroup, currentDate)
+                val filterYear = FilterTransactions.filterTransactionGroupByYear(allTransactionGroup, currentDate)
                 when(position) {
                     0 -> {
                         filterOption = FilterOption(FilterPeriodStatistic.Weekly, currentDate)
                         viewModel.setFilter(FilterPeriodStatistic.Weekly, currentDate)
+                        handleSummarySection(filterMonth)
                     }
                     1 -> {
                         filterOption = FilterOption(FilterPeriodStatistic.Monthly, currentDate)
                         viewModel.setFilter(FilterPeriodStatistic.Monthly, currentDate)
+                        handleSummarySection(filterYear)
                     }
                     2 -> {
                         filterOption = FilterOption(FilterPeriodStatistic.Yearly, currentDate)
@@ -87,18 +98,30 @@ class StatisticListTrendActivity : AppCompatActivity() {
             }
         })
 
+        viewModel.setCurrentFilterDate(Helper.formatDateFromFilterOptionToDateDaily(filterOption.date.toString()))
+
         viewModel.currentFilterDate.observe(this) {date ->
             viewModel.setFilter(filterOption.type, date)
             currentDate = date
+            initialSummarySection(allTransactionGroup)
         }
 
-        viewModel.groupedTransactions.observe(this) { list ->
-            allTransactionGroup = list
+        viewModel.groupedTransactions.observe(this) { groups ->
+            if (!groups.isNullOrEmpty()) {
+                // chỉ chạy 1 lần để update summary khi mới có dữ liệu
+                if (allTransactionGroup.isEmpty()) {
+                    allTransactionGroup = groups
+                    initialSummarySection(groups)
+                } else {
+                    allTransactionGroup = groups
+                }
+            }
         }
 
         viewModel.filterOption.observe(this) {option ->
             imgBack.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
             imgNext.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
+            layoutSummary.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
             updateMonthTextListTrend(option, allTransactionGroup)
         }
 
@@ -138,6 +161,10 @@ class StatisticListTrendActivity : AppCompatActivity() {
         imgBack = findViewById(R.id.activity_statistic_list_trend_month_back)
         imgNext = findViewById(R.id.activity_statistic_list_trend_month_next)
         tvNoData = findViewById(R.id.activity_statistic_list_trend_tv_noData)
+        incomeCountAll = findViewById(R.id.activity_statistic_list_trend_income_count_all)
+        expenseCountAll = findViewById(R.id.activity_statistic_list_trend_expense_count_all)
+        totalCountAll = findViewById(R.id.activity_statistic_list_trend_total_count)
+        layoutSummary = findViewById(R.id.activity_statistic_list_trend_summarySection)
     }
 
     override fun onBackPressed() {
@@ -187,6 +214,27 @@ class StatisticListTrendActivity : AppCompatActivity() {
             "$minYear"
         } else {
             "$minYear ~ $maxYear"
+        }
+    }
+
+    private fun handleSummarySection(filtered: List<TransactionGroup>) {
+        incomeCountAll.text = Helper.formatCurrency(filtered.sumOf { it.income })
+        expenseCountAll.text = Helper.formatCurrency(filtered.sumOf { it.expense })
+        totalCountAll.text = Helper.formatCurrency(filtered.sumOf { it.income - it.expense })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun initialSummarySection(groups: List<TransactionGroup>) {
+        when (getTabPosition(filterOption.type)) {
+            0 -> {
+                val filterMonth = FilterTransactions.filterTransactionGroupByMonth(groups, currentDate)
+                handleSummarySection(filterMonth)
+            }
+            1 -> {
+                val filterYear = FilterTransactions.filterTransactionGroupByYear(groups, currentDate)
+                handleSummarySection(filterYear)
+            }
+            2 -> {}
         }
     }
 }

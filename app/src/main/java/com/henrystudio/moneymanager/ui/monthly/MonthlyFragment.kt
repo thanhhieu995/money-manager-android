@@ -8,9 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.databinding.FragmentMonthlyBinding
+import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
@@ -43,31 +43,51 @@ class MonthlyFragment : Fragment() {
         // Gán layoutManager nếu chưa có
         binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
 
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) {
-            val listGroupTransaction = viewModel.groupedTransactions.value ?: emptyList()
-            val currentYear = viewModel.currentFilterDate.value
-            val filterTransactionYear = currentYear?.let { it1 ->
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listGroupTransaction ,
-                    it1
-                )
-            }
-            listMonthlyData = filterTransactionYear?.let { it1 -> groupTransactionsByMonth(it1) } ?: emptyList()
+        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(groups, date) ->
+            val filterTransactionYear = FilterTransactions.filterTransactionGroupByYear(
+                groups, date
+            )
+            listMonthlyData = groupTransactionsByMonth(filterTransactionYear)
 
             adapter = MonthlyAdapter(listMonthlyData,
-                onMonthClick = { month ->
-                    month.isExpanded = !month.isExpanded
-                    val index = listMonthlyData.indexOf(month)
-                    adapter.notifyItemChanged(index)
-                },
-                onWeekClick = { weekData ->
-                    viewModel.navigateToWeekFromMonthly(weekData.weekStart)
-                }
-            )
-
+            onMonthClick = { month ->
+                month.isExpanded = !month.isExpanded
+                val index = listMonthlyData.indexOf(month)
+                adapter.notifyItemChanged(index)
+            },
+            onWeekClick = { weeklyData ->
+                viewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
+            })
+            adapter.updateData(listMonthlyData)
             adapter.updateData(listMonthlyData)
             binding.monthlyListSummary.adapter = adapter
             binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
         }
+//        viewModel.currentFilterDate.observe(viewLifecycleOwner) {
+//            val listGroupTransaction = viewModel.groupedTransactions.value ?: emptyList()
+//            val currentYear = viewModel.currentFilterDate.value
+//            val filterTransactionYear = currentYear?.let { it1 ->
+//                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listGroupTransaction ,
+//                    it1
+//                )
+//            }
+//            listMonthlyData = filterTransactionYear?.let { it1 -> groupTransactionsByMonth(it1) } ?: emptyList()
+//
+//            adapter = MonthlyAdapter(listMonthlyData,
+//                onMonthClick = { month ->
+//                    month.isExpanded = !month.isExpanded
+//                    val index = listMonthlyData.indexOf(month)
+//                    adapter.notifyItemChanged(index)
+//                },
+//                onWeekClick = { weekData ->
+//                    viewModel.navigateToWeekFromMonthly(weekData.weekStart)
+//                }
+//            )
+//
+//            adapter.updateData(listMonthlyData)
+//            binding.monthlyListSummary.adapter = adapter
+//            binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
+//        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
