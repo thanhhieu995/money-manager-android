@@ -21,26 +21,26 @@
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/monthly_name"
+                android:id="@+id/yearly_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="May"
+                android:text="2025"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#000000" />
 
             <TextView
-                android:id="@+id/monthly_arrange"
+                android:id="@+id/yearly_arrange"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="01-05 ~ 31-05"
+                android:text="1/1/2025 ~ 31/12/2025"
                 android:textColor="#888888"
                 android:textSize="12sp" />
         </LinearLayout>
 
         <!-- Income -->
         <TextView
-            android:id="@+id/monthly_income"
+            android:id="@+id/yearly_income"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -58,7 +58,7 @@
             android:gravity="center_vertical|end">
 
             <TextView
-                android:id="@+id/monthly_expense"
+                android:id="@+id/yearly_expense"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="2.017.725đ"
@@ -66,7 +66,7 @@
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/monthly_total"
+                android:id="@+id/yearly_total"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="-1.017.725đ"
@@ -74,12 +74,4 @@
                 android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/monthly_list_week"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        />
 </LinearLayout>
-

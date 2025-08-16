@@ -112,6 +112,7 @@ class StatisticListTrendActivity : AppCompatActivity() {
                 if (allTransactionGroup.isEmpty()) {
                     allTransactionGroup = groups
                     initialSummarySection(groups)
+                    updateMonthTextListTrend(filterOption, allTransactionGroup)
                 } else {
                     allTransactionGroup = groups
                 }

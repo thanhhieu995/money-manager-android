@@ -199,7 +199,7 @@ class StatisticViewPagerFragment : Fragment() {
                 } else {
                     selectedOption = optionName
                     updateCheckMarks(optionName)
-                    viewModel.setFilter(filterPeriod, LocalDate.now())
+                    viewModel.setFilter(filterPeriod, filterOptionTemp.date)
                 }
             }
         }

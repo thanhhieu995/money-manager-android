@@ -9,6 +9,7 @@ import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.ui.calendar.CalendarFragment
 import com.henrystudio.moneymanager.ui.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.ui.weekly.WeeklyFragment
+import com.henrystudio.moneymanager.ui.yearly.YearlyFragment
 
 class StatisticListTrendAdapter(
     activity: FragmentActivity,
@@ -24,7 +25,7 @@ class StatisticListTrendAdapter(
                 when (position) {
                     0 -> WeeklyFragment()
                     1 -> MonthlyFragment()
-                    2 -> CalendarFragment()
+                    2 -> YearlyFragment()
                     else -> MonthlyFragment()
                 }
             }
