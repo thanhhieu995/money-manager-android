@@ -13,9 +13,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.databinding.FragmentWeeklyBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListTrendActivity
 import com.henrystudio.moneymanager.ui.monthly.WeeklyAdapter
 import com.henrystudio.moneymanager.ui.monthly.WeeklyData
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
@@ -56,7 +59,10 @@ class WeeklyFragment : Fragment() {
         init()
         filterOptionTemp = arguments?.getSerializable("filterOption") as? FilterOption
         adapter = WeeklyAdapter(listWeekData?: emptyList(),
-            onWeekClick = {})
+            onWeekClick = {data ->
+                SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(data.weekStart.toString())
+                (requireActivity() as StatisticListTrendActivity).onBackAnimation()
+            })
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 

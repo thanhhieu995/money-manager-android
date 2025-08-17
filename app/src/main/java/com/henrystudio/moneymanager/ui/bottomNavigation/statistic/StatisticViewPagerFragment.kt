@@ -24,6 +24,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticViewPagerBinding
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
@@ -144,6 +145,15 @@ class StatisticViewPagerFragment : Fragment() {
                 FilterPeriodStatistic.List -> {}
                 FilterPeriodStatistic.Trend -> {}
             }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onResume() {
+        super.onResume()
+        val shareDate = SharedTransactionHolder.currentFilterDate
+        if (shareDate != null) {
+            viewModel.setCurrentFilterDate(shareDate)
         }
     }
 

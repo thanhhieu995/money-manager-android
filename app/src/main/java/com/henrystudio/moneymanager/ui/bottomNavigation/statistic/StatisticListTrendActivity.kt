@@ -54,8 +54,7 @@ class StatisticListTrendActivity : AppCompatActivity() {
         setContentView(R.layout.activity_statistic_list_trend)
         init()
         onBackPressedDispatcher.addCallback(this) {
-            finish()
-            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+            onBackAnimation()
         }
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
@@ -63,8 +62,7 @@ class StatisticListTrendActivity : AppCompatActivity() {
         filterOption = intent.getSerializableExtra("filterOption") as FilterOption
         currentFilterPeriod = intent.getSerializableExtra("currentFilterPeriodStatistic") as FilterPeriodStatistic
         imgClose.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+            onBackAnimation()
         }
         adapter = StatisticListTrendAdapter(this, filterOption, currentFilterPeriod)
         viewPager.adapter = adapter
@@ -236,5 +234,10 @@ class StatisticListTrendActivity : AppCompatActivity() {
             }
             2 -> {}
         }
+    }
+
+    fun onBackAnimation() {
+        finish()
+        overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
     }
 }
