@@ -16,6 +16,7 @@ import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.FilterOption
+import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListTrendActivity
@@ -42,8 +43,6 @@ class WeeklyFragment : Fragment() {
         )
     }
 
-    private var filterOptionTemp : FilterOption?= null
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -57,10 +56,10 @@ class WeeklyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
-        filterOptionTemp = arguments?.getSerializable("filterOption") as? FilterOption
         adapter = WeeklyAdapter(listWeekData?: emptyList(),
             onWeekClick = {data ->
                 SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(data.weekStart.toString())
+                SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Weekly, data.weekStart)
                 (requireActivity() as StatisticListTrendActivity).onBackAnimation()
             })
         recyclerView.layoutManager = LinearLayoutManager(context)

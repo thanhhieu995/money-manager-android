@@ -11,8 +11,14 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.databinding.FragmentMonthlyBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
+import com.henrystudio.moneymanager.model.FilterOption
+import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListTrendActivity
+import com.henrystudio.moneymanager.ui.main.MainActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.DayOfWeek
@@ -42,7 +48,6 @@ class MonthlyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // Gán layoutManager nếu chưa có
         binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
-
         viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(groups, date) ->
             val filterTransactionYear = FilterTransactions.filterTransactionGroupByYear(
                 groups, date
@@ -51,9 +56,16 @@ class MonthlyFragment : Fragment() {
 
             adapter = MonthlyAdapter(listMonthlyData,
             onMonthClick = { month ->
-                month.isExpanded = !month.isExpanded
-                val index = listMonthlyData.indexOf(month)
-                adapter.notifyItemChanged(index)
+                val activity = requireActivity()
+                if (activity is MainActivity) {
+                    month.isExpanded = !month.isExpanded
+                    val index = listMonthlyData.indexOf(month)
+                    adapter.notifyItemChanged(index)
+                } else if (activity is StatisticListTrendActivity) {
+                    SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(month.monthStart.toString())
+                    SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Monthly, month.monthStart)
+                    activity.onBackAnimation()
+                }
             },
             onWeekClick = { weeklyData ->
                 viewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
@@ -63,31 +75,6 @@ class MonthlyFragment : Fragment() {
             binding.monthlyListSummary.adapter = adapter
             binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
         }
-//        viewModel.currentFilterDate.observe(viewLifecycleOwner) {
-//            val listGroupTransaction = viewModel.groupedTransactions.value ?: emptyList()
-//            val currentYear = viewModel.currentFilterDate.value
-//            val filterTransactionYear = currentYear?.let { it1 ->
-//                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listGroupTransaction ,
-//                    it1
-//                )
-//            }
-//            listMonthlyData = filterTransactionYear?.let { it1 -> groupTransactionsByMonth(it1) } ?: emptyList()
-//
-//            adapter = MonthlyAdapter(listMonthlyData,
-//                onMonthClick = { month ->
-//                    month.isExpanded = !month.isExpanded
-//                    val index = listMonthlyData.indexOf(month)
-//                    adapter.notifyItemChanged(index)
-//                },
-//                onWeekClick = { weekData ->
-//                    viewModel.navigateToWeekFromMonthly(weekData.weekStart)
-//                }
-//            )
-//
-//            adapter.updateData(listMonthlyData)
-//            binding.monthlyListSummary.adapter = adapter
-//            binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
-//        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -137,6 +124,7 @@ class MonthlyFragment : Fragment() {
                 // ✅ Trả về MonthlyData đầy đủ
                 MonthlyData(
                     monthName = monthStart.month.name.lowercase().replaceFirstChar { it.uppercase() },
+                    monthStart = monthStart,
                     dateRange = dateRange,
                     income = income,
                     expense = expense,

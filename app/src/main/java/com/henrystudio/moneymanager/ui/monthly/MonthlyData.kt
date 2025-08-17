@@ -1,7 +1,10 @@
 package com.henrystudio.moneymanager.ui.monthly
 
+import java.time.LocalDate
+
 data class MonthlyData(
     val monthName: String,
+    val monthStart: LocalDate,
     val dateRange: String,
     val income: Double,
     val expense: Double,

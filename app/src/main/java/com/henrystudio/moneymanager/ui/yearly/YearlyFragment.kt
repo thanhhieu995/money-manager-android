@@ -11,10 +11,14 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentYearlyBinding
+import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
+import com.henrystudio.moneymanager.model.FilterOption
+import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListTrendActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
@@ -44,7 +48,11 @@ class YearlyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
-        adapter = YearlyAdapter(emptyList(), onClickYear = {})
+        adapter = YearlyAdapter(emptyList(), onClickYear = { data ->
+            SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(data.date.toString())
+            SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Yearly, data.date)
+            (requireActivity() as StatisticListTrendActivity).onBackAnimation()
+        })
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 
@@ -75,6 +83,7 @@ class YearlyFragment : Fragment() {
 
                 YearlyData(
                     name = year,
+                    date = LocalDate.of(year, 1, 1),
                     arrange = "$startDate ~ $endDate",  // ví dụ: 01/01/2025 - 31/12/2025
                     income = income,
                     expense = expense,

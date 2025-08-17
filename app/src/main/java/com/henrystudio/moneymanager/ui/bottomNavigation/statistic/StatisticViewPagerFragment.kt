@@ -152,8 +152,12 @@ class StatisticViewPagerFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         val shareDate = SharedTransactionHolder.currentFilterDate
+        val shareFilterOption = SharedTransactionHolder.filterOption
         if (shareDate != null) {
             viewModel.setCurrentFilterDate(shareDate)
+        }
+        if (shareFilterOption != null) {
+            viewModel.setFilter(shareFilterOption.type, shareFilterOption.date)
         }
     }
 
