@@ -376,7 +376,7 @@ class StatisticCategoryFragment : Fragment() {
                 }
             }
             else -> {
-                emptyList<Transaction>()
+                transactions.filter { it.isIncome == isIncome }
             }
         }
 
@@ -486,7 +486,18 @@ class StatisticCategoryFragment : Fragment() {
     private fun showChartAt(index: Int) {
         val point = chartPoints[index]
         viewModel.setLocalDateCurrentFilterDate(point.date)
-        val label = when (filterOptionTemp.type) {
+
+        monthText.text = getMonthText(index)
+
+        // Enable / disable back/next button
+        binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
+        binding.fragmentStatisticCategoryMonthNext.isEnabled = index < chartPoints.lastIndex
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getMonthText(index: Int) : String {
+        val point = chartPoints[index]
+        return when (filterOptionTemp.type) {
             FilterPeriodStatistic.Monthly -> {
                 val date = point.date
                 "${date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${date.year}"
@@ -494,21 +505,15 @@ class StatisticCategoryFragment : Fragment() {
             FilterPeriodStatistic.Weekly -> {
                 val start = point.date
                 val end = start.plusDays(6)
-                "${start.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))} ~ ${
+                "${start.format(DateTimeFormatter.ofPattern("dd/MM"))} ~ ${
                     end.format(
                         DateTimeFormatter.ofPattern("dd/MM/yyyy")
                     )
                 }"
             }
-            FilterPeriodStatistic.Yearly -> point.date.year
+            FilterPeriodStatistic.Yearly -> point.date.year.toString()
             else -> point.label
         }
-
-        monthText.text = label.toString()
-
-        // Enable / disable back/next button
-        binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
-        binding.fragmentStatisticCategoryMonthNext.isEnabled = index < chartPoints.lastIndex
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -573,7 +578,12 @@ class StatisticCategoryFragment : Fragment() {
             categoryType == CategoryType.INCOME,
             colors
         )
-        updateCategorySum(categoryName, point?.amount ?: -1.0)
+        val name = if (keyFilter == KeyFilter.Time) {
+            getMonthText(index)
+        } else {
+            categoryName
+        }
+        updateCategorySum(name, point?.amount ?: -1.0)
         adapter.submitList(listChildCategoryStat)
     }
 

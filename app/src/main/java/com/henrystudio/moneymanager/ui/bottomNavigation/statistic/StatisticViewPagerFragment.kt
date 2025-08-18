@@ -120,7 +120,7 @@ class StatisticViewPagerFragment : Fragment() {
             filterOptionTemp = filterOption
             filterDropdown.text = filterOption.type.toString()
             selectedOption = filterOption.type.toString()
-            Helper.updateMonthText(filterOption, monthText)
+            monthText.text = Helper.getUpdateMonthText(filterOption)
         }
 
         viewModel.statisticListTransactionFilter.observe(viewLifecycleOwner) {listFilter->
@@ -206,6 +206,7 @@ class StatisticViewPagerFragment : Fragment() {
                 if (filterPeriod == FilterPeriodStatistic.List || filterPeriod == FilterPeriodStatistic.Trend) {
                     val intent = Intent(requireContext(), StatisticListTrendActivity::class.java)
                     intent.putExtra("filterOption", filterOptionTemp)
+                    intent.putExtra("categoryType", currentStatType)
                     intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
                     startActivity(intent)
                     requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)

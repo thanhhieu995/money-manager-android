@@ -234,6 +234,7 @@ class DailyFragment : Fragment() {
                             it.account.trim().equals(categoryName.trim(), ignoreCase = true)
                         }
                     }
+                    else -> group.transactions
                 }
 
                 if (filteredTransactions.isNotEmpty()) {

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.widget.TextView
 import androidx.annotation.RequiresApi
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
@@ -122,10 +121,10 @@ class Helper {
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
-        fun updateMonthText(filterOption: FilterOption, monthText: TextView) {
+        fun getUpdateMonthText(filterOption: FilterOption) : String {
             val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
             // ✅ Cập nhật text phù hợp
-            monthText.text = when (filterOption.type) {
+             return when (filterOption.type) {
                 FilterPeriodStatistic.Monthly -> filterOption.date.format(formatterMonth)
                 FilterPeriodStatistic.Weekly -> {
                     val formatterFirst = DateTimeFormatter.ofPattern("dd/MM")

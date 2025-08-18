@@ -17,10 +17,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.FilterOption
-import com.henrystudio.moneymanager.model.FilterPeriodStatistic
-import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.DayOfWeek
@@ -39,10 +36,12 @@ class StatisticListTrendActivity : AppCompatActivity() {
     private lateinit var expenseCountAll: TextView
     private lateinit var totalCountAll: TextView
     private lateinit var layoutSummary: LinearLayout
+    private lateinit var layoutControl: LinearLayout
     private lateinit var adapter: StatisticListTrendAdapter
     private lateinit var viewPager: ViewPager2
     private lateinit var tabLayout: TabLayout
     private lateinit var filterOption: FilterOption
+    private lateinit var categoryType: CategoryType
     private lateinit var currentFilterPeriod: FilterPeriodStatistic
     private lateinit var viewModel: TransactionViewModel
     private var allTransactionGroup : List<TransactionGroup> = emptyList()
@@ -60,11 +59,12 @@ class StatisticListTrendActivity : AppCompatActivity() {
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
         filterOption = intent.getSerializableExtra("filterOption") as FilterOption
+        categoryType = intent.getSerializableExtra("categoryType") as CategoryType
         currentFilterPeriod = intent.getSerializableExtra("currentFilterPeriodStatistic") as FilterPeriodStatistic
         imgClose.setOnClickListener {
             onBackAnimation()
         }
-        adapter = StatisticListTrendAdapter(this, filterOption, currentFilterPeriod)
+        adapter = StatisticListTrendAdapter(this, categoryType, filterOption, currentFilterPeriod)
         viewPager.adapter = adapter
         TabLayoutMediator(tabLayout, viewPager) {tab, position ->
             tab.text = when(position) {
@@ -110,12 +110,16 @@ class StatisticListTrendActivity : AppCompatActivity() {
         }
 
         viewModel.groupedTransactions.observe(this) { groups ->
+            layoutControl.visibility = when(currentFilterPeriod) {
+                FilterPeriodStatistic.Trend -> View.GONE
+                else -> View.VISIBLE
+            }
             if (!groups.isNullOrEmpty()) {
                 // chỉ chạy 1 lần để update summary khi mới có dữ liệu
                 if (allTransactionGroup.isEmpty()) {
                     allTransactionGroup = groups
                     initialSummarySection(groups)
-                    updateMonthTextListTrend(filterOption, allTransactionGroup)
+                    updateMonthTextList(filterOption, allTransactionGroup)
                 } else {
                     allTransactionGroup = groups
                 }
@@ -126,7 +130,7 @@ class StatisticListTrendActivity : AppCompatActivity() {
             imgBack.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
             imgNext.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
             layoutSummary.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
-            updateMonthTextListTrend(option, allTransactionGroup)
+            updateMonthTextList(option, allTransactionGroup)
         }
 
         imgBack.setOnClickListener {
@@ -169,10 +173,11 @@ class StatisticListTrendActivity : AppCompatActivity() {
         expenseCountAll = findViewById(R.id.activity_statistic_list_trend_expense_count_all)
         totalCountAll = findViewById(R.id.activity_statistic_list_trend_total_count)
         layoutSummary = findViewById(R.id.activity_statistic_list_trend_summarySection)
+        layoutControl = findViewById(R.id.activity_statistic_list_trend_control)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateMonthTextListTrend(filterOption: FilterOption, groups: List<TransactionGroup>) {
+    private fun updateMonthTextList(filterOption: FilterOption, groups: List<TransactionGroup>) {
         monthText.text = when (filterOption.type) {
             FilterPeriodStatistic.Monthly -> filterOption.date.year.toString()
             FilterPeriodStatistic.Weekly -> {
