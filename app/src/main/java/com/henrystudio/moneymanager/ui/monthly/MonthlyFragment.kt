@@ -17,7 +17,7 @@ import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
-import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListTrendActivity
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.ui.main.MainActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -61,7 +61,7 @@ class MonthlyFragment : Fragment() {
                     month.isExpanded = !month.isExpanded
                     val index = listMonthlyData.indexOf(month)
                     adapter.notifyItemChanged(index)
-                } else if (activity is StatisticListTrendActivity) {
+                } else if (activity is StatisticListActivity) {
                     SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(month.monthStart.toString())
                     SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Monthly, month.monthStart)
                     activity.onBackAnimation()

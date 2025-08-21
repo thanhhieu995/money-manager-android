@@ -14,7 +14,14 @@
         android:theme="@style/Theme.MoneyManager"
         tools:targetApi="31">
         <activity
-            android:name=".ui.bottomNavigation.statistic.StatisticListTrendActivity"
+            android:name=".ui.bottomNavigation.statistic.StatisticTrendActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".ui.bottomNavigation.statistic.StatisticListActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"

@@ -19,7 +19,7 @@ import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
-import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListTrendActivity
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.ui.monthly.WeeklyAdapter
 import com.henrystudio.moneymanager.ui.monthly.WeeklyData
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
@@ -60,7 +60,7 @@ class WeeklyFragment : Fragment() {
             onWeekClick = {data ->
                 SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(data.weekStart.toString())
                 SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Weekly, data.weekStart)
-                (requireActivity() as StatisticListTrendActivity).onBackAnimation()
+                (requireActivity() as StatisticListActivity).onBackAnimation()
             })
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter

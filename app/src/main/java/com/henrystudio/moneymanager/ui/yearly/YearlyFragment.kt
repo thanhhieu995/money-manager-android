@@ -18,7 +18,7 @@ import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
-import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListTrendActivity
+import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
@@ -51,7 +51,7 @@ class YearlyFragment : Fragment() {
         adapter = YearlyAdapter(emptyList(), onClickYear = { data ->
             SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(data.date.toString())
             SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Yearly, data.date)
-            (requireActivity() as StatisticListTrendActivity).onBackAnimation()
+            (requireActivity() as StatisticListActivity).onBackAnimation()
         })
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter

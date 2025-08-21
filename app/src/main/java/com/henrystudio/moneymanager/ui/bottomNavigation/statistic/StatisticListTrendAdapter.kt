@@ -15,58 +15,25 @@ import com.henrystudio.moneymanager.ui.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.ui.weekly.WeeklyFragment
 import com.henrystudio.moneymanager.ui.yearly.YearlyFragment
 
+@RequiresApi(Build.VERSION_CODES.O)
 class StatisticListTrendAdapter(
     activity: FragmentActivity,
-    private val categoryType: CategoryType,
-    private val filterOption: FilterOption,
-    private val currentFilterPeriod: FilterPeriodStatistic
+    private var filterOption: FilterOption
 ) : FragmentStateAdapter(activity) {
 
-    override fun getItemCount(): Int = 3 // Weekly, Monthly, Yearly (hoặc Stats, Account, Note)
+    override fun getItemCount(): Int = 3
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun createFragment(position: Int): Fragment {
-        val fragment = when (currentFilterPeriod) {
-            FilterPeriodStatistic.List -> {
-                when (position) {
-                    0 -> WeeklyFragment()
-                    1 -> MonthlyFragment()
-                    2 -> YearlyFragment()
-                    else -> MonthlyFragment()
-                }
-            }
-            FilterPeriodStatistic.Trend -> {
-                StatisticCategoryFragment()
-            }
+        return when (position) {
+            0 -> WeeklyFragment()
+            1 -> MonthlyFragment()
+            2 -> YearlyFragment()
             else -> MonthlyFragment()
-        }
-
-        // ✅ Truyền filterOptionTemp vào fragment
-        fragment.arguments = Bundle().apply {
-            when(currentFilterPeriod) {
-                FilterPeriodStatistic.Trend -> {
-                    // tuỳ vị trí -> truyền filterOption khác nhau
-                    val filterOptionTemp = when (position) {
-                        0 -> filterOption.copy(type = FilterPeriodStatistic.Weekly)
-                        1 -> filterOption.copy(type = FilterPeriodStatistic.Monthly)
-                        2 -> filterOption.copy(type = FilterPeriodStatistic.Yearly)
-                        else -> filterOption
-                    }
-
-                    putSerializable("item_click_statistic_filterOption", filterOptionTemp)
-
-                    // nếu muốn giữ nguyên mấy cái khác thì add luôn
-                    putSerializable("item_click_statistic_category_name", Helper.getUpdateMonthText(filterOptionTemp))
-                    putSerializable("item_click_statistic_category_type", categoryType)
-                    putSerializable("item_click_statistic_keyWord", KeyFilter.Time)
-                }
-                FilterPeriodStatistic.List -> {
-                    putSerializable("filterOption", filterOption)
-                }
-                else -> {}
+        }.apply {
+            arguments = Bundle().apply {
+                putSerializable("filterOption", filterOption)
             }
         }
-
-        return fragment
     }
 }

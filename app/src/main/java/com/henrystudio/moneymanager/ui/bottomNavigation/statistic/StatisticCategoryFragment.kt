@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.LineChart
@@ -31,6 +32,9 @@ import com.henrystudio.moneymanager.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModelFactory
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
@@ -66,12 +70,11 @@ class StatisticCategoryFragment : Fragment() {
     private var currentIndex = 0
     private lateinit var adapter: CategoryStatAdapter
     private val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
-    private var keyFilter : KeyFilter ?= null
+    private var keyFilter: KeyFilter? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     private var filterOptionTemp: FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-
 
     val viewModel: TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
@@ -99,17 +102,22 @@ class StatisticCategoryFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         init()
 
-        categoryName = arguments?.getSerializable("item_click_statistic_category_name") as String
+        categoryName =
+            arguments?.getSerializable("item_click_statistic_category_name") as? String ?: ""
         categoryType =
-            arguments?.getSerializable("item_click_statistic_category_type") as CategoryType
+            arguments?.getSerializable("item_click_statistic_category_type") as? CategoryType
+                ?: CategoryType.EXPENSE
         filterOptionTemp =
-            arguments?.getSerializable("item_click_statistic_filterOption") as FilterOption
+            arguments?.getSerializable("item_click_statistic_filterOption") as? FilterOption
+                ?: FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
         keyFilter = arguments?.getSerializable("item_click_statistic_keyWord") as? KeyFilter
+            ?: KeyFilter.Time
+
         adapter = CategoryStatAdapter(listChildCategoryStat)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
-        colorSetLine =  if (categoryType == CategoryType.INCOME)  Color.GREEN else Color.RED
+        colorSetLine = if (categoryType == CategoryType.INCOME) Color.GREEN else Color.RED
 
         viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
             lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
@@ -123,10 +131,9 @@ class StatisticCategoryFragment : Fragment() {
                 categoryType == CategoryType.INCOME,
                 filterOptionTemp
             )
-            // Cập nhật chart tại đây luôn
-            updateLineChart(chartPoints, filterOptionTemp.type)
-            if (chartPoints.isNotEmpty()) {
-                selectCurrentPeriodPoint()
+            // Nếu view đã được tạo thì mới update chart
+            if (isAdded) {
+                refreshChart(chartPoints)
             }
         }
 
@@ -350,7 +357,7 @@ class StatisticCategoryFragment : Fragment() {
         filterOption: FilterOption
     ): List<LineChartPoint> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
-        val filtered = when(keyFilter) {
+        val filtered = when (keyFilter) {
             KeyFilter.CategoryParent -> {
                 transactions.filter {
                     it.categoryParentName.equals(categoryName.trim(), ignoreCase = true) &&
@@ -405,10 +412,10 @@ class StatisticCategoryFragment : Fragment() {
                     date.year == targetYear
                 }
                     .groupBy {
-                    val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter)
-                    date.monthValue.toString()
-                }
+                        val dateSub = it.date.substringBefore(" ")
+                        val date = LocalDate.parse(dateSub, formatter)
+                        date.monthValue.toString()
+                    }
             }
 
             FilterPeriodStatistic.Yearly -> {
@@ -440,7 +447,14 @@ class StatisticCategoryFragment : Fragment() {
             val localDate = LocalDate.parse(anyDate, formatter)
             val chartDate = when (filterOption.type) {
                 FilterPeriodStatistic.Weekly -> localDate.with(DayOfWeek.MONDAY)
-                FilterPeriodStatistic.Monthly -> localDate.withDayOfMonth(localDate.lengthOfMonth()) // đại diện cho cuối tháng
+                FilterPeriodStatistic.Monthly -> {
+                    val now = LocalDate.now()
+                    if (localDate.year == now.year && localDate.month == now.month) {
+                        now
+                    } else {
+                        localDate.withDayOfMonth(localDate.lengthOfMonth())
+                    }
+                }
                 FilterPeriodStatistic.Yearly -> {
                     val targetMonth = localDate.monthValue
                     val targetYear = localDate.year
@@ -495,7 +509,7 @@ class StatisticCategoryFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun getMonthText(index: Int) : String {
+    private fun getMonthText(index: Int): String {
         val point = chartPoints[index]
         return when (filterOptionTemp.type) {
             FilterPeriodStatistic.Monthly -> {
@@ -562,27 +576,11 @@ class StatisticCategoryFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateDateList(index: Int) {
-        val point = chartPoints.getOrNull(index)
+    private fun updateDateList(index: Int) { val point = chartPoints.getOrNull(index)
         currentIndex = index
-        transactionList = point?.let {
-            getListTransactionsFilterType(
-                listTransactionsFilterCategoryName,
-                filterOptionTemp,
-                it.date
-            )
-        } ?: emptyList()
-        listChildCategoryStat = Helper.convertToCategoryStats(
-            listChildCategories,
-            transactionList,
-            categoryType == CategoryType.INCOME,
-            colors
-        )
-        val name = if (keyFilter == KeyFilter.Time) {
-            getMonthText(index)
-        } else {
-            categoryName
-        }
+        transactionList = point?.let { getListTransactionsFilterType( listTransactionsFilterCategoryName, filterOptionTemp, it.date ) } ?: emptyList()
+        listChildCategoryStat = Helper.convertToCategoryStats( listChildCategories, transactionList, categoryType == CategoryType.INCOME, colors )
+        val name = if (keyFilter == KeyFilter.Time) { getMonthText(index) } else { categoryName }
         updateCategorySum(name, point?.amount ?: -1.0)
         adapter.submitList(listChildCategoryStat)
     }
@@ -624,5 +622,41 @@ class StatisticCategoryFragment : Fragment() {
     private fun updateCategorySum(name: String, amount: Double) {
         categorySumName.text = name
         categorySumAmount.text = Helper.formatCurrency(amount)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun update(
+        filterOptionUpdate: FilterOption,
+        categoryNameUpdate: String,
+        categoryTypeUpdate: CategoryType,
+        keyFilterUpdate: KeyFilter
+    ) {
+        filterOptionTemp = filterOptionUpdate
+        categoryName = categoryNameUpdate
+        categoryType = categoryTypeUpdate
+        keyFilter = keyFilterUpdate
+        viewLifecycleOwner.lifecycleScope.launch {
+            chartPoints = withContext(Dispatchers.Default) {
+                    getCategoryLinePoints(
+                        allTransactions,
+                        categoryName,
+                        categoryType == CategoryType.INCOME,
+                        filterOptionTemp
+                    )
+
+            }
+            // Cập nhật UI an toàn
+            if (isAdded && view != null) {
+                refreshChart(chartPoints)
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun refreshChart(newChartPoints: List<LineChartPoint>) {
+        updateLineChart(newChartPoints, filterOptionTemp.type)
+        if (newChartPoints.isNotEmpty()) {
+            selectCurrentPeriodPoint()
+        }
     }
 }

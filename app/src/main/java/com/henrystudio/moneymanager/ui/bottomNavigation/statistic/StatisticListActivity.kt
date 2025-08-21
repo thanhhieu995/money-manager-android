@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
@@ -20,13 +21,16 @@ import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
 
-class StatisticListTrendActivity : AppCompatActivity() {
+class StatisticListActivity : AppCompatActivity() {
     private lateinit var imgClose: ImageView
     private lateinit var monthText: TextView
     private lateinit var imgBack: ImageView
@@ -50,7 +54,7 @@ class StatisticListTrendActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_statistic_list_trend)
+        setContentView(R.layout.activity_statistic_list)
         init()
         onBackPressedDispatcher.addCallback(this) {
             onBackAnimation()
@@ -64,7 +68,7 @@ class StatisticListTrendActivity : AppCompatActivity() {
         imgClose.setOnClickListener {
             onBackAnimation()
         }
-        adapter = StatisticListTrendAdapter(this, categoryType, filterOption, currentFilterPeriod)
+        adapter = StatisticListTrendAdapter(this, filterOption)
         viewPager.adapter = adapter
         TabLayoutMediator(tabLayout, viewPager) {tab, position ->
             tab.text = when(position) {
@@ -74,28 +78,24 @@ class StatisticListTrendActivity : AppCompatActivity() {
                 else -> ""
             }
         }.attach()
+        viewPager.offscreenPageLimit = 3
         // ✅ Chuyển tab dựa vào oldFilterPeriod
         viewPager.currentItem = getTabPosition(filterOption.type)
 
         viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback(){
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                val filterMonth = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroup, currentDate)
-                val filterYear = FilterTransactions.filterTransactionGroupByYear(allTransactionGroup, currentDate)
-                when(position) {
-                    0 -> {
-                        filterOption = FilterOption(FilterPeriodStatistic.Weekly, currentDate)
-                        viewModel.setFilter(FilterPeriodStatistic.Weekly, currentDate)
-                        handleSummarySection(filterMonth)
+                lifecycleScope.launch {
+                    val (filterMonth, filterYear) = withContext(Dispatchers.Default) {
+                        val month = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroup, currentDate)
+                        val year = FilterTransactions.filterTransactionGroupByYear(allTransactionGroup, currentDate)
+                        month to year
                     }
-                    1 -> {
-                        filterOption = FilterOption(FilterPeriodStatistic.Monthly, currentDate)
-                        viewModel.setFilter(FilterPeriodStatistic.Monthly, currentDate)
-                        handleSummarySection(filterYear)
-                    }
-                    2 -> {
-                        filterOption = FilterOption(FilterPeriodStatistic.Yearly, currentDate)
-                        viewModel.setFilter(FilterPeriodStatistic.Yearly, currentDate)
+                    filterOption = mapPositionToFilter(position, currentDate)
+                    when (position) {
+                        0 -> handleSummarySection(filterMonth)
+                        1 -> handleSummarySection(filterYear)
+                        2 -> {}
                     }
                 }
             }
@@ -244,5 +244,14 @@ class StatisticListTrendActivity : AppCompatActivity() {
     fun onBackAnimation() {
         finish()
         overridePendingTransition(R.anim.no_animation, R.anim.slide_out_bottom)
+    }
+
+    fun mapPositionToFilter(position: Int, date: LocalDate): FilterOption {
+        return when (position) {
+            0 -> FilterOption(FilterPeriodStatistic.Weekly, date)
+            1 -> FilterOption(FilterPeriodStatistic.Monthly, date)
+            2 -> FilterOption(FilterPeriodStatistic.Yearly, date)
+            else -> FilterOption(FilterPeriodStatistic.Monthly, date)
+        }
     }
 }

@@ -90,6 +90,10 @@ class DailyFragment : Fragment() {
 
         viewModel.filterOption.observe(viewLifecycleOwner) { option ->
             filterOption = option
+            viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(transactions, selectedMonth) ->
+                updateAllTransactions(transactions, categoryName, categoryType)
+                filterAndDisplay(selectedMonth)
+            }
         }
 
         viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(transactions, selectedMonth) ->
@@ -211,6 +215,7 @@ class DailyFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updateAllTransactions(transactions: List<TransactionGroup>, categoryName: String?, categoryType: CategoryType) {
         allTransactions = if (categoryName != null) {
+            val isInCome = categoryType == CategoryType.INCOME
             transactions.mapNotNull { group ->
                 val filteredTransactions = when (keyFilter) {
                     KeyFilter.CategoryParent -> {
@@ -224,7 +229,6 @@ class DailyFragment : Fragment() {
                         }
                     }
                     KeyFilter.Note -> {
-                        val isInCome = categoryType == CategoryType.INCOME
                         group.transactions.filter {
                             it.note.trim().equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isInCome
                         }
@@ -234,7 +238,7 @@ class DailyFragment : Fragment() {
                             it.account.trim().equals(categoryName.trim(), ignoreCase = true)
                         }
                     }
-                    else -> group.transactions
+                    else -> group.transactions.filter { it.isIncome == isInCome }
                 }
 
                 if (filteredTransactions.isNotEmpty()) {

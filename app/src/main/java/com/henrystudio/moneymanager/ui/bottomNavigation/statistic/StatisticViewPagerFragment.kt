@@ -203,18 +203,30 @@ class StatisticViewPagerFragment : Fragment() {
         updateCheckMarks(selectedOption) // cập nhật ban đầu
         optionConfigs.forEach { (optionName, layoutId, filterPeriod) ->
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
-                if (filterPeriod == FilterPeriodStatistic.List || filterPeriod == FilterPeriodStatistic.Trend) {
-                    val intent = Intent(requireContext(), StatisticListTrendActivity::class.java)
-                    intent.putExtra("filterOption", filterOptionTemp)
-                    intent.putExtra("categoryType", currentStatType)
-                    intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
-                    startActivity(intent)
-                    requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
-                    bottomSheetDialog.dismiss()
-                } else {
-                    selectedOption = optionName
-                    updateCheckMarks(optionName)
-                    viewModel.setFilter(filterPeriod, filterOptionTemp.date)
+                when (filterPeriod) {
+                    FilterPeriodStatistic.List -> {
+                        val intent = Intent(requireContext(), StatisticListActivity::class.java)
+                        intent.putExtra("filterOption", filterOptionTemp)
+                        intent.putExtra("categoryType", currentStatType)
+                        intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
+                        startActivity(intent)
+                        requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
+                        bottomSheetDialog.dismiss()
+                    }
+                    FilterPeriodStatistic.Trend -> {
+                        val intent = Intent(requireContext(), StatisticTrendActivity::class.java)
+                        intent.putExtra("filterOption", filterOptionTemp)
+                        intent.putExtra("categoryType", currentStatType)
+                        intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
+                        startActivity(intent)
+                        requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
+                        bottomSheetDialog.dismiss()
+                    }
+                    else -> {
+                        selectedOption = optionName
+                        updateCheckMarks(optionName)
+                        viewModel.setFilter(filterPeriod, filterOptionTemp.date)
+                    }
                 }
             }
         }
