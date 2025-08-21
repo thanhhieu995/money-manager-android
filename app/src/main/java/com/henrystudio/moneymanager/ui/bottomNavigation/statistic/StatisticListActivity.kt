@@ -41,7 +41,7 @@ class StatisticListActivity : AppCompatActivity() {
     private lateinit var totalCountAll: TextView
     private lateinit var layoutSummary: LinearLayout
     private lateinit var layoutControl: LinearLayout
-    private lateinit var adapter: StatisticListTrendAdapter
+    private lateinit var adapter: StatisticListAdapter
     private lateinit var viewPager: ViewPager2
     private lateinit var tabLayout: TabLayout
     private lateinit var filterOption: FilterOption
@@ -68,7 +68,7 @@ class StatisticListActivity : AppCompatActivity() {
         imgClose.setOnClickListener {
             onBackAnimation()
         }
-        adapter = StatisticListTrendAdapter(this, filterOption)
+        adapter = StatisticListAdapter(this, filterOption)
         viewPager.adapter = adapter
         TabLayoutMediator(tabLayout, viewPager) {tab, position ->
             tab.text = when(position) {
@@ -92,6 +92,7 @@ class StatisticListActivity : AppCompatActivity() {
                         month to year
                     }
                     filterOption = mapPositionToFilter(position, currentDate)
+                    viewModel.setFilter(filterOption.type, currentDate)
                     when (position) {
                         0 -> handleSummarySection(filterMonth)
                         1 -> handleSummarySection(filterYear)

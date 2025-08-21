@@ -357,33 +357,36 @@ class StatisticCategoryFragment : Fragment() {
         filterOption: FilterOption
     ): List<LineChartPoint> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
+        val sortedTransactions = transactions.sortedBy {
+            LocalDate.parse(it.date.substringBefore(" "), formatter)
+        }
         val filtered = when (keyFilter) {
             KeyFilter.CategoryParent -> {
-                transactions.filter {
+                sortedTransactions.filter {
                     it.categoryParentName.equals(categoryName.trim(), ignoreCase = true) &&
                             it.isIncome == isIncome
                 }
             }
             KeyFilter.CategorySub -> {
-                transactions.filter {
+                sortedTransactions.filter {
                     it.categorySubName.trim()
                         .equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isIncome
                 }
             }
             KeyFilter.Note -> {
-                transactions.filter {
+                sortedTransactions.filter {
                     it.note.trim().equals(categoryName.trim(), ignoreCase = true) &&
                             it.isIncome == isIncome
                 }
             }
             KeyFilter.Account -> {
-                transactions.filter {
+                sortedTransactions.filter {
                     it.account.trim().equals(categoryName.trim(), ignoreCase = true) &&
                             it.isIncome == isIncome
                 }
             }
             else -> {
-                transactions.filter { it.isIncome == isIncome }
+                sortedTransactions.filter { it.isIncome == isIncome }
             }
         }
 
@@ -443,7 +446,7 @@ class StatisticCategoryFragment : Fragment() {
         }
 
         return grouped.entries.map { (label, group) ->
-            val anyDate = group.first().date.substringBefore(" ")
+            val anyDate = group[group.size -1].date.substringBefore(" ")
             val localDate = LocalDate.parse(anyDate, formatter)
             val chartDate = when (filterOption.type) {
                 FilterPeriodStatistic.Weekly -> localDate.with(DayOfWeek.MONDAY)
@@ -456,10 +459,12 @@ class StatisticCategoryFragment : Fragment() {
                     }
                 }
                 FilterPeriodStatistic.Yearly -> {
-                    val targetMonth = localDate.monthValue
-                    val targetYear = localDate.year
-                    LocalDate.of(targetYear, targetMonth, 1)
-                        .withDayOfMonth(LocalDate.of(targetYear, targetMonth, 1).lengthOfMonth())
+                    val now = LocalDate.now()
+                    if (localDate.year == now.year) {
+                        filterOption.date
+                    } else {
+                        LocalDate.of(localDate.year, 12, 31) // năm cũ -> ngày cuối năm
+                    }
                 }   // đại diện cho cuối năm
                 else -> localDate
             }
