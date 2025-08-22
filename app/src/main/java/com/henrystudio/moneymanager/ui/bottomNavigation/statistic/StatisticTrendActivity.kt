@@ -55,7 +55,7 @@ class StatisticTrendActivity : AppCompatActivity() {
         }
         tabLayout.getTabAt(getTabPosition(filterOption.type))?.select().apply {
             Handler().postDelayed({val filter = mapPositionToFilter(getTabPosition(filterOption.type), currentDate)
-                fragment.update(
+                fragment.updateTrend(
                     filter,
                     Helper.getUpdateMonthText(filter),
                     categoryType,
@@ -71,7 +71,8 @@ class StatisticTrendActivity : AppCompatActivity() {
                 val position = tab?.position ?: 0
 
                 val filter = mapPositionToFilter(position, currentDate)
-                fragment.update(
+                viewModel.setFilter(filter.type, currentDate)
+                fragment.updateTrend(
                     filter,
                     Helper.getUpdateMonthText(filter),
                     categoryType,

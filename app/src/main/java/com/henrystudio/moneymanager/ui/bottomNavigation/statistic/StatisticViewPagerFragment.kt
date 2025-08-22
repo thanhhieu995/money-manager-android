@@ -199,6 +199,7 @@ class StatisticViewPagerFragment : Fragment() {
             checkViews.forEach { (option, imageView) ->
                 imageView.visibility = if (option == selected) View.VISIBLE else View.GONE
             }
+            bottomSheetDialog.dismiss()
         }
         updateCheckMarks(selectedOption) // cập nhật ban đầu
         optionConfigs.forEach { (optionName, layoutId, filterPeriod) ->

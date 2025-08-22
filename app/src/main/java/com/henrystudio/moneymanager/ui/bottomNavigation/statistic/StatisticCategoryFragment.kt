@@ -319,7 +319,6 @@ class StatisticCategoryFragment : Fragment() {
         dataSet.setCircleColor(colorSetLine)
         dataSet.lineWidth = 2f
         dataSet.valueTextSize = 10f
-
         val lineData = LineData(dataSet)
         lineChart.data = lineData
 
@@ -630,7 +629,7 @@ class StatisticCategoryFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun update(
+    fun updateTrend(
         filterOptionUpdate: FilterOption,
         categoryNameUpdate: String,
         categoryTypeUpdate: CategoryType,
