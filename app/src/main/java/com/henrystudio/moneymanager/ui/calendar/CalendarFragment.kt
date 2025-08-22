@@ -8,6 +8,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,7 +16,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.applandeo.materialcalendarview.EventDay
@@ -54,6 +54,13 @@ class CalendarFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val bgColor = getAttrColor(android.R.attr.colorBackground)
+        binding.calendarView.setBackgroundColor(bgColor)
+
+        // Đổi màu chữ ngày, tiêu đề theo theme
+        binding.calendarView.setHeaderColor(bgColor)
+        binding.calendarView.setHeaderLabelColor(getAttrColor(android.R.attr.textColorPrimary))
+        binding.calendarView.setBackgroundColor(getAttrColor(android.R.attr.textColorSecondary))
         val events = mutableListOf<EventDay>()
         viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
             for (group in list) {
@@ -90,6 +97,7 @@ class CalendarFragment : Fragment() {
 
     private fun setupDayClickListener() {
         binding.calendarView.setOnDayClickListener(object : OnDayClickListener {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onDayClick(eventDay: EventDay) {
                 showBottomSheetForDate(eventDay.calendar.time)
             }
@@ -124,6 +132,7 @@ class CalendarFragment : Fragment() {
         return BitmapDrawable(context.resources, bitmap)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("MissingInflatedId")
     private fun showBottomSheetForDate(date: Date) {
         val adapter = TransactionGroupAdapter()
@@ -143,7 +152,7 @@ class CalendarFragment : Fragment() {
 
         val groupTransaction = viewModel.groupedTransactions.value?.filter {
             val transactionDate = sdf.parse(it.date)
-            sdf.format(transactionDate) == dateString
+            transactionDate?.let { it1 -> sdf.format(it1) } == dateString
         } ?: emptyList()
 
         adapter.submitList(groupTransaction)
@@ -155,5 +164,13 @@ class CalendarFragment : Fragment() {
 
         bottomSheet.show()
     }
+
+    private fun getAttrColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        val theme = requireContext().theme
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
+    }
+
 }
 

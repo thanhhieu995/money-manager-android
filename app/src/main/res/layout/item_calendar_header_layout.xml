@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+<!--    &lt;!&ndash; Tên tháng + năm &ndash;&gt;-->
+<!--    <TextView-->
+<!--        android:id="@+id/monthTitle"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:textAppearance="?attr/textAppearanceHeadline6"-->
+<!--        app:textColor="?attr/textColorPrimary"-->
+<!--        android:textStyle="bold"-->
+<!--        android:paddingBottom="4dp"-->
+<!--        android:text="Tháng 8 2025" />-->
+
+<!--    &lt;!&ndash; Dòng hiển thị thứ trong tuần &ndash;&gt;-->
+<!--    <LinearLayout-->
+<!--        android:id="@+id/weekDaysLayout"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="horizontal"-->
+<!--        android:gravity="center">-->
+
+<!--        <TextView-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:text="T2"-->
+<!--            app:textColor="?attr/textColorSecondary"-->
+<!--            android:textStyle="bold" />-->
+
+<!--        <TextView-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:text="T3"-->
+<!--            app:textColor="?attr/textColorSecondary"-->
+<!--            android:textStyle="bold" />-->
+
+<!--        <TextView-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:text="T4"-->
+<!--            app:textColor="?attr/textColorSecondary"-->
+<!--            android:textStyle="bold" />-->
+
+<!--        <TextView-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:text="T5"-->
+<!--            app:textColor="?attr/textColorSecondary"-->
+<!--            android:textStyle="bold" />-->
+
+<!--        <TextView-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:text="T6"-->
+<!--            app:textColor="?attr/textColorSecondary"-->
+<!--            android:textStyle="bold" />-->
+
+<!--        <TextView-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:text="T7"-->
+<!--            app:textColor="?attr/textColorSecondary"-->
+<!--            android:textStyle="bold" />-->
+
+<!--        <TextView-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:text="CN"-->
+<!--            app:textColor="?attr/textColorSecondary"-->
+<!--            android:textStyle="bold" />-->
+<!--    </LinearLayout>-->
+</LinearLayout>
