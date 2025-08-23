@@ -6,86 +6,85 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-<!--    &lt;!&ndash; Tên tháng + năm &ndash;&gt;-->
-<!--    <TextView-->
-<!--        android:id="@+id/monthTitle"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:textAppearance="?attr/textAppearanceHeadline6"-->
-<!--        app:textColor="?attr/textColorPrimary"-->
-<!--        android:textStyle="bold"-->
-<!--        android:paddingBottom="4dp"-->
-<!--        android:text="Tháng 8 2025" />-->
+    <!-- Tên tháng + năm -->
+    <TextView
+        android:id="@+id/monthTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textStyle="bold"
+        android:paddingBottom="4dp"
+        android:text="Tháng 8 2025" />
 
-<!--    &lt;!&ndash; Dòng hiển thị thứ trong tuần &ndash;&gt;-->
-<!--    <LinearLayout-->
-<!--        android:id="@+id/weekDaysLayout"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:orientation="horizontal"-->
-<!--        android:gravity="center">-->
+    <!-- Dòng hiển thị thứ trong tuần -->
+    <LinearLayout
+        android:id="@+id/weekDaysLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
 
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="center"-->
-<!--            android:text="T2"-->
-<!--            app:textColor="?attr/textColorSecondary"-->
-<!--            android:textStyle="bold" />-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="T2"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold" />
 
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="center"-->
-<!--            android:text="T3"-->
-<!--            app:textColor="?attr/textColorSecondary"-->
-<!--            android:textStyle="bold" />-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="T3"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold" />
 
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="center"-->
-<!--            android:text="T4"-->
-<!--            app:textColor="?attr/textColorSecondary"-->
-<!--            android:textStyle="bold" />-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="T4"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold" />
 
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="center"-->
-<!--            android:text="T5"-->
-<!--            app:textColor="?attr/textColorSecondary"-->
-<!--            android:textStyle="bold" />-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="T5"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold" />
 
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="center"-->
-<!--            android:text="T6"-->
-<!--            app:textColor="?attr/textColorSecondary"-->
-<!--            android:textStyle="bold" />-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="T6"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold" />
 
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="center"-->
-<!--            android:text="T7"-->
-<!--            app:textColor="?attr/textColorSecondary"-->
-<!--            android:textStyle="bold" />-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="T7"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold" />
 
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="center"-->
-<!--            android:text="CN"-->
-<!--            app:textColor="?attr/textColorSecondary"-->
-<!--            android:textStyle="bold" />-->
-<!--    </LinearLayout>-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="CN"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold" />
+    </LinearLayout>
 </LinearLayout>

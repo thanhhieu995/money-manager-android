@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:text="Food"
             android:textSize="16sp"
-            android:textColor="#000000"/>
+            android:textColor="?android:attr/textColorPrimary"/>
         <TextView
             android:id="@+id/item_transaction_child_category"
             android:layout_width="wrap_content"
@@ -36,6 +36,7 @@
         <TextView
             android:id="@+id/item_transaction_content"
             android:text="Tuition fee"
+            android:textColor="?android:attr/textColorPrimary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 

@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="12dp"
-    android:background="#F9F9F9">
+    android:background="?attr/colorSurface">
 
     <TextView
         android:id="@+id/monthly_detail_arrange"
@@ -13,7 +13,7 @@
         android:text="11-05 ~ 17-05"
         android:layout_weight="1"
         android:textSize="13sp"
-        android:textColor="#444444" />
+        android:textColor="?android:attr/textColorPrimary" />
 
     <TextView
         android:id="@+id/monthly_detail_income"
@@ -47,6 +47,6 @@
             android:layout_height="wrap_content"
             android:text="-500.000đ"
             android:textSize="13sp"
-            android:textColor="#000000" />
+            android:textColor="?android:attr/textColorPrimary" />
     </LinearLayout>
 </LinearLayout>

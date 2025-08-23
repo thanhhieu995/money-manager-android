@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="?attr/colorSurface">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/search_layout_function"
@@ -19,8 +19,8 @@
             android:layout_height="24dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:contentDescription="Back"
             android:src="@drawable/ic_baseline_navigate_before_24"
+            app:tint="?attr/colorControlNormal"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -47,6 +47,7 @@
             android:layout_marginEnd="16dp"
             android:contentDescription="Filter"
             android:src="@drawable/ic_baseline_filter_alt_24"
+            app:tint="?attr/colorControlNormal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -59,6 +60,7 @@
             android:layout_marginTop="12dp"
             android:layout_marginEnd="16dp"
             android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/search_title">
@@ -70,6 +72,7 @@
                 android:layout_weight="1"
                 android:drawableStart="@drawable/ic_baseline_search_24"
                 android:drawablePadding="8dp"
+                android:drawableTint="?attr/colorControlNormal"
                 android:hint="Search..."
                 android:inputType="text"
                 android:padding="12dp" />
@@ -81,7 +84,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="12dp"
                 android:text="Cancel"
-                android:textColor="@android:color/black"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="14sp" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

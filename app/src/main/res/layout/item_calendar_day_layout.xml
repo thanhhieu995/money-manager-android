@@ -4,21 +4,21 @@
     android:layout_height="48dp"
     android:background="?attr/colorBackgroundFloating">
 
-<!--    <TextView-->
-<!--        android:id="@+id/dayText"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:gravity="center"-->
-<!--        app:textColor="?attr/textColorPrimary"-->
-<!--        android:textSize="14sp" />-->
+    <TextView
+        android:id="@+id/dayText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="14sp" />
 
-<!--    &lt;!&ndash; Chấm sự kiện &ndash;&gt;-->
-<!--    <View-->
-<!--        android:id="@+id/eventDot"-->
-<!--        android:layout_width="8dp"-->
-<!--        android:layout_height="8dp"-->
-<!--        android:layout_gravity="bottom|center"-->
-<!--        android:layout_marginBottom="4dp"-->
-<!--        android:background="@drawable/dot_event"-->
-<!--        android:visibility="gone" />-->
+    <!-- Chấm sự kiện -->
+    <View
+        android:id="@+id/eventDot"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/dot_event"
+        android:visibility="gone" />
 </FrameLayout>

@@ -140,7 +140,8 @@
                 android:id="@+id/fragment_daily_navigate_month_back"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_baseline_navigate_before_24" />
+                android:src="@drawable/ic_baseline_navigate_before_24"
+                app:tint="?attr/colorControlNormal"/>
 
             <TextView
                 android:id="@+id/fragment_daily_navigate_month_text"
@@ -156,7 +157,8 @@
                 android:id="@+id/fragment_daily_navigate_month_next"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_baseline_navigate_next_24" />
+                android:src="@drawable/ic_baseline_navigate_next_24"
+                app:tint="?attr/colorControlNormal"/>
         </LinearLayout>
 
         <com.google.android.material.tabs.TabLayout

@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.GridLayout
@@ -65,10 +66,10 @@ class MonthPickerDialogFragment(
                     // Highlight tháng hiện tại
                     if (index + 1 == currentMonth && currentYear == currentYearNow) {
                         setBackgroundResource(R.drawable.bg_month_selected)
-                        setTextColor(Color.WHITE)
+                        setTextColor(Color.RED)
                     } else {
                         setBackgroundResource(R.drawable.bg_month_normal)
-                        setTextColor(Color.BLACK)
+                        setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface))
                     }
 
                     setOnClickListener {
@@ -101,5 +102,12 @@ class MonthPickerDialogFragment(
         populateMonths()
         builder.setView(view)
         return builder.create()
+    }
+
+    private fun getThemeColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        val theme = requireContext().theme
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 }

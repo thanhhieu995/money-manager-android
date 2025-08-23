@@ -6,15 +6,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-<!--    <com.kizitonwose.calendar.view.CalendarView-->
-<!--        android:id="@+id/calendarView_update"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        app:cv_dayViewResource="@layout/item_calendar_day_layout"-->
-<!--        app:cv_monthHeaderResource="@layout/item_calendar_header_layout"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
+    <com.kizitonwose.calendar.view.CalendarView
+        android:id="@+id/calendarView_update"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cv_dayViewResource="@layout/item_calendar_day_layout"
+        app:cv_monthHeaderResource="@layout/item_calendar_header_layout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
