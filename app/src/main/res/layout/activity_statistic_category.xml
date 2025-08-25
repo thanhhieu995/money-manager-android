@@ -28,6 +28,7 @@
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_baseline_navigate_before_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="?attr/colorControlNormal"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
@@ -42,6 +43,7 @@
                 android:textStyle="bold"
                 android:gravity="center"
                 android:maxLines="1"
+                android:textColor="?android:attr/textColorPrimary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -58,6 +60,7 @@
                 android:gravity="center"
                 android:maxLines="1"
                 android:alpha="0"
+                android:textColor="?android:attr/textColorPrimary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

@@ -9,7 +9,7 @@
         android:id="@+id/activity_statistic_trend_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="?attr/colorSurface"
         android:orientation="vertical">
 
         <LinearLayout
@@ -40,6 +40,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_baseline_close_black"
+                    app:tint="?attr/colorControlNormal"
                     android:padding="12dp" />
             </FrameLayout>
 
@@ -47,6 +48,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
+            android:background="?attr/colorSurface"
             android:layout_height="0dp"
             android:layout_weight="1">
             <FrameLayout
@@ -57,6 +59,7 @@
             <TextView
                 android:id="@+id/activity_statistic_trend_tv_noData"
                 android:text="No Data Available"
+                android:textColor="?android:attr/textColorPrimary"
                 android:visibility="gone"
                 android:layout_gravity="center"
                 android:layout_width="wrap_content"

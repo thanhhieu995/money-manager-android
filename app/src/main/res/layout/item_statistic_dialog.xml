@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:background="?attr/colorSurface"
     android:padding="16dp">
 
     <LinearLayout
@@ -129,7 +130,7 @@
         android:layout_height="wrap_content"
         android:text="Cancel"
         android:padding="16dp"
-        android:textColor="@android:color/black"
+        android:textColor="?android:attr/textColorPrimary"
         android:gravity="center"
         android:textStyle="bold"/>
 </LinearLayout>

@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?attr/colorSurface"
     android:orientation="vertical">
 
     <LinearLayout
@@ -23,7 +23,8 @@
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_baseline_navigate_before_24" />
+            android:src="@drawable/ic_baseline_navigate_before_24"
+            app:tint="?attr/colorControlNormal"/>
 
         <TextView
             android:id="@+id/fragment_statistic_category_month_text"
@@ -32,6 +33,7 @@
             android:layout_weight="5"
             android:gravity="center"
             android:text="Apr 2025"
+            android:textColor="?android:attr/textColorPrimary"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -40,7 +42,8 @@
             android:layout_width="0dp"
             android:layout_height="24dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_baseline_navigate_next_24" />
+            android:src="@drawable/ic_baseline_navigate_next_24"
+            app:tint="?attr/colorControlNormal"/>
     </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -55,7 +58,7 @@
             android:gravity="center"
             android:paddingTop="16dp"
             android:text="No data available"
-            android:textColor="@color/black"
+            android:textColor="?android:attr/textColorPrimary"
             android:textSize="16sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/fragment_statistic_category_lineChart"
@@ -74,6 +77,11 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -85,7 +93,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="4dp"
-            android:background="@color/white_smoke"
+            android:background="?attr/colorSurface"
             android:gravity="center_vertical">
 
             <!-- Tên category -->
@@ -95,6 +103,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Food"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -106,8 +115,14 @@
                 android:text="120,000 ₫"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="?android:attr/textColorPrimary" />
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+
         <!-- Danh sách child category nếu có -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/fragment_statistic_category_statsRecyclerView"

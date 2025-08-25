@@ -20,6 +20,7 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.google.android.material.color.MaterialColors
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticStatsBinding
 import com.henrystudio.moneymanager.helper.FilterTransactions
@@ -141,11 +142,13 @@ class StatisticStatsFragment : Fragment() {
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
+        val holeColor = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorSurface, Color.WHITE)
 
         binding.fragmentStatisticPieChart.apply {
             setUsePercentValues(true)
             isDrawHoleEnabled = true
             setCenterTextSize(16f)
+            setHoleColor(holeColor)
             setEntryLabelColor(Color.WHITE)
             setEntryLabelTextSize(12f)
             description.isEnabled = false

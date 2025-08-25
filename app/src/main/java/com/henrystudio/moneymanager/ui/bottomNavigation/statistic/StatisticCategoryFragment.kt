@@ -3,6 +3,7 @@ package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -312,9 +313,11 @@ class StatisticCategoryFragment : Fragment() {
             }
         }
 
+        val textColorTheme = getThemeColor(com.google.android.material.R.attr.colorOnSurface)
+
         val dataSet = LineDataSet(entries, categoryName)
         dataSet.color = colorSetLine
-        dataSet.valueTextColor = Color.BLACK
+        dataSet.valueTextColor = textColorTheme
         dataSet.circleRadius = 4f
         dataSet.setCircleColor(colorSetLine)
         dataSet.lineWidth = 2f
@@ -330,6 +333,11 @@ class StatisticCategoryFragment : Fragment() {
             setDrawGridLines(false)
             textSize = 12f
             labelRotationAngle = 0f // hoặc 45f nếu label dài
+            textColor = textColorTheme
+        }
+
+        with(lineChart.axisLeft) {
+            textColor = textColorTheme
         }
 
         lineChart.setTouchEnabled(true)
@@ -662,5 +670,12 @@ class StatisticCategoryFragment : Fragment() {
         if (newChartPoints.isNotEmpty()) {
             selectCurrentPeriodPoint()
         }
+    }
+
+    private fun getThemeColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        val theme = requireContext().theme
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 }

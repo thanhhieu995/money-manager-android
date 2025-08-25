@@ -9,7 +9,7 @@
         android:id="@+id/activity_statistic_list_trend_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="?attr/colorSurface"
         android:orientation="vertical">
 
         <LinearLayout
@@ -40,6 +40,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_baseline_close_black"
+                    app:tint="?attr/colorControlNormal"
                     android:padding="12dp" />
             </FrameLayout>
 
@@ -49,7 +50,7 @@
             android:id="@+id/activity_statistic_list_trend_control"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="?attr/colorSurface"
             android:orientation="vertical"
             android:padding="8dp">
             <LinearLayout
@@ -67,7 +68,8 @@
                     android:id="@+id/activity_statistic_list_trend_month_back"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@drawable/ic_baseline_navigate_before_24" />
+                    android:src="@drawable/ic_baseline_navigate_before_24"
+                    app:tint="?attr/colorControlNormal" />
 
                 <TextView
                     android:id="@+id/activity_statistic_list_trend_month_text"
@@ -76,6 +78,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="Apr 2025"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -83,7 +86,8 @@
                     android:id="@+id/activity_statistic_list_trend_month_next"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@drawable/ic_baseline_navigate_next_24" />
+                    android:src="@drawable/ic_baseline_navigate_next_24"
+                    app:tint="?attr/colorControlNormal"/>
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/activity_statistic_list_trend_summarySection"
@@ -91,6 +95,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
+                android:background="?attr/colorSurface"
                 app:layout_constraintTop_toBottomOf="@+id/activity_statistic_list_trend_layout_function_control"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -105,6 +110,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/activity_statistic_list_trend_tv_income"
                         android:text="Income"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:gravity="center" />
@@ -129,6 +135,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/activity_statistic_list_trend_tv_expense"
                         android:text="Expense"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:gravity="center" />
@@ -152,6 +159,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/activity_statistic_list_trend_tv_total"
                         android:text="Total"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:gravity="center" />

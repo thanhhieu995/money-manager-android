@@ -9,7 +9,7 @@
         android:id="@+id/fragment_statistic_view_pager_stats_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="?attr/colorSurface"
         android:orientation="vertical">
 
         <LinearLayout
@@ -36,7 +36,7 @@
                 android:padding="4dp"
                 android:gravity="center"
                 android:text="Monthly"
-                android:textColor="@android:color/black"
+                android:textColor="?android:attr/textColorPrimary"
                 android:background="@drawable/bg_filter_dropdown"
                 android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_down_24"
                 android:drawablePadding="4dp"/>
@@ -46,7 +46,7 @@
         android:id="@+id/fragment_statistic_view_pager_root_control"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="?attr/colorSurface"
         android:orientation="vertical"
         android:padding="8dp">
         <LinearLayout
@@ -64,7 +64,8 @@
                 android:id="@+id/fragment_statistic_view_pager_month_back"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_baseline_navigate_before_24" />
+                android:src="@drawable/ic_baseline_navigate_before_24"
+                app:tint="?attr/colorControlNormal"/>
 
             <TextView
                 android:id="@+id/fragment_statistic_view_pager_month_text"
@@ -73,6 +74,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Apr 2025"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -80,7 +82,8 @@
                 android:id="@+id/fragment_statistic_view_pager_month_next"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_baseline_navigate_next_24" />
+                android:src="@drawable/ic_baseline_navigate_next_24"
+                app:tint="?attr/colorControlNormal"/>
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButtonToggleGroup

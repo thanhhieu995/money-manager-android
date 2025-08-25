@@ -4,7 +4,7 @@
     android:id="@+id/stats_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?attr/colorSurface"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -30,7 +30,7 @@
                 android:gravity="center"
                 android:paddingTop="16dp"
                 android:text="No data available"
-                android:textColor="@color/black"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="16sp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="@+id/fragment_statistic_pieChart"
@@ -57,10 +57,11 @@
                 android:id="@+id/fragment_statistic_pieChart"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                app:layout_constraintStart_toStartOf="@id/guidelineStart"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
                 app:layout_constraintEnd_toEndOf="@id/guidelineEnd"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintDimensionRatio="1:1" />
+                app:layout_constraintStart_toStartOf="@id/guidelineStart"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Danh sách phân loại -->

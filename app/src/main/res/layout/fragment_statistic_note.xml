@@ -3,6 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
     android:orientation="vertical">
     <LinearLayout
         android:id="@+id/fragment_statistic_note_sortHeader"
@@ -10,8 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingVertical="8dp"
-        android:paddingHorizontal="16dp"
-        android:background="@color/white">
+        android:paddingHorizontal="16dp">
 
         <TextView
             android:id="@+id/fragment_statistic_note_headerNote"
@@ -19,6 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Note"
+            android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold"
             android:gravity="start"
             android:drawableEnd="@drawable/ic_baseline_arrow_downward_24"
@@ -30,6 +31,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="1->9"
+            android:textColor="?android:attr/textColorPrimary"
             android:drawableEnd="@drawable/ic_baseline_arrow_downward_24"
             android:gravity="center" />
 
@@ -40,6 +42,7 @@
             android:layout_height="wrap_content"
             android:text="Amount"
             android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
             android:gravity="end"
             android:drawableEnd="@drawable/ic_baseline_arrow_downward_24"
             android:drawablePadding="4dp" />
@@ -51,7 +54,7 @@
         android:gravity="center"
         android:paddingTop="16dp"
         android:text="No data available"
-        android:textColor="@color/black"
+        android:textColor="?android:attr/textColorPrimary"
         android:textSize="16sp"
         android:visibility="gone"/>
     <androidx.recyclerview.widget.RecyclerView
