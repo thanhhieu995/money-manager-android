@@ -64,6 +64,7 @@
                 android:id="@+id/fragment_statistic_view_pager_month_back"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_weight="1"
                 android:src="@drawable/ic_baseline_navigate_before_24"
                 app:tint="?attr/colorControlNormal"/>
 
@@ -71,7 +72,7 @@
                 android:id="@+id/fragment_statistic_view_pager_month_text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="3"
                 android:gravity="center"
                 android:text="Apr 2025"
                 android:textColor="?android:attr/textColorPrimary"
@@ -82,6 +83,7 @@
                 android:id="@+id/fragment_statistic_view_pager_month_next"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_weight="1"
                 android:src="@drawable/ic_baseline_navigate_next_24"
                 app:tint="?attr/colorControlNormal"/>
         </LinearLayout>

@@ -3,7 +3,6 @@ package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
 import android.widget.ImageView
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
@@ -45,23 +44,25 @@ class StatisticTrendActivity : AppCompatActivity() {
         tabLayout.addTab(tabLayout.newTab().setText("Weekly"))
         tabLayout.addTab(tabLayout.newTab().setText("Monthly"))
         tabLayout.addTab(tabLayout.newTab().setText("Yearly"))
+        val filter = mapPositionToFilter(getTabPosition(filterOption.type), filterOption.date)
+
+        val bundle = Bundle().apply {
+            putSerializable("item_click_statistic_category_name", Helper.getUpdateMonthText(filter))
+            putSerializable("item_click_statistic_category_type",categoryType)
+            putSerializable("item_click_statistic_filterOption", filter)
+            putSerializable("item_click_statistic_keyWord", KeyFilter.Time)
+        }
         // gắn fragment cố định 1 lần duy nhất
-        fragment = StatisticCategoryFragment()
+        fragment = StatisticCategoryFragment().apply {
+            arguments = bundle
+        }
         supportFragmentManager.beginTransaction()
             .replace(R.id.activity_statistic_trend_fragmentContainer, fragment)
             .commit()
         viewModel.currentFilterDate.observe(this) { date ->
             currentDate = date
         }
-        tabLayout.getTabAt(getTabPosition(filterOption.type))?.select().apply {
-            Handler().postDelayed({val filter = mapPositionToFilter(getTabPosition(filterOption.type), currentDate)
-                fragment.updateTrend(
-                    filter,
-                    Helper.getUpdateMonthText(filter),
-                    categoryType,
-                    KeyFilter.Time
-                )}, 100)
-        }
+        tabLayout.getTabAt(getTabPosition(filterOption.type))?.select()
         btnClose.setOnClickListener {
             onBackAnimation()
         }
@@ -70,14 +71,21 @@ class StatisticTrendActivity : AppCompatActivity() {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 val position = tab?.position ?: 0
 
-                val filter = mapPositionToFilter(position, currentDate)
-                viewModel.setFilter(filter.type, currentDate)
-                fragment.updateTrend(
-                    filter,
-                    Helper.getUpdateMonthText(filter),
-                    categoryType,
-                    KeyFilter.Time
-                )
+                val filterTemp = mapPositionToFilter(position, currentDate)
+                viewModel.setFilter(filterTemp.type, currentDate)
+                val bundleTab = Bundle().apply {
+                    putSerializable("item_click_statistic_category_name", Helper.getUpdateMonthText(filter))
+                    putSerializable("item_click_statistic_category_type",categoryType)
+                    putSerializable("item_click_statistic_filterOption", filterTemp)
+                    putSerializable("item_click_statistic_keyWord", KeyFilter.Time)
+                }
+                // gắn fragment cố định 1 lần duy nhất
+                fragment = StatisticCategoryFragment().apply {
+                    arguments = bundleTab
+                }
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.activity_statistic_trend_fragmentContainer, fragment)
+                    .commit()
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}

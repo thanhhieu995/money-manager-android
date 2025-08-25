@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.LineChart
@@ -33,9 +32,6 @@ import com.henrystudio.moneymanager.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.viewmodel.CategoryViewModelFactory
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
@@ -647,20 +643,15 @@ class StatisticCategoryFragment : Fragment() {
         categoryName = categoryNameUpdate
         categoryType = categoryTypeUpdate
         keyFilter = keyFilterUpdate
-        viewLifecycleOwner.lifecycleScope.launch {
-            chartPoints = withContext(Dispatchers.Default) {
-                    getCategoryLinePoints(
-                        allTransactions,
-                        categoryName,
-                        categoryType == CategoryType.INCOME,
-                        filterOptionTemp
-                    )
-
-            }
-            // Cập nhật UI an toàn
-            if (isAdded && view != null) {
-                refreshChart(chartPoints)
-            }
+        chartPoints = getCategoryLinePoints(
+                allTransactions,
+                categoryName,
+                categoryType == CategoryType.INCOME,
+                filterOptionTemp
+            )
+        // Cập nhật UI an toàn
+        if (isAdded && view != null) {
+            refreshChart(chartPoints)
         }
     }
 
