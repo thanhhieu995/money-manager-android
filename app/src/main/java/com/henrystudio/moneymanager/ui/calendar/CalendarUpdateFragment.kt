@@ -11,19 +11,39 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.model.AppDatabase
+import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.ui.main.TransactionGroupAdapter
+import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
+import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek
+import com.kizitonwose.calendar.core.yearMonth
+import com.kizitonwose.calendar.view.DaySize
 import com.kizitonwose.calendar.view.MonthDayBinder
 import com.kizitonwose.calendar.view.ViewContainer
+import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
+import java.util.*
 
 class CalendarUpdateFragment : Fragment() {
+    private var eventsMap = mutableMapOf<LocalDate, TransactionGroup>()
     private lateinit var calendarView: com.kizitonwose.calendar.view.CalendarView
-
+    private val viewModel: TransactionViewModel by activityViewModels {
+        TransactionViewModelFactory(
+            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+        )
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -36,21 +56,43 @@ class CalendarUpdateFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(groups, currentDate) ->
+            eventsMap.clear()
+            val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+            // Lấy ra tháng đang được filter
+            val month = currentDate.month
+            val year = currentDate.year
 
-        val daysOfWeek = daysOfWeek(firstDayOfWeek = DayOfWeek.MONDAY)
-        val currentMonth = YearMonth.now()
-        val startMonth = currentMonth.minusMonths(12)
-        val endMonth = currentMonth.plusMonths(12)
+            // Tạo map date -> TransactionGroup (dùng LocalDate làm key)
+            val monthGroups = groups.mapNotNull { group ->
+                val parsedDate = sdf.parse(group.date)
+                val localDate = parsedDate?.toInstant()
+                    ?.atZone(ZoneId.systemDefault())
+                    ?.toLocalDate()
+                if (localDate != null && localDate.month == month && localDate.year == year) {
+                    localDate to group
+                } else null
+            }.toMap()
 
-        calendarView.setup(startMonth, endMonth, daysOfWeek.first())
-        calendarView.scrollToMonth(currentMonth)
+            eventsMap.putAll(monthGroups)
+
+            val daysOfWeek = daysOfWeek(firstDayOfWeek = DayOfWeek.MONDAY)
+            val currentMonth = currentDate.yearMonth
+            val startMonth = currentMonth.minusMonths(12)
+            val endMonth = currentMonth.plusMonths(12)
+
+            calendarView.setup(startMonth, endMonth, daysOfWeek.first())
+            calendarView.scrollToMonth(currentMonth)
+            // Gọi hàm update CalendarView
+            calendarView.notifyCalendarChanged()  // hoặc notifyDateChanged(date) tùy thư viện
+        }
 
         // Header hiển thị tháng
         calendarView.monthHeaderBinder = object : com.kizitonwose.calendar.view.MonthHeaderFooterBinder<MonthViewContainer> {
             override fun create(view: View) = MonthViewContainer(view)
             override fun bind(container: MonthViewContainer, month: com.kizitonwose.calendar.core.CalendarMonth) {
                 val title = "${month.yearMonth.month} ${month.yearMonth.year}"
-                container.textView.text = title
+//                container.textView.text = title
             }
         }
 
@@ -59,50 +101,45 @@ class CalendarUpdateFragment : Fragment() {
             override fun create(view: View) = DayViewContainer(view)
             override fun bind(container: DayViewContainer, day: CalendarDay) {
                 container.day = day
-                val textView = container.textView
-                val dotView = container.dotView
-
-                textView.text = day.date.dayOfMonth.toString()
-
+                container.dayText.text = day.date.dayOfMonth.toString()
                 if (day.position == DayPosition.MonthDate) {
-                    textView.setTextColor(getAttrColor(requireContext(), android.R.attr.textColorPrimary))
-                    // 🔹 Tô màu ngày hiện tại
+                    val textColorTheme = getAttrColor(requireContext(), com.google.android.material.R.attr.colorOnSurface)
+                    // tô màu ngày hiện tại
                     if (day.date == LocalDate.now()) {
-                        textView.setBackgroundResource(R.drawable.bg_today)
-                        textView.setTextColor(Color.WHITE) // chữ trắng
+                        container.dayText.setTextColor(Color.RED)
                     } else {
-                        textView.background = null // xoá nền nếu không phải hôm nay
+                        container.dayText.background = null
+                        container.dayText.setTextColor(textColorTheme)
                     }
-                    if (hasEvent(day.date)) {
-                        dotView.visibility = View.VISIBLE
+
+                    // gắn income/expense/total
+                    val event = eventsMap[day.date]
+                    if (event != null) {
+                        container.incomeText.text = "↑${Helper.formatCurrency(event.income)}"
+                        container.expenseText.text = "↓${Helper.formatCurrency(event.expense)}"
+                        container.totalText.text = Helper.formatCurrency(event.income - event.expense)
                     } else {
-                        dotView.visibility = View.GONE
+                        container.incomeText.text = ""
+                        container.expenseText.text = ""
+                        container.totalText.text = ""
                     }
 
                     container.view.setOnClickListener {
-                        showTransactionBottomSheet(day.date)
+                        showBottomSheetForDate(day.date)
                     }
-
                 } else {
-                    textView.setTextColor(Color.GRAY)
-                    dotView.visibility = View.GONE
-                    textView.background = null
+                    // ngày ngoài tháng -> xám
+                    container.dayText.setTextColor(Color.GRAY)
+                    container.incomeText.text = ""
+                    container.expenseText.text = ""
+                    container.totalText.text = ""
                 }
             }
         }
     }
 
     inner class MonthViewContainer(view: View) : ViewContainer(view) {
-        val textView: TextView = view.findViewById(R.id.monthTitle)
-    }
-
-    private fun hasEvent(date: LocalDate): Boolean {
-        // TODO: check trong DB có giao dịch không
-        return false
-    }
-
-    private fun showTransactionBottomSheet(date: LocalDate) {
-        // TODO: hiển thị bottomsheet chi tiết giao dịch
+//        val textView: TextView = view.findViewById(R.id.monthTitle)
     }
 
     private fun getAttrColor(context: Context, attr: Int): Int {
@@ -112,8 +149,42 @@ class CalendarUpdateFragment : Fragment() {
     }
 
     inner class DayViewContainer(view: View) : ViewContainer(view) {
+        val dayText: TextView = view.findViewById(R.id.item_calendar_layout_dayText)
+        val incomeText: TextView = view.findViewById(R.id.item_calendar_layout_income)
+        val expenseText: TextView = view.findViewById(R.id.item_calendar_layout_expense)
+        val totalText: TextView = view.findViewById(R.id.item_calendar_layout_total)
         lateinit var day: CalendarDay
-        val textView: TextView = view.findViewById(R.id.dayText)
-        val dotView: View = view.findViewById(R.id.eventDot)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun showBottomSheetForDate(date: LocalDate) {
+        val adapter = TransactionGroupAdapter()
+
+        val dialogView = layoutInflater.inflate(R.layout.item_calendar_day_detail, null)
+        val bottomSheet = BottomSheetDialog(requireContext())
+        bottomSheet.setContentView(dialogView)
+
+        val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+        val dateString = sdf.format(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+
+        val dayListTransaction = dialogView.findViewById<RecyclerView>(R.id.item_day_calendar_list)
+        dayListTransaction.layoutManager = LinearLayoutManager(requireContext())
+        dayListTransaction.adapter = adapter
+
+        val noDataText = dialogView.findViewById<TextView>(R.id.item_day_calendar_noData)
+
+        val groupTransaction = viewModel.groupedTransactions.value?.filter {
+            val transactionDate = sdf.parse(it.date)
+            transactionDate?.let { it1 -> sdf.format(it1) } == dateString
+        } ?: emptyList()
+
+        adapter.submitList(groupTransaction)
+        noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE
+        adapter.onTransactionClick = {transaction ->
+            Helper.openTransactionDetail(requireContext(), transaction)
+            true
+        }
+
+        bottomSheet.show()
     }
 }

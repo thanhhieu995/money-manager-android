@@ -6,16 +6,6 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- Tên tháng + năm -->
-    <TextView
-        android:id="@+id/monthTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textStyle="bold"
-        android:paddingBottom="4dp"
-        android:text="Tháng 8 2025" />
-
     <!-- Dòng hiển thị thứ trong tuần -->
     <LinearLayout
         android:id="@+id/weekDaysLayout"
@@ -29,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="T2"
+            android:text="Mon"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -38,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="T3"
+            android:text="Tue"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -47,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="T4"
+            android:text="Wed"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -56,7 +46,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="T5"
+            android:text="Thu"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -65,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="T6"
+            android:text="Fri"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -74,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="T7"
+            android:text="Sat"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -83,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="CN"
+            android:text="Sun"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
     </LinearLayout>

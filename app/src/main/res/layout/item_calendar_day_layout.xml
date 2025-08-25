@@ -1,24 +1,58 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="48dp"
-    android:layout_height="48dp"
-    android:background="?attr/colorBackgroundFloating">
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dayRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center">
 
+    <!-- Số ngày -->
     <TextView
-        android:id="@+id/dayText"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="14sp" />
+        android:id="@+id/item_calendar_layout_dayText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
-    <!-- Chấm sự kiện -->
-    <View
-        android:id="@+id/eventDot"
-        android:layout_width="8dp"
-        android:layout_height="8dp"
-        android:layout_gravity="bottom|center"
-        android:layout_marginBottom="4dp"
-        android:background="@drawable/dot_event"
-        android:visibility="gone" />
-</FrameLayout>
+    <!-- Income/Expense/Total -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/item_calendar_layout_income"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="↑1k"
+            android:textColor="@color/income"
+            android:textSize="9sp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/item_calendar_layout_expense"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="↓2k"
+            android:textColor="#D32F2F"
+            android:textSize="9sp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/item_calendar_layout_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-1k"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="9sp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>
