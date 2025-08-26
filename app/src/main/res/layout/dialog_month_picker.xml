@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:id="@+id/tvTitle"
-            android:text="Date"
+            android:text="@string/date"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:layout_alignParentStart="true"
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:id="@+id/btnThisMonth"
-            android:text="This month"
+            android:text="@string/current_month"
             android:textColor="@color/white"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true" />

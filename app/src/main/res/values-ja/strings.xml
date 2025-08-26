@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MoneyManager</string>
+    <string name="hello_blank_fragment">空白のフラグメントへようこそ</string>
+    <string name="month_year_pattern">yyyy年 MMMM</string>
+    <string name="daily">日別</string>
+    <string name="calendar">カレンダー</string>
+    <string name="monthly">月別</string>
+    <string name="Income">収入</string>
+    <string name="Expense">支出</string>
+    <string name="Total">合計</string>
+    <string name="Stats">統計</string>
+    <string name="More">もっと</string>
+    <string name="Acc">口座</string>
+    <string name="Note">メモ</string>
+    <string name="weekly">週別</string>
+    <string name="yearly">年別</string>
+    <string name="list">リスト</string>
+    <string name="trend">トレンド</string>
+    <string name="exp">支出</string>
+    <string name="all">すべて</string>
+    <string name="cancel">キャンセル</string>
+    <string name="search">検索</string>
+    <string name="bookmark">ブックマーク</string>
+    <string name="amount">金額</string>
+    <string name="category">カテゴリ</string>
+    <string name="account">口座</string>
+    <string name="note">メモ</string>
+    <string name="save">保存</string>
+    <string name="ads_continue">続ける</string>
+    <string name="edit">編集</string>
+    <string name="add">追加</string>
+    <string name="enter_name">名前を入力…</string>
+    <string name="no_data">データがありません…</string>
+    <string name="Mon">月</string>
+    <string name="Tue">火</string>
+    <string name="Wed">水</string>
+    <string name="Thu">木</string>
+    <string name="Fri">金</string>
+    <string name="Sat">土</string>
+    <string name="Sun">日</string>
+    //
+    <string name="date">日付</string>
+    <string name="current_month">今月</string>
+    <string name="delete">削除</string>
+    <string name="copy">コピー</string>
+
+</resources>

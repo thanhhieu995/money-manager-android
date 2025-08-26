@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="All"
+            android:text="@string/all"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/search_filter"
@@ -73,7 +73,7 @@
                 android:drawableStart="@drawable/ic_baseline_search_24"
                 android:drawablePadding="8dp"
                 android:drawableTint="?attr/colorControlNormal"
-                android:hint="Search..."
+                android:hint="@string/search"
                 android:inputType="text"
                 android:padding="12dp" />
 
@@ -83,7 +83,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:paddingStart="12dp"
-                android:text="Cancel"
+                android:text="@string/cancel"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="14sp" />
         </LinearLayout>
@@ -123,7 +123,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Edit"
+                android:text="@string/edit"
                 android:textColor="@color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -195,7 +195,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/search_tv_income"
-                android:text="Income"
+                android:text="@string/Income"
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:gravity="center" />
@@ -219,7 +219,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/search_tv_expense"
-                android:text="Expense"
+                android:text="@string/Expense"
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:gravity="center" />
@@ -249,7 +249,7 @@
         android:id="@+id/search_no_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No data"
+        android:text="@string/no_data"
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

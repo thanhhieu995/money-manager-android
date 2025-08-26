@@ -1,5 +1,6 @@
 package com.henrystudio.moneymanager.ui.calendar
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.os.Build
@@ -7,6 +8,7 @@ import android.os.Bundle
 import android.util.TypedValue
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -53,9 +55,22 @@ class CalendarUpdateFragment : Fragment() {
         return view
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        calendarView.setOnTouchListener { v, e ->
+            when (e.actionMasked) {
+                // Chặn MOVE để không thể scroll
+                MotionEvent.ACTION_MOVE, MotionEvent.ACTION_SCROLL -> true
+
+                // Trả click về hệ thống + hỗ trợ accessibility
+                MotionEvent.ACTION_UP -> { v.performClick(); false }
+
+                else -> false
+            }
+        }
+
         viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(groups, currentDate) ->
             eventsMap.clear()
             val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())

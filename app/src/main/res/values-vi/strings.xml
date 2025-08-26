@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MoneyManager</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Xin chào blank fragment</string>
+    <string name="month_year_pattern">MMMM yyyy</string>
+
+    <string name="daily">Hằng ngày</string>
+    <string name="calendar">Lịch</string>
+    <string name="monthly">Hàng tháng</string>
+    <string name="Income">Thu nhập</string>
+    <string name="Expense">Chi tiêu</string>
+    <string name="Total">Tổng</string>
+    <string name="Stats">Thống kê</string>
+    <string name="More">Thêm</string>
+    <string name="Acc">Tài khoản</string>
+    <string name="Note">Ghi chú</string>
+    <string name="weekly">Hàng tuần</string>
+    <string name="yearly">Hàng năm</string>
+    <string name="list">Danh sách</string>
+    <string name="trend">Xu hướng</string>
+    <string name="exp">Chi</string>
+    <string name="all">Tất cả</string>
+    <string name="cancel">Hủy</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="bookmark">Đánh dấu</string>
+    <string name="amount">Số tiền</string>
+    <string name="category">Danh mục</string>
+    <string name="account">Tài khoản</string>
+    <string name="note">Ghi chú</string>
+    <string name="save">Lưu</string>
+    <string name="ads_continue">Tiếp tục</string>
+    <string name="edit">Chỉnh sửa</string>
+
+    <!-- Nút -->
+    <string name="add">Thêm</string>
+    <string name="enter_name">Nhập tên…</string>
+    <string name="no_data">Không có dữ liệu…</string>
+
+    <!-- Calendar -->
+    <string name="Mon">Th 2</string>
+    <string name="Tue">Th 3</string>
+    <string name="Wed">Th 4</string>
+    <string name="Thu">Th 5</string>
+    <string name="Fri">Th 6</string>
+    <string name="Sat">Th 7</string>
+    <string name="Sun">CN</string>
+    //
+    <string name="date">Ngày</string>
+    <string name="current_month">Tháng hiện tại</string>
+    <string name="delete">Xóa</string>
+    <string name="copy">Sao chép</string>
+
+</resources>

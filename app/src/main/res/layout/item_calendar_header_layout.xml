@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Mon"
+            android:text="@string/Mon"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Tue"
+            android:text="@string/Tue"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Wed"
+            android:text="@string/Wed"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -46,7 +46,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Thu"
+            android:text="@string/Thu"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Fri"
+            android:text="@string/Fri"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Sat"
+            android:text="@string/Sat"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
 
@@ -73,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Sun"
+            android:text="@string/Sun"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold" />
     </LinearLayout>

@@ -58,7 +58,7 @@
 
             <TextView
                 android:id="@+id/activity_statistic_trend_tv_noData"
-                android:text="No Data Available"
+                android:text="@string/no_data"
                 android:textColor="?android:attr/textColorPrimary"
                 android:visibility="gone"
                 android:layout_gravity="center"

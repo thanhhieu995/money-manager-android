@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MoneyManager</string>
+    <string name="hello_blank_fragment">Leeres Fragment</string>
+    <string name="month_year_pattern">MMMM yyyy</string>
+    <string name="daily">Täglich</string>
+    <string name="calendar">Kalender</string>
+    <string name="monthly">Monatlich</string>
+    <string name="Income">Einnahmen</string>
+    <string name="Expense">Ausgaben</string>
+    <string name="Total">Gesamt</string>
+    <string name="Stats">Statistiken</string>
+    <string name="More">Mehr</string>
+    <string name="Acc">Konto</string>
+    <string name="Note">Notiz</string>
+    <string name="weekly">Wöchentlich</string>
+    <string name="yearly">Jährlich</string>
+    <string name="list">Liste</string>
+    <string name="trend">Trend</string>
+    <string name="exp">Ausg.</string>
+    <string name="all">Alle</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="search">Suche</string>
+    <string name="bookmark">Lesezeichen</string>
+    <string name="amount">Betrag</string>
+    <string name="category">Kategorie</string>
+    <string name="account">Konto</string>
+    <string name="note">Notiz</string>
+    <string name="save">Speichern</string>
+    <string name="ads_continue">Weiter</string>
+    <string name="add">Hinzufügen</string>
+    <string name="enter_name">Name eingeben…</string>
+    <string name="no_data">Keine Daten…</string>
+    <string name="edit">Bearbeiten</string>
+
+    <!-- Kalender -->
+    <string name="Mon">Mo</string>
+    <string name="Tue">Di</string>
+    <string name="Wed">Mi</string>
+    <string name="Thu">Do</string>
+    <string name="Fri">Fr</string>
+    <string name="Sat">Sa</string>
+    <string name="Sun">So</string>
+    //
+    <string name="date">Datum</string>
+    <string name="current_month">Aktueller Monat</string>
+    <string name="delete">Löschen</string>
+    <string name="copy">Kopieren</string>
+
+</resources>

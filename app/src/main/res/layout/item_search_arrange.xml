@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="All" />
+            android:text="@string/all" />
 
         <ImageView
             android:id="@+id/search_optionTotalCheck"
@@ -42,7 +42,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Weekly"
+            android:text="@string/weekly"
             />
 
         <ImageView
@@ -65,7 +65,7 @@
             android:id="@+id/search_optionMonthly"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Monthly"
+            android:text="@string/monthly"
             android:layout_weight="1" />
 
         <ImageView
@@ -88,7 +88,7 @@
             android:id="@+id/search_optionYearly"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Yearly"
+            android:text="@string/yearly"
             android:layout_weight="1" />
 
         <ImageView
@@ -103,7 +103,7 @@
         android:id="@+id/search_optionCancel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Cancel"
+        android:text="@string/cancel"
         android:padding="16dp"
         android:textColor="?android:attr/textColorPrimary"
         android:gravity="center"

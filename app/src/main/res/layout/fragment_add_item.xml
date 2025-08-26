@@ -8,13 +8,13 @@
     android:orientation="vertical">
     <EditText
         android:id="@+id/fragment_add_item_name"
-        android:hint="Enter name..."
+        android:hint="@string/enter_name"
         android:textColor="?android:attr/textColorPrimary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
     <Button
         android:id="@+id/fragment_add_item_btnSave"
-        android:text="Save"
+        android:text="@string/save"
         android:textColor="@color/white"
         android:backgroundTint="@color/red"
         android:layout_width="match_parent"

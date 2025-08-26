@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MoneyManager</string>
+    <string name="hello_blank_fragment">空白片段</string>
+    <string name="month_year_pattern">yyyy年M月</string>
+    <string name="daily">每日</string>
+    <string name="calendar">日历</string>
+    <string name="monthly">每月</string>
+    <string name="Income">收入</string>
+    <string name="Expense">支出</string>
+    <string name="Total">总计</string>
+    <string name="Stats">统计</string>
+    <string name="More">更多</string>
+    <string name="Acc">账户</string>
+    <string name="Note">备注</string>
+    <string name="weekly">每周</string>
+    <string name="yearly">每年</string>
+    <string name="list">列表</string>
+    <string name="trend">趋势</string>
+    <string name="exp">支</string>
+    <string name="all">全部</string>
+    <string name="cancel">取消</string>
+    <string name="search">搜索</string>
+    <string name="bookmark">书签</string>
+    <string name="amount">金额</string>
+    <string name="category">类别</string>
+    <string name="account">账户</string>
+    <string name="note">备注</string>
+    <string name="save">保存</string>
+    <string name="ads_continue">继续</string>
+    <string name="add">添加</string>
+    <string name="enter_name">输入名称…</string>
+    <string name="no_data">暂无数据…</string>
+    <string name="edit">编辑</string>
+
+    <!-- 日历 -->
+    <string name="Mon">一</string>
+    <string name="Tue">二</string>
+    <string name="Wed">三</string>
+    <string name="Thu">四</string>
+    <string name="Fri">五</string>
+    <string name="Sat">六</string>
+    <string name="Sun">日</string>
+    //
+    <string name="date">日期</string>
+    <string name="current_month">当前月份</string>
+    <string name="delete">删除</string>
+    <string name="copy">复制</string>
+
+</resources>

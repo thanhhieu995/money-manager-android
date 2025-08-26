@@ -12,7 +12,7 @@
 
     <TextView
         android:id="@+id/item_day_calendar_noData"
-        android:text="No data"
+        android:text="@string/no_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"/>
