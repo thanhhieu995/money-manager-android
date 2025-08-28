@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface"
+    android:padding="16dp">
+
+    <!-- English -->
+    <LinearLayout
+        android:id="@+id/lang_enLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_enText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_english" />
+
+        <ImageView
+            android:id="@+id/lang_enCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- German -->
+    <LinearLayout
+        android:id="@+id/lang_deLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_germanText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_german" />
+
+        <ImageView
+            android:id="@+id/lang_deCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Spanish -->
+    <LinearLayout
+        android:id="@+id/lang_esLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_spanishText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_spanish" />
+
+        <ImageView
+            android:id="@+id/lang_esCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- French -->
+    <LinearLayout
+        android:id="@+id/lang_frLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_frenchText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_french" />
+
+        <ImageView
+            android:id="@+id/lang_frCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Japanese -->
+    <LinearLayout
+        android:id="@+id/lang_jaLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_jaText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_japanese" />
+
+        <ImageView
+            android:id="@+id/lang_jaCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Korean -->
+    <LinearLayout
+        android:id="@+id/lang_koLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_koText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_korean" />
+
+        <ImageView
+            android:id="@+id/lang_koCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Russian -->
+    <LinearLayout
+        android:id="@+id/lang_ruLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_ruText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_russian" />
+
+        <ImageView
+            android:id="@+id/lang_ruCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Vietnamese -->
+    <LinearLayout
+        android:id="@+id/lang_viLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_viText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_vietnamese" />
+
+        <ImageView
+            android:id="@+id/lang_viCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Chinese -->
+    <LinearLayout
+        android:id="@+id/lang_zhLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/lang_chineseText"
+            style="@style/LanguageDialogText"
+            android:text="@string/lang_chinese" />
+
+        <ImageView
+            android:id="@+id/lang_zhCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Cancel -->
+    <TextView
+        android:id="@+id/lang_optionCancel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/cancel"
+        android:padding="16dp"
+        android:gravity="center"
+        android:textStyle="bold" />
+</LinearLayout>

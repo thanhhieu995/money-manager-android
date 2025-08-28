@@ -39,7 +39,7 @@ class StatisticViewPagerFragment : Fragment() {
     private lateinit var incomeBtn: MaterialButton
     private lateinit var expenseBtn: MaterialButton
     private lateinit var viewPager: ViewPager2
-    private var selectedOption: String = "Monthly"
+    private var selectedOption: FilterPeriodStatistic = FilterPeriodStatistic.Monthly
     private lateinit var adapter: StatisticPagerAdapter
     private var _binding: FragmentStatisticViewPagerBinding?= null
     private val binding get() = _binding!!
@@ -69,9 +69,9 @@ class StatisticViewPagerFragment : Fragment() {
         viewPager.adapter = adapter
         TabLayoutMediator(tabLayout, viewPager) {tab, position ->
             tab.text = when (position) {
-                0 -> "Stats"
-                1 -> "Acc"
-                2 -> "Note"
+                0 -> requireContext().getString(R.string.Stats)
+                1 -> requireContext().getString(R.string.Acc)
+                2 -> requireContext().getString(R.string.Note)
                 else -> ""
             }
         }.attach()
@@ -118,8 +118,8 @@ class StatisticViewPagerFragment : Fragment() {
 
         viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
             filterOptionTemp = filterOption
-            filterDropdown.text = filterOption.type.toString()
-            selectedOption = filterOption.type.toString()
+            filterDropdown.text = getString(filterOption.type.stringRes)
+            selectedOption = filterOption.type
             monthText.text = Helper.getUpdateMonthText(filterOption)
         }
 
@@ -179,30 +179,41 @@ class StatisticViewPagerFragment : Fragment() {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         val view = layoutInflater.inflate(R.layout.item_statistic_dialog, null)
         bottomSheetDialog.setContentView(view)
+
+        // Map enum -> ImageView check
         val checkViews = mapOf(
-            "Weekly" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgWeeklyCheck),
-            "Monthly" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgMonthlyCheck),
-            "Yearly" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgYearlyCheck),
-            "List" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgListCheck),
-            "Trend" to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgTrendCheck),
-        )
-        val optionConfigs = listOf(
-            Triple("Weekly", R.id.item_statistic_dialog_weeklyLayout, FilterPeriodStatistic.Weekly),
-            Triple("Monthly", R.id.item_statistic_dialog_monthlyLayout, FilterPeriodStatistic.Monthly),
-            Triple("Yearly", R.id.item_statistic_dialog_yearlyLayout, FilterPeriodStatistic.Yearly),
-            Triple("List", R.id.item_statistic_dialog_listLayout, FilterPeriodStatistic.List),
-            Triple("Trend", R.id.item_statistic_dialog_trendLayout, FilterPeriodStatistic.Trend)
+            FilterPeriodStatistic.Weekly to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgWeeklyCheck),
+            FilterPeriodStatistic.Monthly to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgMonthlyCheck),
+            FilterPeriodStatistic.Yearly to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgYearlyCheck),
+            FilterPeriodStatistic.List to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgListCheck),
+            FilterPeriodStatistic.Trend to view.findViewById<ImageView>(R.id.item_statistic_dialog_imgTrendCheck),
         )
 
-        fun updateCheckMarks(selected: String) {
-            filterDropdown.text = selected
+        // Map enum -> layoutId
+        val optionLayouts = mapOf(
+            FilterPeriodStatistic.Weekly to R.id.item_statistic_dialog_weeklyLayout,
+            FilterPeriodStatistic.Monthly to R.id.item_statistic_dialog_monthlyLayout,
+            FilterPeriodStatistic.Yearly to R.id.item_statistic_dialog_yearlyLayout,
+            FilterPeriodStatistic.List to R.id.item_statistic_dialog_listLayout,
+            FilterPeriodStatistic.Trend to R.id.item_statistic_dialog_trendLayout
+        )
+
+        // cập nhật text + check
+        fun updateCheckMarks(selected: FilterPeriodStatistic) {
+            filterDropdown.text = getString(selected.stringRes)
+
             checkViews.forEach { (option, imageView) ->
                 imageView.visibility = if (option == selected) View.VISIBLE else View.GONE
             }
+
             bottomSheetDialog.dismiss()
         }
-        updateCheckMarks(selectedOption) // cập nhật ban đầu
-        optionConfigs.forEach { (optionName, layoutId, filterPeriod) ->
+
+        // cập nhật trạng thái ban đầu
+        updateCheckMarks(selectedOption)
+
+        // gắn click listener
+        optionLayouts.forEach { (filterPeriod, layoutId) ->
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
                 when (filterPeriod) {
                     FilterPeriodStatistic.List -> {
@@ -224,16 +235,18 @@ class StatisticViewPagerFragment : Fragment() {
                         bottomSheetDialog.dismiss()
                     }
                     else -> {
-                        selectedOption = optionName
-                        updateCheckMarks(optionName)
+                        selectedOption = filterPeriod
+                        updateCheckMarks(filterPeriod)
                         viewModel.setFilter(filterPeriod, filterOptionTemp.date)
                     }
                 }
             }
         }
+
         view.findViewById<TextView>(R.id.item_statistic_dialog_optionCancel).setOnClickListener {
             bottomSheetDialog.dismiss()
         }
+
         bottomSheetDialog.show()
     }
 
@@ -243,7 +256,7 @@ class StatisticViewPagerFragment : Fragment() {
 
         val totalIncome = incomeList.sumOf { it.amount }
         val totalExpense = expenseList.sumOf { it.amount }
-        incomeBtn.text = "Income " + Helper.formatCurrency(totalIncome)
-        expenseBtn.text = "Exp " + Helper.formatCurrency(totalExpense)
+        incomeBtn.text = requireContext().getString(R.string.Income) + " " + Helper.formatCurrency(totalIncome)
+        expenseBtn.text = requireContext().getString(R.string.exp) + " " + Helper.formatCurrency(totalExpense)
     }
 }

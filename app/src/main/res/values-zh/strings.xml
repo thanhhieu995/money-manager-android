@@ -46,5 +46,19 @@
     <string name="current_month">当前月份</string>
     <string name="delete">删除</string>
     <string name="copy">复制</string>
+    //
+    <string name="lang_english">英语</string>
+    <string name="lang_vietnamese">越南语</string>
+    <string name="lang_japanese">日语</string>
+    <string name="lang_korean">韩语</string>
+    <string name="lang_chinese">中文</string>
+    <string name="lang_french">法语</string>
+    <string name="lang_russian">俄语</string>
+    <string name="lang_german">德语</string>
+    <string name="lang_spanish">西班牙语</string>
+    <string name="setting">设置</string>
+    <string name="theme">主题</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="language">语言</string>
 
 </resources>

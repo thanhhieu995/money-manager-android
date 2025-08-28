@@ -7,4 +7,25 @@
         <item name="cornerRadius">16dp</item>
         <item name="android:textColor">@color/toggle_button_expense_text_selector</item>
     </style>
+
+    <style name="LanguageDialogRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="LanguageDialogText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="LanguageDialogCheck">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:src">@drawable/ic_baseline_check_24</item>
+        <item name="android:visibility">gone</item>
+    </style>
 </resources>

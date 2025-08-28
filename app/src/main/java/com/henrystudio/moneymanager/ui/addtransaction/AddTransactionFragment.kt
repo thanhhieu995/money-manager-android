@@ -229,6 +229,7 @@ class AddTransactionFragment : Fragment() {
         bookMarkButton = binding.fragmentAddTransactionBtnBookmark
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun saveTransaction(onSuccess: () -> Unit) {
         if (edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
             Toast.makeText(
@@ -407,13 +408,14 @@ class AddTransactionFragment : Fragment() {
         saveButton.setBackgroundColor(activeColor)
         saveButton.setTextColor(activeTextColor)
 
-        val titleTransaction = if (isIncomeType) "Income" else "Expense"
+        val titleTransaction = if (isIncomeType) requireContext().getString(R.string.Income) else requireContext().getString(R.string.Expense)
         (requireActivity() as AddTransactionActivity).updateTransactionTitle(titleTransaction)
 
         layoutSave.visibility = if (isEdit) View.GONE else View.VISIBLE
         layoutEdit.visibility = if (isEdit) View.VISIBLE else View.GONE
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleToAddTransaction() {
         transactionFromIntent = arguments?.getSerializable("transaction") as? Transaction
 
@@ -454,6 +456,7 @@ class AddTransactionFragment : Fragment() {
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun showEditMode(transaction: Transaction) {
         isEditMode = true
         continueButton.visibility = View.GONE
@@ -533,7 +536,8 @@ class AddTransactionFragment : Fragment() {
         (requireActivity() as AddTransactionActivity).titleStack.addLast(titleView.text.toString())
         (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
         val titleIncoming = (requireActivity() as AddTransactionActivity).titleIncoming
-        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(titleIncoming, "Add")
+        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(titleIncoming,
+            requireContext().getString(R.string.add))
         val fragment = AddItemFragment().apply {
             arguments = Bundle().apply {
                 putSerializable("item_type", itemType)

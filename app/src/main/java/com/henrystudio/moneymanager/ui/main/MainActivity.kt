@@ -5,12 +5,16 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bottomNavigation.DailyNavigateFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
+import com.henrystudio.moneymanager.ui.setting.LanguagePref
+import com.henrystudio.moneymanager.ui.setting.SettingFragment
 import com.henrystudio.moneymanager.viewmodel.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -38,6 +42,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val lastTab = prefs.getInt("last_selected_tab", R.id.nav_daily)
+
+        // Lấy ngôn ngữ đã lưu
+        val lang = LanguagePref.getLanguage(this)
+        if (lang != null) {
+            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang)
+            AppCompatDelegate.setApplicationLocales(appLocale)
+        }
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)
@@ -51,10 +64,21 @@ class MainActivity : AppCompatActivity() {
         defaultTransactions()
 
         viewModel.currentFilterDate.observe(this) { month ->
+            // Lấy locale hiện tại trong app (theo AppCompatDelegate)
+            val currentLocales = AppCompatDelegate.getApplicationLocales()
+            val currentLocale: Locale = if (!currentLocales.isEmpty) {
+                currentLocales[0]!!
+            } else {
+                Locale.getDefault() // fallback
+            }
+
+            val formatterMonth = DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale)
             bottomNav.menu.findItem(R.id.nav_daily).title = month.format(formatterMonth)
         }
 
         bottomNav.setOnItemSelectedListener { item ->
+            // lưu lại tab mỗi khi chọn
+            prefs.edit().putInt("last_selected_tab", item.itemId).apply()
             when(item.itemId) {
                 R.id.nav_daily -> {
                     supportFragmentManager.beginTransaction()
@@ -69,12 +93,21 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_more -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.main_fragment_container, SettingFragment())
+                        .commit()
                     true
                 }
                 else -> false
             }
         }
-        bottomNav.selectedItemId = R.id.nav_daily // phải đặt sau listener
+        // 🔑 Nếu app mới mở lại sau khi kill → vào daily
+        //     Nếu resume bình thường → mở lại tab cuối
+        if (savedInstanceState == null) {
+            bottomNav.selectedItemId = R.id.nav_daily
+        } else {
+            bottomNav.selectedItemId = lastTab
+        }
     }
 
     private fun init() {

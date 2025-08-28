@@ -46,5 +46,19 @@
     <string name="current_month">Mois en cours</string>
     <string name="delete">Supprimer</string>
     <string name="copy">Copier</string>
+    //
+    <string name="lang_english">Anglais</string>
+    <string name="lang_vietnamese">Vietnamien</string>
+    <string name="lang_japanese">Japonais</string>
+    <string name="lang_korean">Coréen</string>
+    <string name="lang_chinese">Chinois</string>
+    <string name="lang_french">Français</string>
+    <string name="lang_russian">Russe</string>
+    <string name="lang_german">Allemand</string>
+    <string name="lang_spanish">Espagnol</string>
+    <string name="setting">Paramètres</string>
+    <string name="theme">Thème</string>
+    <string name="dark_mode">Mode sombre</string>
+    <string name="language">Langue</string>
 
 </resources>

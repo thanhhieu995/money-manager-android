@@ -44,5 +44,19 @@
     <string name="current_month">今月</string>
     <string name="delete">削除</string>
     <string name="copy">コピー</string>
+    //
+    <string name="lang_english">英語</string>
+    <string name="lang_vietnamese">ベトナム語</string>
+    <string name="lang_japanese">日本語</string>
+    <string name="lang_korean">韓国語</string>
+    <string name="lang_chinese">中国語</string>
+    <string name="lang_french">フランス語</string>
+    <string name="lang_russian">ロシア語</string>
+    <string name="lang_german">ドイツ語</string>
+    <string name="lang_spanish">スペイン語</string>
+    <string name="setting">設定</string>
+    <string name="theme">テーマ</string>
+    <string name="dark_mode">ダークモード</string>
+    <string name="language">言語</string>
 
 </resources>

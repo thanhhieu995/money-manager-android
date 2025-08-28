@@ -3,6 +3,7 @@ package com.henrystudio.moneymanager.ui.bottomNavigation
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -20,6 +22,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.helper.Helper.Companion.getAppLocale
 import com.henrystudio.moneymanager.helper.MonthPickerDialogFragment
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
@@ -78,8 +81,13 @@ class DailyNavigateFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         init()
 
-        val formatterYear = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
-        val formatterMonth = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+        fun formatterMonth(): DateTimeFormatter {
+            return DateTimeFormatter.ofPattern("MMM yyyy", getAppLocale())
+        }
+
+        fun formatterYear(): DateTimeFormatter {
+            return DateTimeFormatter.ofPattern("yyyy", getAppLocale())
+        }
 
         val tabLayout = view.findViewById<TabLayout>(R.id.fragment_daily_navigate_tabLayout)
 
@@ -88,9 +96,9 @@ class DailyNavigateFragment : Fragment() {
         viewPager.adapter = viewPagerAdapter
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
-                0 -> tab.text = "Daily"
-                1 -> tab.text = "Calendar"
-                2 -> tab.text = "Monthly"
+                0 -> tab.text = requireContext().getString(R.string.daily)
+                1 -> tab.text = requireContext().getString(R.string.calendar)
+                2 -> tab.text = requireContext().getString(R.string.monthly)
             }
         }.attach()
 
@@ -114,21 +122,21 @@ class DailyNavigateFragment : Fragment() {
                 0 -> {
                     // Daily tab selected
                     if (month != null) {
-                        monthText.text = month!!.format(formatterMonth)
+                        monthText.text = month!!.format(formatterMonth())
                         handleSummarySection(filteredMonth?: emptyList())
                     }
                 }
                 1 -> {
                     // Calendar tab selected
                     if (month != null) {
-                        monthText.text = month!!.format(formatterMonth)
+                        monthText.text = month!!.format(formatterMonth())
                         handleSummarySection(filteredMonth ?: emptyList())
                     }
                 }
                 2 -> {
                     // Monthly tab selected
                     if (month != null) {
-                        monthText.text = month!!.format(formatterYear)
+                        monthText.text = month!!.format(formatterYear())
                         if (filteredYear != null) {
                             handleSummarySection(filteredYear)
                         }
@@ -139,9 +147,19 @@ class DailyNavigateFragment : Fragment() {
 
         monthText.setOnClickListener {
             MonthPickerDialogFragment { month, year ->
-                val monthName = Month.of(month).getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                // Lấy locale hiện tại trong app
+                val appLocales = AppCompatDelegate.getApplicationLocales()
+                val currentLocale: Locale = if (!appLocales.isEmpty) {
+                    appLocales[0]!!
+                } else {
+                    Locale.getDefault()
+                }
+
+                // Lấy tên tháng theo locale
+                val monthName = Month.of(month).getDisplayName(TextStyle.SHORT, currentLocale)
+
                 monthText.text = "$monthName $year"
-                // Parse thành LocalDate (ngày 1 của tháng)
+                // Parse thành LocalDate (ngày 1 của tháng → ngày cuối tháng)
                 val lastDay = LocalDate.of(year, month, 1).lengthOfMonth()
                 val selectedDate = LocalDate.of(year, month, lastDay)
                 viewModel.setLocalDateCurrentFilterDate(selectedDate)
@@ -187,7 +205,7 @@ class DailyNavigateFragment : Fragment() {
             val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
             val isMonthly = fragment is MonthlyFragment
 
-            monthText.text = selectedMonth.format(if (isMonthly) formatterYear else formatterMonth)
+            monthText.text = selectedMonth.format(if (isMonthly) formatterYear() else formatterMonth())
 
             val filtered = if (isMonthly) {
                 com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, selectedMonth)

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
@@ -150,6 +151,15 @@ class Helper {
             // Format sang dạng dd/MM/yy (E)
             val outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
             return date.format(outputFormatter)
+        }
+
+        fun getAppLocale(): Locale {
+            val appLocales = AppCompatDelegate.getApplicationLocales()
+            return if (!appLocales.isEmpty) {
+                appLocales[0]!!
+            } else {
+                Locale.getDefault()
+            }
         }
     }
 }

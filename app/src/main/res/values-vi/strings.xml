@@ -50,5 +50,19 @@
     <string name="current_month">Tháng hiện tại</string>
     <string name="delete">Xóa</string>
     <string name="copy">Sao chép</string>
+    //
+    <string name="lang_english">Tiếng Anh</string>
+    <string name="lang_vietnamese">Tiếng Việt</string>
+    <string name="lang_japanese">Tiếng Nhật</string>
+    <string name="lang_korean">Tiếng Hàn</string>
+    <string name="lang_chinese">Tiếng Trung</string>
+    <string name="lang_french">Tiếng Pháp</string>
+    <string name="lang_russian">Tiếng Nga</string>
+    <string name="lang_german">Tiếng Đức</string>
+    <string name="lang_spanish">Tiếng Tây Ban Nha</string>
+    <string name="setting">Cài đặt</string>
+    <string name="theme">Chủ đề</string>
+    <string name="dark_mode">Chế độ tối</string>
+    <string name="language">Ngôn ngữ</string>
 
 </resources>

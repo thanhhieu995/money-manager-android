@@ -9,6 +9,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
@@ -19,6 +21,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +58,13 @@ class StatisticListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistic_list)
+        // Lấy ngôn ngữ đã lưu
+        val lang = LanguagePref.getLanguage(this)
+        if (lang != null) {
+            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang)
+            AppCompatDelegate.setApplicationLocales(appLocale)
+        }
+
         init()
         onBackPressedDispatcher.addCallback(this) {
             onBackAnimation()
@@ -72,9 +82,9 @@ class StatisticListActivity : AppCompatActivity() {
         viewPager.adapter = adapter
         TabLayoutMediator(tabLayout, viewPager) {tab, position ->
             tab.text = when(position) {
-                0 -> "Weekly"
-                1 -> "Monthly"
-                2 -> "Yearly"
+                0 -> getString(R.string.weekly)
+                1 -> getString(R.string.monthly)
+                2 -> getString(R.string.yearly)
                 else -> ""
             }
         }.attach()

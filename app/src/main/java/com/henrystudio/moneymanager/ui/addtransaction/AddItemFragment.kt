@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
+import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentAddItemBinding
 import com.henrystudio.moneymanager.helper.Helper.Companion.toCategory
 import com.henrystudio.moneymanager.model.*
@@ -63,8 +64,16 @@ class AddItemFragment : Fragment() {
 
         btnSave.setOnClickListener {
             if (nameText.text.trim().isNotEmpty()) {
-                (requireActivity() as AddTransactionActivity).updateTransactionTitle(if (categoryType == CategoryType.EXPENSE)"Expense" else "Income")
-                (requireActivity() as AddTransactionActivity).updateTitleIncoming(if (itemType == ItemType.CATEGORY) "Category" else "Account")
+                (requireActivity() as AddTransactionActivity).updateTransactionTitle(if (categoryType == CategoryType.EXPENSE) {
+                    requireContext().getString(R.string.Income)
+                } else {
+                    requireContext().getString(R.string.Expense)
+                })
+                (requireActivity() as AddTransactionActivity).updateTitleIncoming(if (itemType == ItemType.CATEGORY) {
+                    requireContext().getString(R.string.category)
+                } else {
+                    requireContext().getString(R.string.account)
+                })
                 when (source) {
                     AddItemSource.FROM_ADD_TRANSACTION -> {
                         (requireActivity() as AddTransactionActivity).switchToBookmarkIconWithFade()

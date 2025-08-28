@@ -47,5 +47,18 @@
     //
     <string name="delete">Delete</string>
     <string name="copy">Copy</string>
-
+    //
+    <string name="lang_english">English</string>
+    <string name="lang_vietnamese">Vietnamese</string>
+    <string name="lang_japanese">Japanese</string>
+    <string name="lang_korean">Korean</string>
+    <string name="lang_chinese">Chinese</string>
+    <string name="lang_french">French</string>
+    <string name="lang_russian">Russian</string>
+    <string name="lang_german">German</string>
+    <string name="lang_spanish">Spanish</string>
+    <string name="setting">Setting</string>
+    <string name="theme">Theme</string>
+    <string name="dark_mode">Dark mode</string>
+    <string name="language">Language</string>
 </resources>

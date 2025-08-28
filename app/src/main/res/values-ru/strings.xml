@@ -46,5 +46,19 @@
     <string name="current_month">Текущий месяц</string>
     <string name="delete">Удалить</string>
     <string name="copy">Копировать</string>
+    //
+    <string name="lang_english">Английский</string>
+    <string name="lang_vietnamese">Вьетнамский</string>
+    <string name="lang_japanese">Японский</string>
+    <string name="lang_korean">Корейский</string>
+    <string name="lang_chinese">Китайский</string>
+    <string name="lang_french">Французский</string>
+    <string name="lang_russian">Русский</string>
+    <string name="lang_german">Немецкий</string>
+    <string name="lang_spanish">Испанский</string>
+    <string name="setting">Настройки</string>
+    <string name="theme">Тема</string>
+    <string name="dark_mode">Тёмный режим</string>
+    <string name="language">Язык</string>
 
 </resources>
