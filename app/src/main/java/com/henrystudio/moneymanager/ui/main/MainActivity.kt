@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
-import com.henrystudio.moneymanager.ui.bottomNavigation.DailyNavigateFragment
+import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.DailyNavigateFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.ui.setting.SettingFragment

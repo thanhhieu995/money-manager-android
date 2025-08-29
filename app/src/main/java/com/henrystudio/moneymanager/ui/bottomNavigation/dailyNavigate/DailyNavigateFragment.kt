@@ -1,9 +1,8 @@
-package com.henrystudio.moneymanager.ui.bottomNavigation
+package com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate
 
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -67,6 +66,13 @@ class DailyNavigateFragment : Fragment() {
         TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
     }
 
+    private lateinit var viewPagerAdapter: ViewPagerAdapter
+    private lateinit var viewPager: ViewPager2
+    private lateinit var tabLayout: TabLayout
+    private lateinit var pageCallback: ViewPager2.OnPageChangeCallback
+    private var isRestoring = false
+    private var mediator: TabLayoutMediator? = null
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -89,28 +95,35 @@ class DailyNavigateFragment : Fragment() {
             return DateTimeFormatter.ofPattern("yyyy", getAppLocale())
         }
 
-        val tabLayout = view.findViewById<TabLayout>(R.id.fragment_daily_navigate_tabLayout)
+        tabLayout = view.findViewById<TabLayout>(R.id.fragment_daily_navigate_tabLayout)
 
-        val viewPager = view.findViewById<ViewPager2>(R.id.fragment_daily_navigate_viewPager)
-        val viewPagerAdapter = ViewPagerAdapter(this)
+        viewPager = view.findViewById<ViewPager2>(R.id.fragment_daily_navigate_viewPager)
+        viewPagerAdapter = ViewPagerAdapter(this)
         viewPager.adapter = viewPagerAdapter
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+        mediator = TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             when (position) {
                 0 -> tab.text = requireContext().getString(R.string.daily)
                 1 -> tab.text = requireContext().getString(R.string.calendar)
                 2 -> tab.text = requireContext().getString(R.string.monthly)
             }
-        }.attach()
+        }.also { it.attach() }
+        viewPager.offscreenPageLimit = 3
 
-        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-                viewModel.setCurrentDailyNavigateTab(position)
+        val savedPos = PrefsManager.getTabPosition(requireContext())
+        // setCurrentItem NGAY, trước attach mediator
+        viewPager.setCurrentItem(savedPos, false)
+        isRestoring = true
+        // chọn tab (cập nhật cả TabLayout lẫn ViewPager)
+        tabLayout.post {
+            tabLayout.getTabAt(savedPos)?.select()
+            viewPager.post {
+                viewPager.setCurrentItem(savedPos, false)
+                // cho phép callback hoạt động lại sau 1 frame
+                viewPager.post { isRestoring = false }
             }
-        })
+        }
 
         viewModel.currentDailyNavigateTabPosition.observe(viewLifecycleOwner) { position ->
-            viewPager.currentItem = position
             val filteredMonth = month?.let {
                 com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
                     it
@@ -204,7 +217,6 @@ class DailyNavigateFragment : Fragment() {
             // Đổi tiêu đề của item "Daily"
             val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
             val isMonthly = fragment is MonthlyFragment
-
             monthText.text = selectedMonth.format(if (isMonthly) formatterYear() else formatterMonth())
 
             val filtered = if (isMonthly) {
@@ -271,9 +283,31 @@ class DailyNavigateFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        pageCallback = object : ViewPager2.OnPageChangeCallback() {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                if (isRestoring) return  // bỏ qua trigger do khôi phục
+                PrefsManager.saveTabPosition(requireContext(), position)
+                // Nếu cần cập nhật ViewModel thì làm ở đây (KHÔNG set currentItem nữa)
+                 viewModel.setCurrentDailyNavigateTab(position)
+            }
+        }
+        viewPager.registerOnPageChangeCallback(pageCallback)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewPager.unregisterOnPageChangeCallback(pageCallback)
+    }
+
     override fun onDestroyView() {
-        super.onDestroyView()
+        mediator?.detach()
+        mediator = null
         _binding = null
+        super.onDestroyView()
     }
 
     private fun handleSummarySection(filtered: List<TransactionGroup>) {
@@ -284,7 +318,6 @@ class DailyNavigateFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun navigateToDailyTabAndScrollToWeek(weekStart: LocalDate) {
-        val viewPager = binding.fragmentDailyNavigateViewPager
         viewPager.setCurrentItem(0, true) // 0 là tab "Daily"
 
         // Delay nhẹ để đợi Fragment trong ViewPager khởi tạo xong
