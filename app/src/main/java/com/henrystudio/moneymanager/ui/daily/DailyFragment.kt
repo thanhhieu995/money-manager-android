@@ -19,9 +19,12 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
+import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
+import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import com.henrystudio.moneymanager.ui.main.MainActivity
 
 class DailyFragment : Fragment() {
@@ -146,6 +149,36 @@ class DailyFragment : Fragment() {
 
             selectedList = selectedTransactions
         }
+
+        val lastDate = loadLastDate(requireContext()) // hàm tự viết lấy từ SharedPreferences
+        if (lastDate != null) {
+            binding.transactionList.post {
+                val position = findPositionForDate(getFilterListGroupTransaction(lastDate), lastDate)
+                if (position != -1) {
+                    (binding.transactionList.layoutManager as LinearLayoutManager)
+                        .scrollToPositionWithOffset(position, 0)
+                }
+            }
+        }
+
+        binding.transactionList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) { // chỉ khi user dừng scroll
+                    val lm = recyclerView.layoutManager as LinearLayoutManager
+                    val firstPos = lm.findFirstVisibleItemPosition()
+                    if (firstPos != RecyclerView.NO_POSITION) {
+                        val txGroup = adapter.getGroupAt(firstPos)
+                        val cleanedDate = txGroup.date.substringBefore(" ")
+                        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+                        val date = LocalDate.parse(cleanedDate, formatter)
+
+                        saveLastDate(requireContext(), date)
+                    }
+                }
+            }
+        })
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

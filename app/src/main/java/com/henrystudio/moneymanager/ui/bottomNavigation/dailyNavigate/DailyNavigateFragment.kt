@@ -212,28 +212,21 @@ class DailyNavigateFragment : Fragment() {
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
         }
 
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { selectedMonth ->
-            month = selectedMonth
-            // Đổi tiêu đề của item "Daily"
+        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) { (groups, date) ->
+            month = date
+            listTransactionGroup = groups
             val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
             val isMonthly = fragment is MonthlyFragment
-            monthText.text = selectedMonth.format(if (isMonthly) formatterYear() else formatterMonth())
+
+            monthText.text = date.format(if (isMonthly) formatterYear() else formatterMonth())
 
             val filtered = if (isMonthly) {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, selectedMonth)
+                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, date)
             } else {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, selectedMonth)
+                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, date)
             }
 
             handleSummarySection(filtered)
-        }
-
-        viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
-            listTransactionGroup = list
-            month?.let {
-                val filtered = com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(list, it)
-                handleSummarySection(filtered)
-            }
         }
 
         // observe selectionMode && id
@@ -275,9 +268,8 @@ class DailyNavigateFragment : Fragment() {
             }
         })
 
-        viewModel.navigateToWeekFromMonthly.observe(viewLifecycleOwner) { date ->
-            if (date != null) {
-                // Gọi scroll đến tuần tương ứng
+        viewModel.navigateToWeekFromMonthly.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { date ->
                 navigateToDailyTabAndScrollToWeek(date)
             }
         }
@@ -295,6 +287,10 @@ class DailyNavigateFragment : Fragment() {
                  viewModel.setCurrentDailyNavigateTab(position)
             }
         }
+        val savedPos = PrefsManager.getTabPosition(requireContext())
+        // setCurrentItem NGAY, trước attach mediator
+        viewPager.setCurrentItem(savedPos, false)
+        isRestoring = true
         viewPager.registerOnPageChangeCallback(pageCallback)
     }
 

@@ -24,8 +24,8 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     val selectionMode: LiveData<Boolean> = _selectionMode
     private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
     val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
-    private val _navigateToWeekFromMonthly = MutableLiveData<LocalDate?>(null)
-    val navigateToWeekFromMonthly: LiveData<LocalDate?> = _navigateToWeekFromMonthly
+    private val _navigateToWeekFromMonthly = MutableLiveData<Event<LocalDate>>()
+    val navigateToWeekFromMonthly: LiveData<Event<LocalDate>> = _navigateToWeekFromMonthly
     private val _filterOption = MutableLiveData<FilterOption>()
     val filterOption: LiveData<FilterOption> = _filterOption
     private val _statisticCategoryType = MutableLiveData(CategoryType.EXPENSE)
@@ -146,7 +146,7 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun navigateToWeekFromMonthly(date: LocalDate) {
         _currentFilterDate.value = date.withDayOfMonth(date.dayOfMonth)
-        _navigateToWeekFromMonthly.value = date // Dùng để scroll sau khi cập nhật
+        _navigateToWeekFromMonthly.value = Event(date) // Dùng để scroll sau khi cập nhật
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
