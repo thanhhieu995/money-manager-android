@@ -171,7 +171,7 @@ class AddTransactionFragment : Fragment() {
                 edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
             accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
-                showAccountBottomDialog("Account", accountList, edtAccount,
+                showAccountBottomDialog(requireContext().getString(R.string.account), accountList, edtAccount,
                     onAddClick = {openAddItemFragment(ItemType.ACCOUNT, selectedType)},
                     onEditClick = {openEditAccountFragment(ItemType.ACCOUNT, selectedType)}
                 )
@@ -516,7 +516,7 @@ class AddTransactionFragment : Fragment() {
 
             categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
                 val treeItems = buildCategoryTree(list)
-                showCategoryBottomDialog("Category", treeItems, edtCategory,
+                showCategoryBottomDialog(requireContext().getString(R.string.category), treeItems, edtCategory,
                     onAddClick = { openAddItemFragment(ItemType.CATEGORY, selectedType) },
                     onEditClick = { openEditCategoryFragment(ItemType.CATEGORY, selectedType) }
                     )
@@ -563,7 +563,7 @@ class AddTransactionFragment : Fragment() {
                 it1
             )
         }
-        (requireActivity() as AddTransactionActivity).updateTitleIncoming(if(itemType == ItemType.CATEGORY) "Category" else "Account")
+        (requireActivity() as AddTransactionActivity).updateTitleIncoming(if(itemType == ItemType.CATEGORY) requireContext().getString(R.string.category) else requireContext().getString(R.string.account))
         val extraEditText = (requireActivity() as AddTransactionActivity).titleIncoming
         (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(extraEditText, extraEditText.text.toString())
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()
@@ -692,7 +692,7 @@ class AddTransactionFragment : Fragment() {
     private fun openEditAccountFragment(itemType: ItemType, categoryType: CategoryType) {
         val titleView = (requireActivity() as AddTransactionActivity).titleCurrent
         (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(titleView)
-        (requireActivity() as AddTransactionActivity).updateTitleIncoming(if(itemType == ItemType.CATEGORY) "Category" else "Account")
+        (requireActivity() as AddTransactionActivity).updateTitleIncoming(if(itemType == ItemType.CATEGORY) requireContext().getString(R.string.category) else requireContext().getString(R.string.account))
         val extraEditText = (requireActivity() as AddTransactionActivity).titleIncoming
         (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(extraEditText, extraEditText.text.toString())
         (requireActivity() as AddTransactionActivity).switchToAddIconWithFade()

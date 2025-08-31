@@ -98,12 +98,12 @@ class StatisticCategoryActivity : BaseActivity() {
             selectedTransactionList = selectedTransactions
             // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
             selectedCount.text =
-                "${selectedTransactions.size} selected"
+                "${selectedTransactions.size} ${getString(R.string.selected)}"
             val totalAmount = selectedTransactions.sumOf {
                 if(it.isIncome) it.amount else -it.amount
             }
             selectedTotal.text =
-                "Total: ${Helper.formatCurrency(totalAmount)}"
+                "${getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
         }
 
         btnEditClose.setOnClickListener {

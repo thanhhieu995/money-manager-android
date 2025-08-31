@@ -108,18 +108,18 @@ class AddTransactionActivity : BaseActivity() {
                 ItemType.CATEGORY -> {
                     when(source) {
                         AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG -> {
-                            updateTransactionTitle(selectedCategoryItemForAdd?.name ?: "Category")
+                            updateTransactionTitle(selectedCategoryItemForAdd?.name ?: getString(R.string.category))
                         }
                         else -> {}
                     }
                 }
                 ItemType.ACCOUNT -> {
-                    updateTransactionTitle(selectedAccountItemForAdd?.name ?: "Account")
+                    updateTransactionTitle(selectedAccountItemForAdd?.name ?: getString(R.string.account))
                 }
                 else -> {}
             }
             addIcon.visibility = View.GONE
-            animateIncomingTitleToCenter(titleIncoming, "Add")
+            animateIncomingTitleToCenter(titleIncoming, getString(R.string.add))
 
             supportFragmentManager.beginTransaction()
                 .setCustomAnimations(

@@ -134,7 +134,7 @@ class StatisticAccountFragment : Fragment() {
             }
         })
 
-        val centerTextValue = if (categoryType == CategoryType.EXPENSE) "Expense" else "Income"
+        val centerTextValue = if (categoryType == CategoryType.EXPENSE) requireContext().getString(R.string.Expense) else requireContext().getString(R.string.Income)
         val color = if (categoryType == CategoryType.EXPENSE) Color.RED else ContextCompat.getColor(requireContext(), R.color.income)
 
         val spannable = SpannableString(centerTextValue).apply {

@@ -290,7 +290,7 @@ class StatisticCategoryFragment : Fragment() {
             when (chartMode) {
                 FilterPeriodStatistic.Monthly -> {
                     val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                    month.getDisplayName(TextStyle.FULL, Locale.getDefault())
                 }
                 FilterPeriodStatistic.Weekly -> {
                     point.label
@@ -300,11 +300,11 @@ class StatisticCategoryFragment : Fragment() {
                 }
                 FilterPeriodStatistic.List -> {
                     val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                    month.getDisplayName(TextStyle.FULL, Locale.getDefault())
                 }
                 FilterPeriodStatistic.Trend -> {
                     val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                    month.getDisplayName(TextStyle.FULL, Locale.getDefault())
                 }
             }
         }
@@ -522,7 +522,7 @@ class StatisticCategoryFragment : Fragment() {
         return when (filterOptionTemp.type) {
             FilterPeriodStatistic.Monthly -> {
                 val date = point.date
-                "${date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${date.year}"
+                "${date.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${date.year}"
             }
             FilterPeriodStatistic.Weekly -> {
                 val start = point.date

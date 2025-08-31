@@ -26,7 +26,7 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 class SearchActivity : BaseActivity() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var transactionAdapter: TransactionAdapter
-    private var selectedOption: String = "All" // default
+    private var selectedOption: FilterPeriodSearch = FilterPeriodSearch.All
     private var keySearch = ""
     private var allSelectedTransactions: List<Transaction> = emptyList()
     private var transactions : List<Transaction> = emptyList()
@@ -73,7 +73,7 @@ class SearchActivity : BaseActivity() {
         val factory = TransactionViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
 
-        searchTitle.text = "All"
+        searchTitle.text = getString(R.string.all)
 
         btnBack.setOnClickListener {
             shouldAnimateExit = true
@@ -230,32 +230,33 @@ class SearchActivity : BaseActivity() {
         bottomSheetDialog.setContentView(view)
 
         val checkViews = mapOf(
-            "All" to view.findViewById<ImageView>(R.id.search_optionTotalCheck),
-            "Weekly" to view.findViewById<ImageView>(R.id.search_optionWeeklyCheck),
-            "Monthly" to view.findViewById<ImageView>(R.id.search_optionMonthlyCheck),
-            "Yearly" to view.findViewById<ImageView>(R.id.search_optionYearlyCheck),
+            FilterPeriodSearch.All to view.findViewById<ImageView>(R.id.search_optionTotalCheck),
+            FilterPeriodSearch.Weekly to view.findViewById<ImageView>(R.id.search_optionWeeklyCheck),
+            FilterPeriodSearch.Monthly to view.findViewById<ImageView>(R.id.search_optionMonthlyCheck),
+            FilterPeriodSearch.Yearly to view.findViewById<ImageView>(R.id.search_optionYearlyCheck),
         )
 
-        val optionConfigs = listOf(
-            Triple("All", R.id.optionTotalLayout, FilterPeriodSearch.All),
-            Triple("Weekly", R.id.optionWeeklyLayout, FilterPeriodSearch.Weekly),
-            Triple("Monthly", R.id.optionMonthlyLayout, FilterPeriodSearch.Monthly),
-            Triple("Yearly", R.id.optionYearlyLayout, FilterPeriodSearch.Yearly)
+        val optionLayouts = mapOf(
+            FilterPeriodSearch.All to R.id.optionTotalLayout,
+            FilterPeriodSearch.Weekly to R.id.optionWeeklyLayout,
+            FilterPeriodSearch.Monthly to R.id.optionMonthlyLayout,
+            FilterPeriodSearch.Yearly to R.id.optionYearlyLayout,
         )
 
-        fun updateCheckMarks(selected: String) {
-            searchTitle.text = selected
+        fun updateCheckMarks(selected: FilterPeriodSearch) {
+            searchTitle.text = getString(selected.stringRes)
             checkViews.forEach { (option, imageView) ->
                 imageView.visibility = if (option == selected) View.VISIBLE else View.GONE
             }
+            bottomSheetDialog.dismiss()
         }
 
         updateCheckMarks(selectedOption) // cập nhật ban đầu
 
-        optionConfigs.forEach { (optionName, layoutId, filterPeriod) ->
+        optionLayouts.forEach { (filterPeriod, layoutId) ->
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
-                selectedOption = optionName
-                updateCheckMarks(optionName)
+                selectedOption = filterPeriod
+                updateCheckMarks(filterPeriod)
                 transactionAdapter.filterPeriod = filterPeriod
                 transactionAdapter.filter.filter(query)
                 transactionAdapter.updateList(transactions)

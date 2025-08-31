@@ -64,5 +64,5 @@
     <string name="theme">Chủ đề</string>
     <string name="dark_mode">Chế độ tối</string>
     <string name="language">Ngôn ngữ</string>
-
+    <string name="selected">Đã chọn</string>
 </resources>

@@ -24,6 +24,7 @@ import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 class MonthlyFragment : Fragment() {
     private var _binding: FragmentMonthlyBinding? = null
@@ -120,10 +121,10 @@ class MonthlyFragment : Fragment() {
                         total = weekTotal
                     )
                 }
-
+                val monthFormatter = DateTimeFormatter.ofPattern("MMMM", Locale.getDefault())
                 // ✅ Trả về MonthlyData đầy đủ
                 MonthlyData(
-                    monthName = monthStart.month.name.lowercase().replaceFirstChar { it.uppercase() },
+                    monthName = monthStart.format(monthFormatter),
                     monthStart = monthStart,
                     dateRange = dateRange,
                     income = income,

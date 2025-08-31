@@ -60,5 +60,5 @@
     <string name="theme">Тема</string>
     <string name="dark_mode">Тёмный режим</string>
     <string name="language">Язык</string>
-
+    <string name="selected">Выбрано</string>
 </resources>

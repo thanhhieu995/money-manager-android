@@ -46,7 +46,7 @@ class BookmarkActivity : BaseActivity() {
         // Set tiêu đề giữa
         toolbar.post {
             bookmarkTitleView = TextView(this).apply {
-                text = "Bookmark"
+                text = getString(R.string.bookmark)
                 textSize = 18f
                 setTextColor(Color.WHITE)
                 typeface = Typeface.DEFAULT_BOLD

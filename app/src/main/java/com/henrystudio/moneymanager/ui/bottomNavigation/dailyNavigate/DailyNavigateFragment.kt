@@ -238,12 +238,12 @@ class DailyNavigateFragment : Fragment() {
             selectedTransactionList = selectedTransactions
             // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
             binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
-                "${selectedTransactions.size} selected"
+                "${selectedTransactions.size} ${requireContext().getString(R.string.selected)}"
             val totalAmount = selectedTransactions.sumOf {
                 if(it.isIncome) it.amount else -it.amount
             }
             binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
-                "Total: ${Helper.formatCurrency(totalAmount)}"
+                "${requireContext().getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
         }
 
         btnEditClose.setOnClickListener {

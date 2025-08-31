@@ -61,4 +61,6 @@
     <string name="theme">Theme</string>
     <string name="dark_mode">Dark mode</string>
     <string name="language">Language</string>
+    //
+    <string name="selected">selected</string>
 </resources>

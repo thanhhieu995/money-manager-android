@@ -58,5 +58,6 @@
     <string name="theme">テーマ</string>
     <string name="dark_mode">ダークモード</string>
     <string name="language">言語</string>
+    <string name="selected">選択済み</string>
 
 </resources>

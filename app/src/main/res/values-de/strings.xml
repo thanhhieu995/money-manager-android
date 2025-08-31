@@ -60,5 +60,5 @@
     <string name="theme">Thema</string>
     <string name="dark_mode">Dunkelmodus</string>
     <string name="language">Sprache</string>
-
+    <string name="selected">Ausgewählt</string>
 </resources>
