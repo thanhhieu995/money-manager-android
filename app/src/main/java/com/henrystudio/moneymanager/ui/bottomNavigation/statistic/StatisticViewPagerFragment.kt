@@ -25,6 +25,7 @@ import com.henrystudio.moneymanager.databinding.FragmentStatisticViewPagerBindin
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
+import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
@@ -48,6 +49,9 @@ class StatisticViewPagerFragment : Fragment() {
     private val viewModel : TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
     }
+    private lateinit var pageCallback: ViewPager2.OnPageChangeCallback
+    private var isRestoring = false
+    private var mediator: TabLayoutMediator? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     private var filterOptionTemp : FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
@@ -67,21 +71,28 @@ class StatisticViewPagerFragment : Fragment() {
         init()
         adapter = StatisticPagerAdapter(this)
         viewPager.adapter = adapter
-        TabLayoutMediator(tabLayout, viewPager) {tab, position ->
+        mediator = TabLayoutMediator(tabLayout, viewPager) {tab, position ->
             tab.text = when (position) {
                 0 -> requireContext().getString(R.string.Stats)
                 1 -> requireContext().getString(R.string.Acc)
                 2 -> requireContext().getString(R.string.Note)
                 else -> ""
             }
-        }.attach()
+        }.also { it.attach() }
 
-        viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-                viewModel.setCurrentStatisticTab(position)
+        val savedPos = PrefsManager.getStatisticTabPosition(requireContext())
+        // setCurrentItem NGAY, trước attach mediator
+        viewPager.setCurrentItem(savedPos, false)
+        isRestoring = true
+        // chọn tab (cập nhật cả TabLayout lẫn ViewPager)
+        tabLayout.post {
+            tabLayout.getTabAt(savedPos)?.select()
+            viewPager.post {
+                viewPager.setCurrentItem(savedPos, false)
+                // cho phép callback hoạt động lại sau 1 frame
+                viewPager.post { isRestoring = false }
             }
-        })
+        }
 
         viewModel.statisticListTransactionFilter.observe(viewLifecycleOwner) {list ->
             listTransactionFilter = list
@@ -159,6 +170,19 @@ class StatisticViewPagerFragment : Fragment() {
         if (shareFilterOption != null) {
             viewModel.setFilter(shareFilterOption.type, shareFilterOption.date)
         }
+        pageCallback = object : OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                if (isRestoring) return  // bỏ qua trigger do khôi phục
+                PrefsManager.saveStatisticTabPosition(requireContext(), position)
+                viewModel.setCurrentStatisticTab(position)
+            }
+        }
+        val savedPos = PrefsManager.getStatisticTabPosition(requireContext())
+        // setCurrentItem NGAY, trước attach mediator
+        viewPager.setCurrentItem(savedPos, false)
+        isRestoring = true
+        viewPager.registerOnPageChangeCallback(pageCallback)
     }
 
     fun init() {

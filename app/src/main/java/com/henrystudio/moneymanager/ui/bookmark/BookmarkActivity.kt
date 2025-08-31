@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Typeface
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -14,9 +13,10 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.core.os.LocaleListCompat
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.ui.setting.LanguagePref
 
-class BookmarkActivity : AppCompatActivity() {
+class BookmarkActivity : BaseActivity() {
     private lateinit var toolbar: Toolbar
 
     private var isEditMode = false

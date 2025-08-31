@@ -1,7 +1,6 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -16,6 +15,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
@@ -23,7 +23,7 @@ import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
-class StatisticCategoryActivity : AppCompatActivity() {
+class StatisticCategoryActivity : BaseActivity() {
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnBack: ImageButton
     lateinit var titleCurrent: TextView

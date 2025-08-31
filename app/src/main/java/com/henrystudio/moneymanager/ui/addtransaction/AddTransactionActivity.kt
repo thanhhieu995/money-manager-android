@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -16,13 +15,14 @@ import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
-class AddTransactionActivity : AppCompatActivity() {
+class AddTransactionActivity : BaseActivity() {
     lateinit var titleCurrent: TextView
     lateinit var titleIncoming: TextView
     lateinit var bookmarkIcon: ImageView

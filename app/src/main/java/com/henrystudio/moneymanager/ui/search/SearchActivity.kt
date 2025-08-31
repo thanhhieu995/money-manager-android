@@ -1,7 +1,6 @@
 package com.henrystudio.moneymanager.ui.search
 
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -16,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
@@ -23,7 +23,7 @@ import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
-class SearchActivity : AppCompatActivity() {
+class SearchActivity : BaseActivity() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var transactionAdapter: TransactionAdapter
     private var selectedOption: String = "All" // default

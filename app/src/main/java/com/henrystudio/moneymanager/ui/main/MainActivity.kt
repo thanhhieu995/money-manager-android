@@ -2,7 +2,6 @@ package com.henrystudio.moneymanager.ui.main
 
 import android.annotation.SuppressLint
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
@@ -10,6 +9,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.DailyNavigateFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var viewModel: TransactionViewModel

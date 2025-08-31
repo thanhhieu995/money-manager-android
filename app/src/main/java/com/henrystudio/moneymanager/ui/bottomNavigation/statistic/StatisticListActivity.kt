@@ -1,7 +1,6 @@
 package com.henrystudio.moneymanager.ui.bottomNavigation.statistic
 
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -18,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
 
-class StatisticListActivity : AppCompatActivity() {
+class StatisticListActivity : BaseActivity() {
     private lateinit var imgClose: ImageView
     private lateinit var monthText: TextView
     private lateinit var imgBack: ImageView
