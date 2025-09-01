@@ -59,4 +59,12 @@
     <string name="dark_mode">다크 모드</string>
     <string name="language">언어</string>
     <string name="selected">선택됨</string>
+    <string name="error_fill_category_account">카테고리와 계정을 모두 입력해 주세요</string>
+    <string name="confirm_delete">삭제 확인</string>
+    <string name="question_delete">이 거래를 삭제하시겠습니까?</string>
+    <string name="yes">예</string>
+    <string name="no">아니오</string>
+    <string name="transaction_delete">거래가 삭제되었습니다</string>
+    <string name="bookmarked">북마크됨</string>
+
 </resources>

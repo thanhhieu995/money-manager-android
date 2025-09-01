@@ -59,5 +59,12 @@
     <string name="dark_mode">ダークモード</string>
     <string name="language">言語</string>
     <string name="selected">選択済み</string>
+    <string name="error_fill_category_account">カテゴリとアカウントをすべて入力してください</string>
+    <string name="confirm_delete">削除を確認</string>
+    <string name="question_delete">この取引を削除してもよろしいですか？</string>
+    <string name="yes">はい</string>
+    <string name="no">いいえ</string>
+    <string name="transaction_delete">取引が削除されました</string>
+    <string name="bookmarked">ブックマークしました</string>
 
 </resources>

@@ -15,6 +15,9 @@ import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.model.TransactionGroup
 import com.henrystudio.moneymanager.ui.daily.TransactionDailyAdapter
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.GroupViewHolder>() {
 
@@ -59,10 +62,19 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
     @SuppressLint("MissingInflatedId", "SetTextI18n")
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val group = groups[position]
-        val fullDate = group.date // "13/05/25 (Tue)"
-        val dayPart = fullDate.substringBefore("/") // "13"
-        val monthYear = fullDate.substringAfter("/").substringBefore(" ") // "05/25"
-        val dayOfWeek = fullDate.substringAfterLast(" ") // "(Tue)"
+
+        // group.date đang là "13/05/25 (Tue)"
+        val cleanedDate = group.date.substringBefore(" ") // "13/05/25"
+
+        val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
+        val localDate = LocalDate.parse(cleanedDate, inputFormatter)
+
+        // Locale hiện tại app đang dùng
+        val currentLocale = holder.itemView.context.resources.configuration.locales[0]
+
+        val dayPart = localDate.format(DateTimeFormatter.ofPattern("dd", currentLocale))
+        val dayOfWeek = localDate.format(DateTimeFormatter.ofPattern("EEE", currentLocale)) // thứ, ngôn ngữ theo locale
+        val monthYear = localDate.format(DateTimeFormatter.ofPattern("MM/yy", currentLocale))
 
         if (filterYear) {
             holder.date.text = "$dayPart $dayOfWeek $monthYear"

@@ -61,4 +61,12 @@
     <string name="dark_mode">Mode sombre</string>
     <string name="language">Langue</string>
     <string name="selected">Sélectionné</string>
+    <string name="error_fill_category_account">Veuillez saisir la catégorie et le compte complets</string>
+    <string name="confirm_delete">Confirmer la suppression</string>
+    <string name="question_delete">Êtes-vous sûr de vouloir supprimer cette transaction ?</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+    <string name="transaction_delete">Transaction supprimée</string>
+    <string name="bookmarked">Ajouté aux favoris</string>
+
 </resources>

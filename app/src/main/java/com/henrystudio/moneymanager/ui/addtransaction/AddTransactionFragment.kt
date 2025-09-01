@@ -34,6 +34,8 @@ import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.*
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AddTransactionFragment : Fragment() {
@@ -189,7 +191,7 @@ class AddTransactionFragment : Fragment() {
         continueButton.setOnClickListener {
             saveTransaction {
                 SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
-                Toast.makeText(context, "Giao dịch đã được lưu!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, requireContext().getString(R.string.saved), Toast.LENGTH_SHORT).show()
                 // Reset các trường
                 edtAmount.setText("")
                 edtCategory.setText("")
@@ -234,7 +236,7 @@ class AddTransactionFragment : Fragment() {
         if (edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
             Toast.makeText(
                 context,
-                "Vui lòng nhập đầy đủ Category và Account",
+                requireContext().getString(R.string.error_fill_category_account),
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -244,6 +246,14 @@ class AddTransactionFragment : Fragment() {
             .replace("[^\\d]".toRegex(), "")
             .toDoubleOrNull() ?: 0.0
         val categoryParts = Helper.splitCategoryName(edtCategory.text.toString())
+        // 👉 Parse lại ngày từ dateTextView
+        val inputLocale = requireContext().resources.configuration.locales[0] // locale hiện tại
+        val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", inputLocale)
+        val localDate = LocalDate.parse(dateTextView.text.toString(), inputFormatter)
+
+        // 👉 Format lại theo ENGLISH để lưu DB
+        val englishFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
+        val dateForDb = localDate.format(englishFormatter)
         if(isEditMode) {
             transactionFromIntent?.let { original ->
                 val updatedTransaction = original.copy(
@@ -254,7 +264,7 @@ class AddTransactionFragment : Fragment() {
                     account = edtAccount.text.toString(),
                     amount = amount,
                     isIncome = isIncome,
-                    date = dateTextView.text.toString()
+                    date = dateForDb
                 )
                 viewModel.update(updatedTransaction)
             }
@@ -267,7 +277,7 @@ class AddTransactionFragment : Fragment() {
                 account = edtAccount.text.toString(),
                 amount = amount,
                 isIncome = isIncome,
-                date = dateTextView.text.toString()
+                date = dateForDb
             )
             viewModel.insert(transaction)
         }
@@ -476,23 +486,23 @@ class AddTransactionFragment : Fragment() {
 
         deleteButton.setOnClickListener {
             AlertDialog.Builder(requireContext())
-                .setTitle("Confirm Delete")
-                .setMessage("Are you sure you want to delete this transaction?")
-                .setPositiveButton("Yes") { dialog, _ ->
+                .setTitle(requireContext().getString(R.string.confirm_delete))
+                .setMessage(requireContext().getString(R.string.question_delete))
+                .setPositiveButton(requireContext().getString(R.string.yes)) { dialog, _ ->
                     viewModel.delete(transaction)
-                    Toast.makeText(context, "Transaction deleted", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, requireContext().getString(R.string.transaction_delete), Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                     requireActivity().finish()
                     requireActivity().overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
                 }
-                .setNegativeButton("No") { dialog, _ -> dialog.dismiss() }
+                .setNegativeButton(requireContext().getString(R.string.no)) { dialog, _ -> dialog.dismiss() }
                 .show()
         }
 
         bookMarkButton.setOnClickListener {
             val updated = transaction.copy(isBookmarked = true)
             viewModel.update(updated)
-            Toast.makeText(context, "Bookmarked!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, requireContext().getString(R.string.bookmarked), Toast.LENGTH_SHORT).show()
             requireActivity().finish()
             requireActivity().overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
         }

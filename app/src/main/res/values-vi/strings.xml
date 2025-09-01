@@ -65,4 +65,12 @@
     <string name="dark_mode">Chế độ tối</string>
     <string name="language">Ngôn ngữ</string>
     <string name="selected">Đã chọn</string>
+    <string name="error_fill_category_account">Vui lòng nhập đầy đủ Danh mục và Tài khoản</string>
+    <string name="confirm_delete">Xác nhận xóa</string>
+    <string name="question_delete">Bạn có chắc chắn muốn xóa giao dịch này không?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="transaction_delete">Đã xóa giao dịch</string>
+    <string name="bookmarked">Đã đánh dấu</string>
+
 </resources>

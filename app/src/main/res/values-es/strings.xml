@@ -61,4 +61,12 @@
     <string name="dark_mode">Modo oscuro</string>
     <string name="language">Idioma</string>
     <string name="selected">Seleccionado</string>
+    <string name="error_fill_category_account">Por favor, ingrese la Categoría y la Cuenta completas</string>
+    <string name="confirm_delete">Confirmar eliminación</string>
+    <string name="question_delete">¿Está seguro de que desea eliminar esta transacción?</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="transaction_delete">Transacción eliminada</string>
+    <string name="bookmarked">Marcado</string>
+
 </resources>

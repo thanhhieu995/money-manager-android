@@ -61,4 +61,12 @@
     <string name="dark_mode">Тёмный режим</string>
     <string name="language">Язык</string>
     <string name="selected">Выбрано</string>
+    <string name="error_fill_category_account">Пожалуйста, введите категорию и счёт полностью</string>
+    <string name="confirm_delete">Подтвердите удаление</string>
+    <string name="question_delete">Вы уверены, что хотите удалить эту транзакцию?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="transaction_delete">Транзакция удалена</string>
+    <string name="bookmarked">В закладках</string>
+
 </resources>
