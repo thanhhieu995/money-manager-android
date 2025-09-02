@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
@@ -19,7 +20,6 @@ import com.henrystudio.moneymanager.viewmodel.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
-
 
 class MainActivity : BaseActivity() {
 
@@ -40,8 +40,13 @@ class MainActivity : BaseActivity() {
     @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Gọi trước setContentView
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // Có thể giữ splash lâu hơn bằng condition
+        splashScreen.setKeepOnScreenCondition { false }
+
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val lastTab = prefs.getInt("last_selected_tab", R.id.nav_daily)
 

@@ -15,4 +15,10 @@
         <item name="android:colorBackground">@color/white</item>
         <item name="android:textColorPrimary">@color/black</item>
     </style>
+    <style name="Theme.MoneyManager.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimationDuration">2000</item>
+        <item name="postSplashScreenTheme">@style/Theme.MoneyManager</item>
+    </style>
 </resources>
