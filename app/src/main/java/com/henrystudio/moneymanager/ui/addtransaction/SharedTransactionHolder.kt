@@ -6,4 +6,5 @@ object SharedTransactionHolder {
     var currentFilterDate: String? = null
     var filterOption: FilterOption? = null
     var scrollToAddedTransaction: Boolean = false
+    var navigateFromMonthly: Boolean = false  // 🟡 thêm flag này
 }

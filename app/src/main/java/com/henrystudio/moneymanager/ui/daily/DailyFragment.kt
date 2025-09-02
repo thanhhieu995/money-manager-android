@@ -26,6 +26,7 @@ import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import com.henrystudio.moneymanager.ui.main.MainActivity
+import java.util.*
 
 class DailyFragment : Fragment() {
     private lateinit var adapter: TransactionGroupAdapter
@@ -81,8 +82,18 @@ class DailyFragment : Fragment() {
                     header.findViewById<TextView>(R.id.item_transaction_header_income)
                 val headerExpense =
                     header.findViewById<TextView>(R.id.item_transaction_header_expense)
-                val dayPart = group.date.substringBefore("/") // "13"
-                val dayOfWeek = group.date.substringAfterLast(" ") // "(Tue)"
+
+                // group.date đang là "13/05/25 (Tue)"
+                val cleanedDate = group.date.substringBefore(" ") // "13/05/25"
+
+                val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
+                val localDate = LocalDate.parse(cleanedDate, inputFormatter)
+
+                // Locale hiện tại app đang dùng
+                val currentLocale = requireContext().resources.configuration.locales[0]
+
+                val dayPart = localDate.format(DateTimeFormatter.ofPattern("dd", currentLocale))
+                val dayOfWeek = localDate.format(DateTimeFormatter.ofPattern("EEE", currentLocale)) // thứ, ngôn ngữ theo locale
                 headerText.text = "$dayPart $dayOfWeek"
                 headerIncome.text = Helper.formatCurrency(group.income)
                 headerExpense.text = Helper.formatCurrency(group.expense)
@@ -151,7 +162,7 @@ class DailyFragment : Fragment() {
         }
 
         val lastDate = loadLastDate(requireContext()) // hàm tự viết lấy từ SharedPreferences
-        if (lastDate != null) {
+        if (lastDate != null && !SharedTransactionHolder.navigateFromMonthly) {
             binding.transactionList.post {
                 val position = findPositionForDate(getFilterListGroupTransaction(lastDate), lastDate)
                 if (position != -1) {
@@ -196,6 +207,7 @@ class DailyFragment : Fragment() {
         if (matchedIndex != -1) {
             binding.transactionList.scrollToPosition(matchedIndex)
         }
+        SharedTransactionHolder.navigateFromMonthly = false // 🟡 reset flag
     }
 
     override fun onDestroyView() {

@@ -73,6 +73,10 @@ class StatisticCategoryFragment : Fragment() {
     private var filterOptionTemp: FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private var filterOptionPushChild: FilterOption =
+        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
+
     val viewModel: TransactionViewModel by activityViewModels {
         TransactionViewModelFactory(
             AppDatabase.getDatabase(requireActivity().application).transactionDao()
@@ -242,6 +246,10 @@ class StatisticCategoryFragment : Fragment() {
                 highlightChartPoint(currentIndex)
             }
         }
+
+        viewModel.currentFilterDate.observe(viewLifecycleOwner) { date ->
+            filterOptionPushChild = FilterOption(filterOptionTemp.type, date)
+        }
         // click into child category item
         adapter.onClickListener = { categoryStat ->
             (requireActivity() as StatisticCategoryActivity).titleStack.addLast(categoryName)
@@ -257,7 +265,7 @@ class StatisticCategoryFragment : Fragment() {
             val bundle = Bundle().apply {
                 putSerializable("item_click_statistic_category_name", categoryStat.name)
                 putSerializable("item_click_statistic_category_type", categoryType)
-                putSerializable("item_click_statistic_filterOption", filterOptionTemp)
+                putSerializable("item_click_statistic_filterOption", filterOptionPushChild)
                 putSerializable("item_click_statistic_keyWord", KeyFilter.CategorySub)
             }
             fragment.apply {

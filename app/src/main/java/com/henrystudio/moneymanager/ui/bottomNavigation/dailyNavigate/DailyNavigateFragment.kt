@@ -111,13 +111,13 @@ class DailyNavigateFragment : Fragment() {
 
         val savedPos = PrefsManager.getTabPosition(requireContext())
         // setCurrentItem NGAY, trước attach mediator
-        viewPager.setCurrentItem(savedPos, false)
+        viewPager.setCurrentItem(savedPos, true)
         isRestoring = true
         // chọn tab (cập nhật cả TabLayout lẫn ViewPager)
         tabLayout.post {
             tabLayout.getTabAt(savedPos)?.select()
             viewPager.post {
-                viewPager.setCurrentItem(savedPos, false)
+                viewPager.setCurrentItem(savedPos, true)
                 // cho phép callback hoạt động lại sau 1 frame
                 viewPager.post { isRestoring = false }
             }
@@ -289,7 +289,7 @@ class DailyNavigateFragment : Fragment() {
         }
         val savedPos = PrefsManager.getTabPosition(requireContext())
         // setCurrentItem NGAY, trước attach mediator
-        viewPager.setCurrentItem(savedPos, false)
+        viewPager.setCurrentItem(savedPos, true)
         isRestoring = true
         viewPager.registerOnPageChangeCallback(pageCallback)
     }

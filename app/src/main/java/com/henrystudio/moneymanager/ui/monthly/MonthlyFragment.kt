@@ -69,6 +69,7 @@ class MonthlyFragment : Fragment() {
                 }
             },
             onWeekClick = { weeklyData ->
+                SharedTransactionHolder.navigateFromMonthly = true
                 viewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
             })
             adapter.updateData(listMonthlyData)
