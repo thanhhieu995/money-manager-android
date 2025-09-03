@@ -30,6 +30,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.helper.Helper.Companion.buildCategoryTree
+import com.henrystudio.moneymanager.helper.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.*
 import java.text.NumberFormat
@@ -191,7 +192,8 @@ class AddTransactionFragment : Fragment() {
         continueButton.setOnClickListener {
             saveTransaction {
                 SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
-                Toast.makeText(context, requireContext().getString(R.string.saved), Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, requireContext().getString(R.string.saved), Toast.LENGTH_SHORT).show()
+                showToastWithIcon(requireContext(), requireContext().getString(R.string.saved))
                 // Reset các trường
                 edtAmount.setText("")
                 edtCategory.setText("")
@@ -234,11 +236,12 @@ class AddTransactionFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveTransaction(onSuccess: () -> Unit) {
         if (edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
-            Toast.makeText(
-                context,
-                requireContext().getString(R.string.error_fill_category_account),
-                Toast.LENGTH_SHORT
-            ).show()
+//            Toast.makeText(
+//                context,
+//                requireContext().getString(R.string.error_fill_category_account),
+//                Toast.LENGTH_SHORT
+//            ).show()
+            showToastWithIcon(requireContext(), requireContext().getString(R.string.error_fill_category_account))
             return
         }
 

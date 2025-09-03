@@ -60,6 +60,4 @@ dependencies {
     implementation "androidx.fragment:fragment-ktx:1.6.2" // hoặc version mới hơn
     //calendar new update
     implementation "com.kizitonwose.calendar:view:2.0.4"
-    // splashScreen
-    implementation("androidx.core:core-splashscreen:1.0.1")
 }

@@ -13,6 +13,6 @@
     <color name="rose">#FFE3EB</color>
     <color name="white_smoke">#F5F5F5</color>
     <color name="toggle_button_stroke">#FF6F61</color> <!-- Bạn có thể thay màu khác -->
-    <color name="app_background">#FFFFFF</color>
-    <color name="app_text_primary">#000000</color>
+    <color name="app_background">#121212</color>
+    <color name="app_text_primary">#FFFFFF</color>
 </resources>

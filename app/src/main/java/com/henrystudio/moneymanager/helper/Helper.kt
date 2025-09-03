@@ -3,7 +3,13 @@ package com.henrystudio.moneymanager.helper
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
+import android.view.Gravity
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import com.henrystudio.moneymanager.R
@@ -159,6 +165,40 @@ class Helper {
                 appLocales[0]!!
             } else {
                 Locale.getDefault()
+            }
+        }
+
+        fun showToastWithIcon(context: Context, message: String) {
+            val layout = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(32, 16, 32, 16)
+                gravity = Gravity.CENTER_VERTICAL
+
+                // Icon app
+                val icon = ImageView(context).apply {
+                    setImageResource(R.mipmap.ic_launcher) // có thể đổi sang ic_launcher_foreground
+                    layoutParams = LinearLayout.LayoutParams(48, 48) // px
+                }
+                addView(icon)
+
+                // Text
+                val text = TextView(context).apply {
+                    this.text = message
+                    setTextColor(Color.WHITE)
+                    textSize = 16f
+                    setPadding(16, 0, 0, 0)
+                }
+                addView(text)
+
+                // Nền mặc định toast
+                setBackgroundResource(android.R.drawable.toast_frame)
+            }
+
+            Toast(context).apply {
+                duration = Toast.LENGTH_SHORT
+                view = layout
+                setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
+                show()
             }
         }
     }
