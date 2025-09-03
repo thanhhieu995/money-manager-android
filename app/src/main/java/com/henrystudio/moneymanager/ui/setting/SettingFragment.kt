@@ -13,10 +13,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.os.LocaleListCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.application.LocaleHelper
 import com.henrystudio.moneymanager.databinding.FragmentSettingBinding
 import java.util.*
 
@@ -98,12 +98,22 @@ class SettingFragment : Fragment() {
                 selectLanguage = optionName
                 updateCheckMarks(optionName)
 
-                // Lưu vào SharedPreferences
-                LanguagePref.saveLanguage(requireContext(), langCode)
+                // 1. Lưu ngôn ngữ mới để dùng cho lần khởi động app tiếp theo
+                LocaleHelper.saveLanguage(requireContext(), langCode)
 
-                // Đổi ngôn ngữ app
+                // 2. Yêu cầu hệ thống áp dụng ngôn ngữ mới ngay lập tức
                 val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(langCode)
                 AppCompatDelegate.setApplicationLocales(appLocale)
+
+//                // 3. -> QUAN TRỌNG: Khởi động lại ứng dụng để áp dụng ngôn ngữ cho toàn bộ UI
+//                // Thay thế MainActivity::class.java bằng Activity chính của bạn
+//                val intent = Intent(requireContext(), MainActivity::class.java)
+//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+//                startActivity(intent)
+//
+//                // Kết thúc activity hiện tại để người dùng không thể back lại màn hình setting cũ
+//                requireActivity().finish()
+
             }
         }
 

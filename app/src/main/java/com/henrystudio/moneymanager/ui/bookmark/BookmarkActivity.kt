@@ -9,12 +9,9 @@ import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import androidx.activity.addCallback
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
-import androidx.core.os.LocaleListCompat
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.application.BaseActivity
-import com.henrystudio.moneymanager.ui.setting.LanguagePref
 
 class BookmarkActivity : BaseActivity() {
     private lateinit var toolbar: Toolbar
@@ -29,12 +26,7 @@ class BookmarkActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bookmark)
-        // Lấy ngôn ngữ đã lưu
-        val lang = LanguagePref.getLanguage(this)
-        if (lang != null) {
-            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang)
-            AppCompatDelegate.setApplicationLocales(appLocale)
-        }
+
         init()
         onBackPressedDispatcher.addCallback(this) {
             finish()

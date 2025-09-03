@@ -7,9 +7,7 @@ import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,7 +17,6 @@ import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
-import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
@@ -52,13 +49,6 @@ class SearchActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
-        // Lấy ngôn ngữ đã lưu
-        val lang = LanguagePref.getLanguage(this)
-        if (lang != null) {
-            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang)
-            AppCompatDelegate.setApplicationLocales(appLocale)
-        }
-
         init()
         onBackPressedDispatcher.addCallback(this) {
             finish()

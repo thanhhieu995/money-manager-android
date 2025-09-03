@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
@@ -13,7 +12,6 @@ import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.DailyNavigateFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
-import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.ui.setting.SettingFragment
 import com.henrystudio.moneymanager.viewmodel.*
 import java.time.LocalDate
@@ -44,13 +42,6 @@ class MainActivity : BaseActivity() {
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val lastTab = prefs.getInt("last_selected_tab", R.id.nav_daily)
-
-        // Lấy ngôn ngữ đã lưu
-        val lang = LanguagePref.getLanguage(this)
-        if (lang != null) {
-            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang)
-            AppCompatDelegate.setApplicationLocales(appLocale)
-        }
 
         val dao = AppDatabase.getDatabase(application).transactionDao()
         val factory = TransactionViewModelFactory(dao)

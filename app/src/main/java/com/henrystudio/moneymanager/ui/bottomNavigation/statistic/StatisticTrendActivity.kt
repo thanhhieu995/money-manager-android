@@ -5,15 +5,12 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.tabs.TabLayout
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
-import com.henrystudio.moneymanager.ui.setting.LanguagePref
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
@@ -31,12 +28,6 @@ class StatisticTrendActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistic_trend)
-        // Lấy ngôn ngữ đã lưu
-        val lang = LanguagePref.getLanguage(this)
-        if (lang != null) {
-            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang)
-            AppCompatDelegate.setApplicationLocales(appLocale)
-        }
         init()
         onBackPressedDispatcher.addCallback(this) {
             onBackAnimation()
