@@ -9,11 +9,11 @@ import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import androidx.activity.addCallback
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.application.BaseActivity
 
-class BookmarkActivity : BaseActivity() {
+class BookmarkActivity : AppCompatActivity() {
     private lateinit var toolbar: Toolbar
 
     private var isEditMode = false

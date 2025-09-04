@@ -10,16 +10,16 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
-class AddTransactionActivity : BaseActivity() {
+class AddTransactionActivity : AppCompatActivity() {
     lateinit var titleCurrent: TextView
     lateinit var titleIncoming: TextView
     lateinit var bookmarkIcon: ImageView

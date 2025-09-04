@@ -5,17 +5,17 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.tabs.TabLayout
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
 
-class StatisticTrendActivity : BaseActivity() {
+class StatisticTrendActivity : AppCompatActivity() {
     private lateinit var btnClose: ImageView
     private lateinit var tabLayout: TabLayout
     private lateinit var fragment: StatisticCategoryFragment

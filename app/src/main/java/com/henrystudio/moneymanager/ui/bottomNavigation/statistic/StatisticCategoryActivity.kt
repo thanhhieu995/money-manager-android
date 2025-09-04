@@ -10,17 +10,17 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
-class StatisticCategoryActivity : BaseActivity() {
+class StatisticCategoryActivity : AppCompatActivity() {
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnBack: ImageButton
     lateinit var titleCurrent: TextView

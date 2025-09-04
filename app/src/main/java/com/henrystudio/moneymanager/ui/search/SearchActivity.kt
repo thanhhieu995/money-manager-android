@@ -7,20 +7,20 @@ import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
-class SearchActivity : BaseActivity() {
+class SearchActivity : AppCompatActivity() {
     private lateinit var viewModel: TransactionViewModel
     private lateinit var transactionAdapter: TransactionAdapter
     private var selectedOption: FilterPeriodSearch = FilterPeriodSearch.All

@@ -9,9 +9,4 @@ class MoneyManagerApplication: Application() {
         super.onCreate()
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
-
-    override fun attachBaseContext(base: Context?) {
-        val lang = base?.let { LocaleHelper.getLanguage(it) }
-        super.attachBaseContext(base?.let { lang?.let { it1 -> LocaleHelper.setLocale(it, it1) } })
-    }
 }

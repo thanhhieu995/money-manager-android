@@ -1,6 +1,7 @@
 package com.henrystudio.moneymanager.ui.setting
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -18,6 +19,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.application.LocaleHelper
 import com.henrystudio.moneymanager.databinding.FragmentSettingBinding
+import com.henrystudio.moneymanager.ui.main.MainActivity
 import java.util.*
 
 class SettingFragment : Fragment() {
@@ -98,15 +100,15 @@ class SettingFragment : Fragment() {
                 selectLanguage = optionName
                 updateCheckMarks(optionName)
 
-                // 1. Lưu ngôn ngữ mới để dùng cho lần khởi động app tiếp theo
-                LocaleHelper.saveLanguage(requireContext(), langCode)
+//                // 1. Lưu ngôn ngữ mới để dùng cho lần khởi động app tiếp theo
+//                LocaleHelper.saveLanguage(requireContext(), langCode)
+//
+//                // 2. Yêu cầu hệ thống áp dụng ngôn ngữ mới ngay lập tức
+//                val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(langCode)
+//                AppCompatDelegate.setApplicationLocales(appLocale)
 
-                // 2. Yêu cầu hệ thống áp dụng ngôn ngữ mới ngay lập tức
-                val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(langCode)
-                AppCompatDelegate.setApplicationLocales(appLocale)
-
-//                // 3. -> QUAN TRỌNG: Khởi động lại ứng dụng để áp dụng ngôn ngữ cho toàn bộ UI
-//                // Thay thế MainActivity::class.java bằng Activity chính của bạn
+                // 3. -> QUAN TRỌNG: Khởi động lại ứng dụng để áp dụng ngôn ngữ cho toàn bộ UI
+                // Thay thế MainActivity::class.java bằng Activity chính của bạn
 //                val intent = Intent(requireContext(), MainActivity::class.java)
 //                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
 //                startActivity(intent)

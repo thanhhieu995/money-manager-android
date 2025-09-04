@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
@@ -15,7 +16,6 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.application.BaseActivity
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
@@ -30,7 +30,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
 
-class StatisticListActivity : BaseActivity() {
+class StatisticListActivity : AppCompatActivity() {
     private lateinit var imgClose: ImageView
     private lateinit var monthText: TextView
     private lateinit var imgBack: ImageView
