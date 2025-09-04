@@ -48,6 +48,8 @@ class StatisticAccountFragment : Fragment() {
             AppDatabase.getDatabase(requireActivity().application).transactionDao()
         )
     }
+    private lateinit var adapter: CategoryStatAdapter
+    private var categoryType = CategoryType.EXPENSE
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,8 +64,21 @@ class StatisticAccountFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
-        viewModel.statisticCategoryType.observe(viewLifecycleOwner) {type ->
-            updateCircleChartByAccount(type, filteredListTransaction)
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        adapter.onClickListener = { categoryStat ->
+            val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
+            intent.putExtra("item_click_statistic_category_name", categoryStat.name)
+            intent.putExtra("item_click_statistic_category_type", categoryType)
+            intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
+            intent.putExtra("item_click_statistic_keyWord", KeyFilter.Account)
+            startActivity(intent)
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
+            true
+        }
+        viewModel.combinedFilter.observe(viewLifecycleOwner) { (type, list) ->
+            categoryType = type
+            updateCircleChartByAccount(type, list)
         }
 
         viewModel.allTransactions.observe(viewLifecycleOwner) { transactionList->
@@ -80,10 +95,12 @@ class StatisticAccountFragment : Fragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun init() {
         noDataText = binding.fragmentStatisticAccountNoDataText
         pieChart = binding.fragmentStatisticAccountPieChart
         recyclerView = binding.fragmentStatisticAccountRecyclerView
+        adapter = CategoryStatAdapter(emptyList())
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -182,20 +199,7 @@ class StatisticAccountFragment : Fragment() {
                 color = colors[index % colors.size]
             )
         }
-
-        val adapter = CategoryStatAdapter(statList)
-        adapter.onClickListener = { categoryStat ->
-            val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
-            intent.putExtra("item_click_statistic_category_name", categoryStat.name)
-            intent.putExtra("item_click_statistic_category_type", categoryType)
-            intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
-            intent.putExtra("item_click_statistic_keyWord", KeyFilter.Account)
-            startActivity(intent)
-            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
-            true
-        }
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        adapter.submitList(statList)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

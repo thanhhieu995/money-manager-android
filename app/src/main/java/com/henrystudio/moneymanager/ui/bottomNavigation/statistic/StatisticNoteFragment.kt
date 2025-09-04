@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticNoteBinding
+import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -71,6 +72,16 @@ class StatisticNoteFragment : Fragment() {
 
         viewModel.filterOption.observe(viewLifecycleOwner) {filterOption ->
             filterOptionTemp = filterOption
+            viewModel.allTransactions.observe(viewLifecycleOwner) {allTransactions->
+                val list = when (filterOption.type) {
+                    FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
+                    FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
+                    FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
+                    FilterPeriodStatistic.List -> emptyList()
+                    FilterPeriodStatistic.Trend -> emptyList()
+                }
+                viewModel.setStatisticTransactionFilter(list)
+            }
         }
 
         tvNote.setOnClickListener {

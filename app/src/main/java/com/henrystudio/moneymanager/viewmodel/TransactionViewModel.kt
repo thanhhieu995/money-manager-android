@@ -40,14 +40,20 @@ class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
         var currentType: CategoryType? = null
         var currentList: List<Transaction>? = null
 
+        val updateCombinedFilter = {
+            if (currentType != null && currentList != null) {
+                combinedFilter.value = Pair(currentType!!, currentList!!)
+            }
+        }
+
         combinedFilter.addSource(statisticCategoryType) { type ->
             currentType = type
-            currentList?.let { combinedFilter.value = Pair(type, it) }
+            updateCombinedFilter()
         }
 
         combinedFilter.addSource(statisticListTransactionFilter) { list ->
             currentList = list
-            currentType?.let { combinedFilter.value = Pair(it, list) }
+            updateCombinedFilter()
         }
     }
 
