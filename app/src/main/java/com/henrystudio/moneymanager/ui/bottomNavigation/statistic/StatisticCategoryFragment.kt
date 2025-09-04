@@ -68,7 +68,7 @@ class StatisticCategoryFragment : Fragment() {
     private lateinit var adapter: CategoryStatAdapter
     private val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
     private var keyFilter: KeyFilter? = null
-
+    private val appLocale = Helper.getAppLocale()
     @RequiresApi(Build.VERSION_CODES.O)
     private var filterOptionTemp: FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
@@ -298,7 +298,7 @@ class StatisticCategoryFragment : Fragment() {
             when (chartMode) {
                 FilterPeriodStatistic.Monthly -> {
                     val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    month.getDisplayName(TextStyle.FULL, appLocale)
                 }
                 FilterPeriodStatistic.Weekly -> {
                     point.label
@@ -308,11 +308,11 @@ class StatisticCategoryFragment : Fragment() {
                 }
                 FilterPeriodStatistic.List -> {
                     val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    month.getDisplayName(TextStyle.FULL, appLocale)
                 }
                 FilterPeriodStatistic.Trend -> {
                     val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    month.getDisplayName(TextStyle.FULL, appLocale)
                 }
             }
         }
@@ -367,7 +367,7 @@ class StatisticCategoryFragment : Fragment() {
         isIncome: Boolean,
         filterOption: FilterOption
     ): List<LineChartPoint> {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", appLocale)
         val sortedTransactions = transactions.sortedBy {
             LocalDate.parse(it.date.substringBefore(" "), formatter)
         }
@@ -530,7 +530,7 @@ class StatisticCategoryFragment : Fragment() {
         return when (filterOptionTemp.type) {
             FilterPeriodStatistic.Monthly -> {
                 val date = point.date
-                "${date.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${date.year}"
+                "${date.month.getDisplayName(TextStyle.FULL, appLocale)} ${date.year}"
             }
             FilterPeriodStatistic.Weekly -> {
                 val start = point.date

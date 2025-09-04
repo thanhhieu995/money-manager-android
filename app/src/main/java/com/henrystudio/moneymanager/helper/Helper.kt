@@ -129,13 +129,14 @@ class Helper {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun getUpdateMonthText(filterOption: FilterOption) : String {
-            val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            val appLocale = getAppLocale()
+            val formatterMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", appLocale)
             // ✅ Cập nhật text phù hợp
              return when (filterOption.type) {
                 FilterPeriodStatistic.Monthly -> filterOption.date.format(formatterMonth)
                 FilterPeriodStatistic.Weekly -> {
-                    val formatterFirst = DateTimeFormatter.ofPattern("dd/MM")
-                    val formatterLast = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    val formatterFirst = DateTimeFormatter.ofPattern("dd/MM", appLocale)
+                    val formatterLast = DateTimeFormatter.ofPattern("dd/MM/yyyy", appLocale)
                     // Ép tuần bắt đầu từ thứ Hai
                     val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
                     val firstDayOfWeek = filterOption.date.with(weekFields.dayOfWeek(), 1) // Monday

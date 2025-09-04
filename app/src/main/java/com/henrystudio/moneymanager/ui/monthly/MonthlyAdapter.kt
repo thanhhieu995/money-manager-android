@@ -6,17 +6,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
+import java.time.format.TextStyle
+import java.util.*
 
 class MonthlyAdapter(
     private var monthlyList: List<MonthlyData>,
     private val onMonthClick: (MonthlyData) -> Unit,
     private val onWeekClick: (WeeklyData) -> Unit
 ) : RecyclerView.Adapter<MonthlyAdapter.MonthViewHolder>() {
-
     inner class MonthViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvMonthName: TextView = itemView.findViewById(R.id.monthly_name)
         val tvDateRange: TextView = itemView.findViewById(R.id.monthly_arrange)
@@ -25,9 +27,9 @@ class MonthlyAdapter(
         val tvTotal: TextView = itemView.findViewById(R.id.monthly_total)
         private val rvWeeks: RecyclerView = itemView.findViewById(R.id.monthly_list_week)
 
-        @RequiresApi(Build.VERSION_CODES.M)
+        @RequiresApi(Build.VERSION_CODES.O)
         fun bind(data: MonthlyData) {
-            tvMonthName.text = data.monthName
+            tvMonthName.text = data.monthStart.month.getDisplayName(TextStyle.SHORT, Helper.getAppLocale())
             tvDateRange.text = data.dateRange
             tvIncome.text = Helper.formatCurrency(data.income)
             tvExpense.text = Helper.formatCurrency(data.expense)
@@ -62,7 +64,7 @@ class MonthlyAdapter(
         return MonthViewHolder(view)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MonthViewHolder, position: Int) {
         holder.bind(monthlyList[position])
     }

@@ -100,21 +100,21 @@ class SettingFragment : Fragment() {
                 selectLanguage = optionName
                 updateCheckMarks(optionName)
 
-//                // 1. Lưu ngôn ngữ mới để dùng cho lần khởi động app tiếp theo
-//                LocaleHelper.saveLanguage(requireContext(), langCode)
-//
-//                // 2. Yêu cầu hệ thống áp dụng ngôn ngữ mới ngay lập tức
-//                val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(langCode)
-//                AppCompatDelegate.setApplicationLocales(appLocale)
+                // 1. Lưu ngôn ngữ mới để dùng cho lần khởi động app tiếp theo
+                LocaleHelper.saveLanguage(requireContext(), langCode)
+
+                // 2. Yêu cầu hệ thống áp dụng ngôn ngữ mới ngay lập tức
+                val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(langCode)
+                AppCompatDelegate.setApplicationLocales(appLocale)
 
                 // 3. -> QUAN TRỌNG: Khởi động lại ứng dụng để áp dụng ngôn ngữ cho toàn bộ UI
                 // Thay thế MainActivity::class.java bằng Activity chính của bạn
-//                val intent = Intent(requireContext(), MainActivity::class.java)
-//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-//                startActivity(intent)
-//
-//                // Kết thúc activity hiện tại để người dùng không thể back lại màn hình setting cũ
-//                requireActivity().finish()
+                val intent = Intent(requireContext(), MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                startActivity(intent)
+
+                // Kết thúc activity hiện tại để người dùng không thể back lại màn hình setting cũ
+                requireActivity().finish()
 
             }
         }
