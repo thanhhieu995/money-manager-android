@@ -3,6 +3,7 @@ package com.henrystudio.moneymanager.helper
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
 import android.view.Gravity
@@ -12,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
@@ -175,24 +177,28 @@ class Helper {
                 setPadding(32, 16, 32, 16)
                 gravity = Gravity.CENTER_VERTICAL
 
-                // Icon app
+                // Icon
                 val icon = ImageView(context).apply {
-                    setImageResource(R.mipmap.ic_launcher) // có thể đổi sang ic_launcher_foreground
-                    layoutParams = LinearLayout.LayoutParams(48, 48) // px
+                    setImageResource(R.mipmap.ic_launcher)
+                    layoutParams = LinearLayout.LayoutParams(48, 48)
                 }
                 addView(icon)
 
                 // Text
                 val text = TextView(context).apply {
                     this.text = message
-                    setTextColor(Color.WHITE)
+                    setTextColor(resolveThemeColor(context, com.google.android.material.R.attr.colorOnSurface))
                     textSize = 16f
                     setPadding(16, 0, 0, 0)
                 }
                 addView(text)
 
-                // Nền mặc định toast
-                setBackgroundResource(android.R.drawable.toast_frame)
+                // Nền toast follow dark/light
+                background = MaterialShapeDrawable().apply {
+                    fillColor = ColorStateList.valueOf(resolveThemeColor(context, com.google.android.material.R.attr.colorSurface))
+                    setCornerSize(24f)
+                    elevation = 6f
+                }
             }
 
             Toast(context).apply {
@@ -201,6 +207,14 @@ class Helper {
                 setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
                 show()
             }
+        }
+
+        // Helper: lấy màu theo theme
+        private fun resolveThemeColor(context: Context, attr: Int): Int {
+            val typedArray = context.obtainStyledAttributes(intArrayOf(attr))
+            val color = typedArray.getColor(0, Color.WHITE)
+            typedArray.recycle()
+            return color
         }
     }
 }

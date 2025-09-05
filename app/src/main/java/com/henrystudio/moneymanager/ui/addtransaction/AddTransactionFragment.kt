@@ -192,7 +192,6 @@ class AddTransactionFragment : Fragment() {
         continueButton.setOnClickListener {
             saveTransaction {
                 SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
-//                Toast.makeText(context, requireContext().getString(R.string.saved), Toast.LENGTH_SHORT).show()
                 showToastWithIcon(requireContext(), requireContext().getString(R.string.saved))
                 // Reset các trường
                 edtAmount.setText("")
@@ -236,11 +235,6 @@ class AddTransactionFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveTransaction(onSuccess: () -> Unit) {
         if (edtCategory.text.isEmpty() || edtAccount.text.isEmpty()) {
-//            Toast.makeText(
-//                context,
-//                requireContext().getString(R.string.error_fill_category_account),
-//                Toast.LENGTH_SHORT
-//            ).show()
             showToastWithIcon(requireContext(), requireContext().getString(R.string.error_fill_category_account))
             return
         }

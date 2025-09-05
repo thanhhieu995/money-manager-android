@@ -73,7 +73,6 @@ class MonthlyFragment : Fragment() {
                 viewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
             })
             adapter.updateData(listMonthlyData)
-            adapter.updateData(listMonthlyData)
             binding.monthlyListSummary.adapter = adapter
             binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
         }

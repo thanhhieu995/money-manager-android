@@ -198,6 +198,7 @@ class DailyFragment : Fragment() {
         val dateShare = SharedTransactionHolder.currentFilterDate
         if (dateShare != null) {
             viewModel.setCurrentFilterDate(dateShare)
+            SharedTransactionHolder.currentFilterDate = null
         }
     }
 
