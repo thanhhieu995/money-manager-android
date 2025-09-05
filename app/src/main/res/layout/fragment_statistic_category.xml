@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="3"
             android:gravity="center"
-            android:text="Apr 2025"
+            android:text=""
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -102,7 +102,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Food"
+                android:text=""
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -112,7 +112,7 @@
                 android:id="@+id/fragment_statistic_category_layout_category_sum_amount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="120,000 ₫"
+                android:text=""
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="?android:attr/textColorPrimary" />

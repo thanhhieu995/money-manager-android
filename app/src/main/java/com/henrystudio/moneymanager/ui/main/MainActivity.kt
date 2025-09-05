@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         init()
         defaultCategory()
         defaultAccount()
-        defaultTransactions()
+//        defaultTransactions()
 
         viewModel.currentFilterDate.observe(this) { month ->
             // Lấy locale hiện tại trong app (theo AppCompatDelegate)

@@ -59,6 +59,7 @@ class YearlyFragment : Fragment() {
         viewModel.allTransactions.observe(viewLifecycleOwner) {transactions ->
             allTransactions = transactions
             adapter.updateData(mapTransactionsToYearlyData(transactions))
+            noData.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 
