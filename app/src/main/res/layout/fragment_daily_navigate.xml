@@ -81,14 +81,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textColor="@color/white"
-                android:text="0 items selected" />
+                android:text="" />
 
             <TextView
                 android:id="@+id/fragment_daily_navigate_layout_edit_line_two_selected_total"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
-                android:text="Total: 0" />
+                android:text="" />
         </LinearLayout>
     </LinearLayout>
 
