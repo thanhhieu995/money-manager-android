@@ -27,7 +27,6 @@ class ExpandableCategoryAdapter(
                 displayedItems.add(DisplayedItem.ChildGroup(item.children))
             }
         }
-        notifyDataSetChanged()
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -74,12 +73,11 @@ class ExpandableCategoryAdapter(
             tvEmoji.text = item.emoji
             tvName.text = item.name
             ivArrow.visibility = if (item.children.isNotEmpty()) View.VISIBLE else View.INVISIBLE
-            ivArrow.rotation = if (item.isExpanded) 180f else 0f
+            ivArrow.animate().rotation(if (item.isExpanded) 180f else 0f).start()
 
             itemView.setOnClickListener {
                 if (item.children.isNotEmpty()) {
-                    item.isExpanded = !item.isExpanded
-                    refreshDisplayedItems()
+                   toggleItem(item)
                 } else {
                     onItemClick(item)
                 }
@@ -119,6 +117,32 @@ class ExpandableCategoryAdapter(
 
                 override fun getItemCount(): Int = children.size
             }
+        }
+    }
+
+    private fun toggleItem(item: CategoryItem) {
+        val parentIndex = displayedItems.indexOfFirst {
+            it is DisplayedItem.Parent && it.category == item
+        }
+        if (parentIndex == -1) return
+
+        if (item.isExpanded) {
+            // Collapse -> remove ChildGroup
+            if (parentIndex + 1 < displayedItems.size &&
+                displayedItems[parentIndex + 1] is DisplayedItem.ChildGroup) {
+                displayedItems.removeAt(parentIndex + 1)
+                notifyItemRemoved(parentIndex + 1)
+            }
+            item.isExpanded = false
+            notifyItemChanged(parentIndex) // update arrow
+        } else {
+            // Expand -> insert ChildGroup
+            if (item.children.isNotEmpty()) {
+                displayedItems.add(parentIndex + 1, DisplayedItem.ChildGroup(item.children))
+                notifyItemInserted(parentIndex + 1)
+            }
+            item.isExpanded = true
+            notifyItemChanged(parentIndex) // update arrow
         }
     }
 }
