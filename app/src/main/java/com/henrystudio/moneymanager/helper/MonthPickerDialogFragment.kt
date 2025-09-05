@@ -50,7 +50,7 @@ class MonthPickerDialogFragment(
 
             for ((index, month) in months.withIndex()) {
                 val tv = TextView(requireContext()).apply {
-                    text = month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                    text = month.getDisplayName(TextStyle.SHORT, Helper.getAppLocale())
                     textSize = 16f
                     gravity = Gravity.CENTER
                     setPadding(16, 16, 16, 16)

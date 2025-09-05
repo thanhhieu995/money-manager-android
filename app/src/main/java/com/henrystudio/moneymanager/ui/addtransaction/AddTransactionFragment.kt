@@ -111,7 +111,7 @@ class AddTransactionFragment : Fragment() {
 
         // Lấy ngày hiện tại và hiển thị
         val currentDate = Calendar.getInstance().time
-        val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Helper.getAppLocale())
         formattedDate = dateFormat.format(currentDate)
 
         val daoCategory = AppDatabase.getDatabase(requireActivity().application).categoryDao()

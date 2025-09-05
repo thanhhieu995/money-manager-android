@@ -12,7 +12,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -160,16 +159,8 @@ class DailyNavigateFragment : Fragment() {
 
         monthText.setOnClickListener {
             MonthPickerDialogFragment { month, year ->
-                // Lấy locale hiện tại trong app
-                val appLocales = AppCompatDelegate.getApplicationLocales()
-                val currentLocale: Locale = if (!appLocales.isEmpty) {
-                    appLocales[0]!!
-                } else {
-                    Locale.getDefault()
-                }
-
                 // Lấy tên tháng theo locale
-                val monthName = Month.of(month).getDisplayName(TextStyle.SHORT, currentLocale)
+                val monthName = Month.of(month).getDisplayName(TextStyle.SHORT, getAppLocale())
 
                 monthText.text = "$monthName $year"
                 // Parse thành LocalDate (ngày 1 của tháng → ngày cuối tháng)
@@ -287,10 +278,6 @@ class DailyNavigateFragment : Fragment() {
                  viewModel.setCurrentDailyNavigateTab(position)
             }
         }
-        val savedPos = PrefsManager.getTabPosition(requireContext())
-        // setCurrentItem NGAY, trước attach mediator
-        viewPager.setCurrentItem(savedPos, false)
-        isRestoring = true
         viewPager.registerOnPageChangeCallback(pageCallback)
     }
 

@@ -181,10 +181,6 @@ class StatisticViewPagerFragment : Fragment() {
                 viewModel.setCurrentStatisticTab(position)
             }
         }
-        val savedPos = PrefsManager.getStatisticTabPosition(requireContext())
-        // setCurrentItem NGAY, trước attach mediator
-        viewPager.setCurrentItem(savedPos, false)
-        isRestoring = true
         viewPager.registerOnPageChangeCallback(pageCallback)
     }
 
