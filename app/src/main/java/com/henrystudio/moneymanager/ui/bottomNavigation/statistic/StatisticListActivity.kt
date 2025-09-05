@@ -10,7 +10,6 @@ import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
@@ -21,9 +20,6 @@ import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -85,19 +81,15 @@ class StatisticListActivity : AppCompatActivity() {
         viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback(){
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                lifecycleScope.launch {
-                    val (filterMonth, filterYear) = withContext(Dispatchers.Default) {
-                        val month = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroup, currentDate)
-                        val year = FilterTransactions.filterTransactionGroupByYear(allTransactionGroup, currentDate)
-                        month to year
-                    }
-                    filterOption = mapPositionToFilter(position, currentDate)
-                    viewModel.setFilter(filterOption.type, currentDate)
-                    when (position) {
-                        0 -> handleSummarySection(filterMonth)
-                        1 -> handleSummarySection(filterYear)
-                        2 -> {}
-                    }
+                val filterMonth = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroup, currentDate)
+                val filterYear = FilterTransactions.filterTransactionGroupByYear(allTransactionGroup, currentDate)
+
+                filterOption = mapPositionToFilter(position, currentDate)
+                viewModel.setFilter(filterOption.type, currentDate)
+                when (position) {
+                    0 -> handleSummarySection(filterMonth)
+                    1 -> handleSummarySection(filterYear)
+                    2 -> {}
                 }
             }
         })

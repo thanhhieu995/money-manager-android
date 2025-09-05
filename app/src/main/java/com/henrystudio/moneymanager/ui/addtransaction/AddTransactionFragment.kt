@@ -30,8 +30,10 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.helper.Helper.Companion.buildCategoryTree
+import com.henrystudio.moneymanager.helper.Helper.Companion.parseStringToLocalDate
 import com.henrystudio.moneymanager.helper.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import com.henrystudio.moneymanager.viewmodel.*
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -185,6 +187,7 @@ class AddTransactionFragment : Fragment() {
             saveTransaction {
                 SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
                 SharedTransactionHolder.scrollToAddedTransaction  = true
+                saveLastDate(requireContext(), parseStringToLocalDate(dateTextView.text.toString()))
                 (saveButton.context as? AddTransactionActivity)?.onTransactionSaved()
             }
         }
@@ -192,6 +195,7 @@ class AddTransactionFragment : Fragment() {
         continueButton.setOnClickListener {
             saveTransaction {
                 SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
+                saveLastDate(requireContext(), parseStringToLocalDate(dateTextView.text.toString()))
                 showToastWithIcon(requireContext(), requireContext().getString(R.string.saved))
                 // Reset các trường
                 edtAmount.setText("")

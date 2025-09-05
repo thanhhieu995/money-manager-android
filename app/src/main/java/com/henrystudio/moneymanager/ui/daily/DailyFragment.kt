@@ -207,6 +207,7 @@ class DailyFragment : Fragment() {
         val matchedIndex = findPositionForDate(getFilterListGroupTransaction(weekStart), weekStart)
         if (matchedIndex != -1) {
             binding.transactionList.scrollToPosition(matchedIndex)
+            saveLastDate(requireContext(), weekStart)
         }
         SharedTransactionHolder.navigateFromMonthly = false // 🟡 reset flag
     }

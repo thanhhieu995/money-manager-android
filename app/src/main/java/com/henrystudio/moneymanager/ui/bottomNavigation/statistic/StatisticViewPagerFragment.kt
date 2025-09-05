@@ -240,6 +240,8 @@ class StatisticViewPagerFragment : Fragment() {
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
                 when (filterPeriod) {
                     FilterPeriodStatistic.List -> {
+                        selectedOption = filterOptionTemp.type
+                        updateCheckMarks(selectedOption)
                         val intent = Intent(requireContext(), StatisticListActivity::class.java)
                         intent.putExtra("filterOption", filterOptionTemp)
                         intent.putExtra("categoryType", currentStatType)
@@ -249,6 +251,8 @@ class StatisticViewPagerFragment : Fragment() {
                         bottomSheetDialog.dismiss()
                     }
                     FilterPeriodStatistic.Trend -> {
+                        selectedOption = filterOptionTemp.type
+                        updateCheckMarks(selectedOption)
                         val intent = Intent(requireContext(), StatisticTrendActivity::class.java)
                         intent.putExtra("filterOption", filterOptionTemp)
                         intent.putExtra("categoryType", currentStatType)

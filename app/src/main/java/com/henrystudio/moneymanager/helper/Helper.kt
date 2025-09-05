@@ -216,5 +216,12 @@ class Helper {
             typedArray.recycle()
             return color
         }
-    }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun parseStringToLocalDate(date: String): LocalDate {
+            val cleanedDate = date.substringBefore(" ")
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
+            return LocalDate.parse(cleanedDate, formatter)
+        }
+     }
 }
