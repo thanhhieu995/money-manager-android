@@ -281,6 +281,7 @@
         android:layout_margin="16dp"
         android:src="@drawable/ic_baseline_add_24"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:translationY="-80dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

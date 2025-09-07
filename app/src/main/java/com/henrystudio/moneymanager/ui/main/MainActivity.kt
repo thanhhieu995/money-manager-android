@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -50,14 +51,15 @@ class MainActivity : AppCompatActivity() {
         MobileAds.initialize(this) {}
 
         adView = findViewById(R.id.adView)
-        val adUnitId = if (BuildConfig.DEBUG) {
-            // Dùng ID test khi chạy debug
-            "ca-app-pub-3940256099942544/6300978111"
-        } else {
-            // Dùng ID thật khi release
-            "ca-app-pub-8536795401427760/2052264213"
-        }
-        adView.adUnitId = adUnitId
+//        val adUnitId = if (BuildConfig.DEBUG) {
+//            // Dùng ID test khi chạy debug
+//            "ca-app-pub-3940256099942544/6300978111"
+//        } else {
+//            // Dùng ID thật khi release
+//            "ca-app-pub-8536795401427760/2052264213"
+//        }
+//        adView.adUnitId = adUnitId
+//        adView.setAdSize(AdSize.BANNER) // 👈 bắt buộc khi set qua code
         val adRequest = AdRequest.Builder().build()
         adView.loadAd(adRequest)
 
