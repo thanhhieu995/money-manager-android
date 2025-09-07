@@ -4,10 +4,13 @@ import android.app.Application
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import com.google.android.gms.ads.MobileAds
 
 class MoneyManagerApplication: Application() {
     override fun onCreate() {
         super.onCreate()
+
+        MobileAds.initialize(this) {}
 
         // 1. Lấy ngôn ngữ đã lưu
         val lang = LocaleHelper.getLanguage(this)

@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.kapt'
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -60,4 +61,6 @@ dependencies {
     implementation "androidx.fragment:fragment-ktx:1.6.2" // hoặc version mới hơn
     //calendar new update
     implementation "com.kizitonwose.calendar:view:2.0.4"
+    // ad mob
+    implementation 'com.google.android.gms:play-services-ads:23.1.0'
 }

@@ -7,7 +7,11 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.henrystudio.moneymanager.BuildConfig
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.DailyNavigateFragment
@@ -34,11 +38,28 @@ class MainActivity : AppCompatActivity() {
         AppDatabase.getDatabase(application).categoryDao()
     }
 
+    private lateinit var adView: AdView
+
     @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Khởi tạo SDK AdMob (nên gọi 1 lần trong App)
+        MobileAds.initialize(this) {}
+
+        adView = findViewById(R.id.adView)
+        val adUnitId = if (BuildConfig.DEBUG) {
+            // Dùng ID test khi chạy debug
+            "ca-app-pub-3940256099942544/6300978111"
+        } else {
+            // Dùng ID thật khi release
+            "ca-app-pub-8536795401427760/2052264213"
+        }
+        adView.adUnitId = adUnitId
+        val adRequest = AdRequest.Builder().build()
+        adView.loadAd(adRequest)
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val lastTab = prefs.getInt("last_selected_tab", R.id.nav_daily)
