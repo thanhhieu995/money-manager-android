@@ -25,6 +25,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentCalendarBinding
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.main.TransactionGroupAdapter
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -37,8 +38,10 @@ class CalendarFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var calendarResume: Calendar
     private val viewModel: TransactionViewModel by activityViewModels {
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
         TransactionViewModelFactory(
-            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+            repository
         )
     }
 

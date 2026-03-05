@@ -25,6 +25,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticViewPagerBinding
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
@@ -48,7 +49,9 @@ class StatisticViewPagerFragment : Fragment() {
     private var listTransactionFilter: List<Transaction> = emptyList()
 
     private val viewModel : TransactionViewModel by activityViewModels {
-        TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
+        TransactionViewModelFactory(repository)
     }
     private lateinit var pageCallback: ViewPager2.OnPageChangeCallback
     private var isRestoring = false

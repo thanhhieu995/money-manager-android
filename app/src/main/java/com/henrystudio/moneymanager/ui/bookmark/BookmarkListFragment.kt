@@ -4,12 +4,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +20,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
@@ -34,15 +37,17 @@ class BookmarkListFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_bookmark_list, container, false)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         tvNoData = view.findViewById(R.id.bookmark_noData)
         val recyclerView = view.findViewById<RecyclerView>(R.id.bookmarkRecyclerView)
 
-        val dao = AppDatabase.getDatabase(requireActivity().application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val transactionRepository = TransactionRepository(database.transactionDao())
+        val transactionFactory = TransactionViewModelFactory(transactionRepository)
+        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
 
         adapter = BookmarkAdapter(
             items = emptyList(),

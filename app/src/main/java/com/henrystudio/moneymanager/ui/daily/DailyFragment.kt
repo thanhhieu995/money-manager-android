@@ -22,6 +22,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.helper.FilterTransactions
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
@@ -44,8 +45,10 @@ class DailyFragment : Fragment() {
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
     private val viewModel: TransactionViewModel by activityViewModels {
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
         TransactionViewModelFactory(
-            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+            repository
         )
     }
 

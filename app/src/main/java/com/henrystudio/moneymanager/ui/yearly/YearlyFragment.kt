@@ -17,6 +17,7 @@ import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
@@ -33,7 +34,9 @@ class YearlyFragment : Fragment() {
     private lateinit var adapter: YearlyAdapter
     private var allTransactions: List<Transaction> = emptyList()
     private val viewModel : TransactionViewModel by activityViewModels {
-        TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
+        TransactionViewModelFactory(repository)
     }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

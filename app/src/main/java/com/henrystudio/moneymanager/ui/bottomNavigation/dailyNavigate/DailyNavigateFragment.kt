@@ -25,6 +25,7 @@ import com.henrystudio.moneymanager.helper.MonthPickerDialogFragment
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
 import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.ui.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.ui.daily.DailyFragment
@@ -62,7 +63,9 @@ class DailyNavigateFragment : Fragment() {
     private var listTransactionGroup: List<TransactionGroup> = listOf()
     private var selectedTransactionList: List<Transaction> = emptyList()
     private val viewModel: TransactionViewModel by activityViewModels {
-        TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
+        TransactionViewModelFactory(repository)
     }
 
     private lateinit var viewPagerAdapter: ViewPagerAdapter

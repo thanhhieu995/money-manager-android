@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -54,9 +55,13 @@ class AddTransactionActivity : AppCompatActivity() {
             finish()
             overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
         }
-        val dao = AppDatabase.getDatabase(application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        val database = AppDatabase.getDatabase(application)
+
+        val transactionRepository = TransactionRepository(database.transactionDao())
+        val transactionFactory = TransactionViewModelFactory(transactionRepository)
+
+        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
+
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
         bookmarkIcon.setOnClickListener {

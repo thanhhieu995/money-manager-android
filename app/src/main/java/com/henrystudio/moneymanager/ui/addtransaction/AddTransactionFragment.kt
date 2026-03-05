@@ -33,6 +33,7 @@ import com.henrystudio.moneymanager.helper.Helper.Companion.buildCategoryTree
 import com.henrystudio.moneymanager.helper.Helper.Companion.parseStringToLocalDate
 import com.henrystudio.moneymanager.helper.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import com.henrystudio.moneymanager.viewmodel.*
 import java.text.NumberFormat
@@ -69,7 +70,9 @@ class AddTransactionFragment : Fragment() {
 
     private var isEditMode = false
     private val viewModel: TransactionViewModel by activityViewModels {
-        TransactionViewModelFactory(AppDatabase.getDatabase(requireActivity().application).transactionDao())
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
+        TransactionViewModelFactory(repository)
     }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

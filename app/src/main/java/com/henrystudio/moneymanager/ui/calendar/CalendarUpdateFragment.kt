@@ -21,6 +21,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.main.TransactionGroupAdapter
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
@@ -42,8 +43,10 @@ class CalendarUpdateFragment : Fragment() {
     private var eventsMap = mutableMapOf<LocalDate, TransactionGroup>()
     private lateinit var calendarView: com.kizitonwose.calendar.view.CalendarView
     private val viewModel: TransactionViewModel by activityViewModels {
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
         TransactionViewModelFactory(
-            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+            repository
         )
     }
     override fun onCreateView(

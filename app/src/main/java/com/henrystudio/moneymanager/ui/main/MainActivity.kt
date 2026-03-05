@@ -15,6 +15,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.BuildConfig
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.DailyNavigateFragment
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.ui.setting.SettingFragment
@@ -66,9 +67,11 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val lastTab = prefs.getInt("last_selected_tab", R.id.nav_daily)
 
-        val dao = AppDatabase.getDatabase(application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        val database = AppDatabase.getDatabase(application)
+        val transactionRepository = TransactionRepository(database.transactionDao())
+        val transactionFactory = TransactionViewModelFactory(transactionRepository)
+        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel :: class.java]
+
         val categoryDao = AppDatabase.getDatabase(application).categoryDao()
         val categoryFactory = CategoryViewModelFactory(categoryDao)
         categoryViewModel = ViewModelProvider(this, categoryFactory)[CategoryViewModel::class.java]

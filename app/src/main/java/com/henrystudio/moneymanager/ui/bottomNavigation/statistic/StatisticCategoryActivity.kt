@@ -17,6 +17,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 
@@ -42,9 +43,10 @@ class StatisticCategoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistic_category)
 
-        val dao = AppDatabase.getDatabase(application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+        val database = AppDatabase.getDatabase(application)
+        val transactionRepository = TransactionRepository(database.transactionDao())
+        val transactionFactory = TransactionViewModelFactory(transactionRepository)
+        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
         init()
 
         btnBack.setOnClickListener {

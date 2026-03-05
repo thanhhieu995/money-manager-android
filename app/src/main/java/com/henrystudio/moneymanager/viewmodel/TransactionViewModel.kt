@@ -10,8 +10,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
-class TransactionViewModel(private val dao: TransactionDao) : ViewModel() {
-    private val repository = TransactionRepository(dao)
+class TransactionViewModel(private val repository: TransactionRepository) : ViewModel() {
     val allTransactions: LiveData<List<Transaction>> = repository.allTransactions
     val groupedTransactions: LiveData<List<TransactionGroup>> = repository.getGroupedTransactions()
     @RequiresApi(Build.VERSION_CODES.O)

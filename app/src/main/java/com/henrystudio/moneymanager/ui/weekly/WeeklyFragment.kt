@@ -18,6 +18,7 @@ import com.henrystudio.moneymanager.model.AppDatabase
 import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.ui.monthly.WeeklyAdapter
@@ -38,8 +39,10 @@ class WeeklyFragment : Fragment() {
     private var listWeekData: List<WeeklyData> = emptyList()
 
     private val viewModel: TransactionViewModel by activityViewModels {
+        val database = AppDatabase.getDatabase(requireActivity().application)
+        val repository = TransactionRepository(database.transactionDao())
         TransactionViewModelFactory(
-            AppDatabase.getDatabase(requireActivity().application).transactionDao()
+            repository
         )
     }
 

@@ -11,6 +11,7 @@ import com.google.android.material.tabs.TabLayout
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.helper.Helper
 import com.henrystudio.moneymanager.model.*
+import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory
 import java.time.LocalDate
@@ -32,9 +33,11 @@ class StatisticTrendActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this) {
             onBackAnimation()
         }
-        val dao = AppDatabase.getDatabase(application).transactionDao()
-        val factory = TransactionViewModelFactory(dao)
-        viewModel = ViewModelProvider(this, factory)[TransactionViewModel::class.java]
+
+        val database = AppDatabase.getDatabase(application)
+        val transactionRepository = TransactionRepository(database.transactionDao())
+        val transactionFactory = TransactionViewModelFactory(transactionRepository)
+        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
         filterOption = intent.getSerializableExtra("filterOption") as FilterOption
         categoryType = intent.getSerializableExtra("categoryType") as CategoryType
         currentFilterPeriod = intent.getSerializableExtra("currentFilterPeriodStatistic") as FilterPeriodStatistic
