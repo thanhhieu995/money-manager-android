@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.model.Account
-import com.henrystudio.moneymanager.model.AccountDao
+import com.henrystudio.moneymanager.features.transaction.data.local.AccountDao
 import com.henrystudio.moneymanager.repository.AccountRepository
 import kotlinx.coroutines.launch
 

@@ -22,8 +22,10 @@ import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.color.MaterialColors
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.database.AppDatabase
 import com.henrystudio.moneymanager.databinding.FragmentStatisticStatsBinding
-import com.henrystudio.moneymanager.helper.FilterTransactions
+import com.henrystudio.moneymanager.core.util.FilterTransactions
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel

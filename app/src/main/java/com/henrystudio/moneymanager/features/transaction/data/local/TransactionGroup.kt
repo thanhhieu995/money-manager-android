@@ -1,7 +1,8 @@
-package com.henrystudio.moneymanager.model
+package com.henrystudio.moneymanager.features.transaction.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 
 @Entity(tableName = "transaction_groups")
 data class TransactionGroup(

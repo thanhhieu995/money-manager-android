@@ -1,7 +1,6 @@
-package com.henrystudio.moneymanager.application
+package com.henrystudio.moneymanager.core.application
 
 import android.app.Application
-import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.google.android.gms.ads.MobileAds

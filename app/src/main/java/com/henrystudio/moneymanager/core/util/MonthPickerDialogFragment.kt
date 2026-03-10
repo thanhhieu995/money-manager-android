@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.helper
+package com.henrystudio.moneymanager.core.util
 
 import android.app.Dialog
 import android.graphics.Color

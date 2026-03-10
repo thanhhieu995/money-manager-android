@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.application
+package com.henrystudio.moneymanager.core.application
 
 import android.content.Context
 import android.content.res.Configuration

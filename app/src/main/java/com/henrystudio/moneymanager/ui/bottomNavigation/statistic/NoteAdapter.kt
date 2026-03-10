@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.model.Note
 
 class NoteAdapter(private var notes: List<Note>): RecyclerView.Adapter<NoteAdapter.ViewHolder>() {

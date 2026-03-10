@@ -2,7 +2,7 @@ package com.henrystudio.moneymanager.repository
 
 import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.model.Account
-import com.henrystudio.moneymanager.model.AccountDao
+import com.henrystudio.moneymanager.features.transaction.data.local.AccountDao
 
 class AccountRepository(private val dao: AccountDao) {
 

@@ -2,7 +2,7 @@ package com.henrystudio.moneymanager.repository
 
 import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.model.Category
-import com.henrystudio.moneymanager.model.CategoryDao
+import com.henrystudio.moneymanager.features.transaction.data.local.CategoryDao
 import com.henrystudio.moneymanager.model.CategoryType
 
 

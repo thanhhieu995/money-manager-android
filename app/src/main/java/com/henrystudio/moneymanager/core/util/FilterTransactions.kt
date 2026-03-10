@@ -1,9 +1,9 @@
-package com.henrystudio.moneymanager.helper
+package com.henrystudio.moneymanager.core.util
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.henrystudio.moneymanager.model.Transaction
-import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
+import com.henrystudio.moneymanager.features.transaction.data.local.TransactionGroup
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

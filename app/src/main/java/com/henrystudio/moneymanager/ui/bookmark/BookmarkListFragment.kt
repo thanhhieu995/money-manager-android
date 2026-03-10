@@ -17,9 +17,9 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.database.AppDatabase
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.viewmodel.TransactionViewModelFactory

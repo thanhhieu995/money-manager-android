@@ -1,7 +1,7 @@
 package com.henrystudio.moneymanager.ui.main
 
 import androidx.recyclerview.widget.DiffUtil
-import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 
 class TransactionDiffCallback(
     private val oldList: List<Transaction>,

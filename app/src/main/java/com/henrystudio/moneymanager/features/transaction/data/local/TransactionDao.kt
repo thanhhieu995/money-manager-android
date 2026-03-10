@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.model
+package com.henrystudio.moneymanager.features.transaction.data.local
 
 import androidx.lifecycle.LiveData
 import androidx.room.*

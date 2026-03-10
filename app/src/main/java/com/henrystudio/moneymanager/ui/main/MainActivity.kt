@@ -8,12 +8,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.henrystudio.moneymanager.BuildConfig
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.database.AppDatabase
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.DailyNavigateFragment

@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.core.util.Helper
 
 class YearlyAdapter(private var yearlyList: List<YearlyData>,
 private var onClickYear: (YearlyData) -> Unit) : RecyclerView.Adapter<YearlyAdapter.YearlyViewHolder>() {

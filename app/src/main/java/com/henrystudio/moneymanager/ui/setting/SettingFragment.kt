@@ -17,7 +17,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.application.LocaleHelper
+import com.henrystudio.moneymanager.core.application.LocaleHelper
 import com.henrystudio.moneymanager.databinding.FragmentSettingBinding
 import com.henrystudio.moneymanager.ui.main.MainActivity
 import java.util.*

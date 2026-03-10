@@ -8,7 +8,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.model.CategoryStat
 
 class CategoryStatAdapter(private var items: List<CategoryStat>) : RecyclerView.Adapter<CategoryStatAdapter.ViewHolder>() {

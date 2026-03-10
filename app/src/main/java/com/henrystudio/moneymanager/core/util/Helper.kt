@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.helper
+package com.henrystudio.moneymanager.core.util
 
 import android.app.Activity
 import android.content.Context
@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.ui.addtransaction.CategoryItem

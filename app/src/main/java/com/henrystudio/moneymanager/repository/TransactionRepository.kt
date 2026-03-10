@@ -2,9 +2,9 @@ package com.henrystudio.moneymanager.repository
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
-import com.henrystudio.moneymanager.model.Transaction
-import com.henrystudio.moneymanager.model.TransactionDao
-import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
+import com.henrystudio.moneymanager.features.transaction.data.local.TransactionDao
+import com.henrystudio.moneymanager.features.transaction.data.local.TransactionGroup
 
 class TransactionRepository(private val dao: TransactionDao) {
     val allTransactions: LiveData<List<Transaction>> = dao.getAll()

@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.database.AppDatabase
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.bookmark.BookmarkActivity

@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentCategoryDetailBinding
 import com.henrystudio.moneymanager.model.AddItemSource
-import com.henrystudio.moneymanager.model.AppDatabase
+import com.henrystudio.moneymanager.core.database.AppDatabase
 import com.henrystudio.moneymanager.model.ItemType
 import com.henrystudio.moneymanager.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.viewmodel.AccountViewModelFactory

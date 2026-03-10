@@ -1,7 +1,9 @@
-package com.henrystudio.moneymanager.model
+package com.henrystudio.moneymanager.features.transaction.data.local
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.henrystudio.moneymanager.model.Category
+import com.henrystudio.moneymanager.model.CategoryType
 
 @Dao
 interface CategoryDao {

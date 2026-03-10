@@ -1,7 +1,7 @@
 package com.henrystudio.moneymanager.ui.daily
 
 import androidx.recyclerview.widget.DiffUtil
-import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 
 object TransactionDailyDiffCallback: DiffUtil.ItemCallback<Transaction>() {
     override fun areItemsTheSame(oldItem: Transaction, newItem: Transaction): Boolean {

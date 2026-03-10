@@ -23,9 +23,11 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.database.AppDatabase
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
-import com.henrystudio.moneymanager.helper.FilterTransactions
-import com.henrystudio.moneymanager.helper.Helper
+import com.henrystudio.moneymanager.core.util.FilterTransactions
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.daily.DailyFragment

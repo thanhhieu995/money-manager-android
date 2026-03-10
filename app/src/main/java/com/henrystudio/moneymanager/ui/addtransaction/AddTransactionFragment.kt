@@ -27,11 +27,13 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.database.AppDatabase
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
-import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.helper.Helper.Companion.buildCategoryTree
-import com.henrystudio.moneymanager.helper.Helper.Companion.parseStringToLocalDate
-import com.henrystudio.moneymanager.helper.Helper.Companion.showToastWithIcon
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.buildCategoryTree
+import com.henrystudio.moneymanager.core.util.Helper.Companion.parseStringToLocalDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate

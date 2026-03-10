@@ -13,8 +13,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.ui.main.TransactionDiffCallback
 import java.text.Normalizer
 import java.time.DayOfWeek

@@ -9,8 +9,9 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.database.AppDatabase
 import com.henrystudio.moneymanager.databinding.FragmentAddItemBinding
-import com.henrystudio.moneymanager.helper.Helper.Companion.toCategory
+import com.henrystudio.moneymanager.core.util.Helper.Companion.toCategory
 import com.henrystudio.moneymanager.model.*
 import com.henrystudio.moneymanager.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.viewmodel.AccountViewModelFactory

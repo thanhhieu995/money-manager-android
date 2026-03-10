@@ -12,11 +12,11 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.databinding.FragmentYearlyBinding
-import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.model.AppDatabase
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.database.AppDatabase
 import com.henrystudio.moneymanager.model.FilterOption
 import com.henrystudio.moneymanager.model.FilterPeriodStatistic
-import com.henrystudio.moneymanager.model.Transaction
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.ui.bottomNavigation.statistic.StatisticListActivity

@@ -19,12 +19,13 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
-import com.henrystudio.moneymanager.helper.Helper
-import com.henrystudio.moneymanager.helper.Helper.Companion.getAppLocale
-import com.henrystudio.moneymanager.helper.MonthPickerDialogFragment
-import com.henrystudio.moneymanager.model.AppDatabase
-import com.henrystudio.moneymanager.model.Transaction
-import com.henrystudio.moneymanager.model.TransactionGroup
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.getAppLocale
+import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
+import com.henrystudio.moneymanager.core.database.AppDatabase
+import com.henrystudio.moneymanager.core.util.FilterTransactions
+import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
+import com.henrystudio.moneymanager.features.transaction.data.local.TransactionGroup
 import com.henrystudio.moneymanager.repository.TransactionRepository
 import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.ui.bookmark.BookmarkActivity
@@ -127,12 +128,12 @@ class DailyNavigateFragment : Fragment() {
 
         viewModel.currentDailyNavigateTabPosition.observe(viewLifecycleOwner) { position ->
             val filteredMonth = month?.let {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
+                FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
                     it
                 )
             }
             val filteredYear =
-                month?.let { com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, it) }
+                month?.let { FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, it) }
             when (position) {
                 0 -> {
                     // Daily tab selected
@@ -215,9 +216,9 @@ class DailyNavigateFragment : Fragment() {
             monthText.text = date.format(if (isMonthly) formatterYear() else formatterMonth())
 
             val filtered = if (isMonthly) {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, date)
+                FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, date)
             } else {
-                com.henrystudio.moneymanager.helper.FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, date)
+                FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, date)
             }
 
             handleSummarySection(filtered)
