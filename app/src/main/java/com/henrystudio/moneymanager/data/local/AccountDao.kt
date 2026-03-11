@@ -1,14 +1,14 @@
 package com.henrystudio.moneymanager.data.local
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.henrystudio.moneymanager.data.model.Account
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AccountDao {
 
     @Query("SELECT * FROM accounts")
-    fun getAll(): LiveData<List<Account>>
+    fun getAll(): Flow<List<Account>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(account: Account)

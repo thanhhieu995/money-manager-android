@@ -1,27 +1,27 @@
 package com.henrystudio.moneymanager.data.repository
 
-import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.local.CategoryDao
 import com.henrystudio.moneymanager.domain.repository.CategoryRepository
 import com.henrystudio.moneymanager.data.model.CategoryType
+import kotlinx.coroutines.flow.Flow
 
 
 class CategoryRepositoryImpl(private val dao: CategoryDao) : CategoryRepository{
 
-    override fun getParentCategories(type: CategoryType): LiveData<List<Category>> {
+    override fun getParentCategories(type: CategoryType): Flow<List<Category>> {
         return dao.getParentCategoriesByType(type)
     }
 
-    override fun getChildCategories(parentId: Int): LiveData<List<Category>> {
+    override fun getChildCategories(parentId: Int): Flow<List<Category>> {
         return dao.getChildCategories(parentId)
     }
 
-    override fun getAll() : LiveData<List<Category>> {
+    override fun getAll() : Flow<List<Category>> {
         return dao.getAll()
     }
 
-    override  fun getCategoriesByType(type: CategoryType): LiveData<List<Category>> {
+    override  fun getCategoriesByType(type: CategoryType): Flow<List<Category>> {
         return dao.getCategoriesByType(type)
     }
 

@@ -1,13 +1,13 @@
 package com.henrystudio.moneymanager.data.repository
 
-import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.local.AccountDao
 import com.henrystudio.moneymanager.domain.repository.AccountRepository
+import kotlinx.coroutines.flow.Flow
 
 class AccountRepositoryImpl(private val dao: AccountDao): AccountRepository {
 
-    override fun getAllAccount() : LiveData<List<Account>> {
+    override fun getAllAccount() : Flow<List<Account>> {
         return dao.getAll()
     }
 

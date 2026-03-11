@@ -1,23 +1,23 @@
 package com.henrystudio.moneymanager.data.local
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
     @Query("SELECT * FROM categories WHERE type = :type AND parentId IS NULL")
-    fun getParentCategoriesByType(type: CategoryType): LiveData<List<Category>>
+    fun getParentCategoriesByType(type: CategoryType): Flow<List<Category>>
 
     @Query("SELECT * FROM categories WHERE parentId = :parentId")
-    fun getChildCategories(parentId: Int): LiveData<List<Category>>
+    fun getChildCategories(parentId: Int): Flow<List<Category>>
 
     @Query("SELECT * FROM categories WHERE type = :type")
-    fun getCategoriesByType(type: CategoryType): LiveData<List<Category>>
+    fun getCategoriesByType(type: CategoryType): Flow<List<Category>>
 
     @Query("SELECT * FROM categories")
-    fun getAll(): LiveData<List<Category>>
+    fun getAll(): Flow<List<Category>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(category: Category)

@@ -15,6 +15,22 @@ import com.henrystudio.moneymanager.core.util.Helper.Companion.toCategory
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.data.repository.AccountRepositoryImpl
+import com.henrystudio.moneymanager.data.repository.CategoryRepositoryImpl
+import com.henrystudio.moneymanager.domain.usecase.account.AccountUseCases
+import com.henrystudio.moneymanager.domain.usecase.account.AddAccountUseCase
+import com.henrystudio.moneymanager.domain.usecase.account.DeleteAccountUseCase
+import com.henrystudio.moneymanager.domain.usecase.account.GetAccountsUseCase
+import com.henrystudio.moneymanager.domain.usecase.account.UpdateAccountUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
+import com.henrystudio.moneymanager.domain.usecase.category.DeleteCategoryByIdUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.DeleteCategoryUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.GetAllCategoriesUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.GetCategoriesByTypeUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.GetChildCategoriesUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.GetParentCategoriesUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.InsertCategoryUseCase
+import com.henrystudio.moneymanager.domain.usecase.category.UpdateCategoryUseCase
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
@@ -94,7 +110,24 @@ class AddItemFragment : Fragment() {
                     ItemType.CATEGORY -> {
                         // Xử lý cho category
                         val dao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
-                        val factory = CategoryViewModelFactory(dao)
+                        val repository = CategoryRepositoryImpl(dao)
+                        val useCases = CategoryUseCases(
+                            getParentCategories= GetParentCategoriesUseCase(repository),
+                        getChildCategories=GetChildCategoriesUseCase(repository),
+                         getAllCategories= GetAllCategoriesUseCase(repository),
+
+                         getCategoriesByType= GetCategoriesByTypeUseCase(repository),
+
+                         insertCategory= InsertCategoryUseCase(repository),
+
+                         deleteCategory= DeleteCategoryUseCase(repository),
+
+                         deleteCategoryById= DeleteCategoryByIdUseCase(repository),
+
+                         updateCategory= UpdateCategoryUseCase(repository)
+
+                        )
+                        val factory = CategoryViewModelFactory(useCases)
                         val viewModel = ViewModelProvider(this, factory)[CategoryViewModel::class.java]
 
                         val category = categoryUpdate?.toCategory(categoryType)?.copy(
@@ -127,7 +160,14 @@ class AddItemFragment : Fragment() {
                     ItemType.ACCOUNT -> {
                         // Xử lý cho account
                         val dao = AppDatabase.getDatabase(requireActivity().application).accountDao()
-                        val factory = AccountViewModelFactory(dao)
+                        val repository = AccountRepositoryImpl(dao)
+                        val accountUseCases = AccountUseCases(
+                            addAccountUseCase= AddAccountUseCase(repository),
+                            deleteAccountUseCase= DeleteAccountUseCase(repository),
+                            getAccountsUseCase= GetAccountsUseCase(repository),
+                            updateAccountUseCase= UpdateAccountUseCase(repository)
+                        )
+                        val factory = AccountViewModelFactory(accountUseCases)
                         val viewModel = ViewModelProvider(this, factory)[AccountViewModel::class.java]
                         val account = accountUpdate?.item?.copy(
                             name = nameText.text.toString()

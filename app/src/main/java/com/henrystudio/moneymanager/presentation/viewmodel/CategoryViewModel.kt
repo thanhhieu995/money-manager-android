@@ -1,12 +1,9 @@
 package com.henrystudio.moneymanager.presentation.viewmodel
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.Category
-import com.henrystudio.moneymanager.data.local.CategoryDao
 import com.henrystudio.moneymanager.data.model.CategoryType
-import com.henrystudio.moneymanager.data.repository.CategoryRepositoryImpl
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch

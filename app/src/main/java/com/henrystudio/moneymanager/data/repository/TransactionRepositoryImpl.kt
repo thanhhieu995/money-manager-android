@@ -1,14 +1,17 @@
 package com.henrystudio.moneymanager.data.repository
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.local.TransactionDao
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.domain.repository.TransactionRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRepository {
-    override val getAllTransactions: LiveData<List<Transaction>> = dao.getAll()
+    override fun getAllTransactions(): Flow<List<Transaction>> {
+        return dao.getAll()
+    }
 
     override suspend fun insert(transaction: Transaction) {
         dao.insert(transaction)
@@ -26,13 +29,19 @@ class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRe
         dao.update(transaction)
     }
 
-    override fun getGroupedTransactions(): LiveData<List<TransactionGroup>> {
-        return getAllTransactions.map { transactionList ->
+    override fun getGroupedTransactions(): Flow<List<TransactionGroup>> {
+        return dao.getAll().map { transactionList ->
             transactionList
                 .groupBy { it.date }
                 .map { (date, transactionsOnDate) ->
-                    val income = transactionsOnDate.filter { it.isIncome }.sumOf { it.amount }
-                    val expense = transactionsOnDate.filter { !it.isIncome }.sumOf { it.amount }
+
+                    val income = transactionsOnDate
+                        .filter { it.isIncome }
+                        .sumOf { it.amount }
+
+                    val expense = transactionsOnDate
+                        .filter { !it.isIncome }
+                        .sumOf { it.amount }
 
                     TransactionGroup(
                         id = date.hashCode(),
@@ -45,7 +54,7 @@ class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRe
         }
     }
 
-    override fun getBookmarkedTransactions() : LiveData<List<Transaction>> {
+    override fun getBookmarkedTransactions() : Flow<List<Transaction>> {
         return dao.getBookmarkedTransactions()
     }
 }
