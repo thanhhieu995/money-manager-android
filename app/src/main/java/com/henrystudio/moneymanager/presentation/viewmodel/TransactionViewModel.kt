@@ -6,18 +6,19 @@ import androidx.lifecycle.*
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
+import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.model.Event
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
-class TransactionViewModel(private val repository: TransactionRepositoryImpl) : ViewModel() {
-    val allTransactions: LiveData<List<Transaction>> = repository.getAllTransactions
-    val groupedTransactions: LiveData<List<TransactionGroup>> = repository.getGroupedTransactions()
+class TransactionViewModel(private val transactionUseCases: TransactionUseCases) : ViewModel() {
+    val allTransactions: Flow<List<Transaction>> = transactionUseCases.getTransactionsUseCase()
+    val groupedTransactions: LiveData<List<TransactionGroup>> = transactionUseCases.getTransactionsGroupUseCase().asLiveData()
     @RequiresApi(Build.VERSION_CODES.O)
     private val _currentFilterDate = MutableLiveData(LocalDate.now())
     @RequiresApi(Build.VERSION_CODES.O)
@@ -78,23 +79,23 @@ class TransactionViewModel(private val repository: TransactionRepositoryImpl) : 
     val currentStatisticTabPosition: LiveData<Int> = _currentStatisticTabPosition
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
-        repository.insert(transaction)
+        transactionUseCases.addTransactionUseCase(transaction)
     }
 
     fun delete(transaction: Transaction) = viewModelScope.launch {
-        repository.delete(transaction)
+        transactionUseCases.deleteTransactionUseCase(transaction)
     }
 
     fun deleteAll(transactionList: List<Transaction>) = viewModelScope.launch {
-        repository.deleteAll(transactionList)
+        transactionUseCases.deleteAllTransactionsUseCase(transactionList)
     }
 
     fun update(transaction: Transaction) = viewModelScope.launch{
-       repository.update(transaction)
+       transactionUseCases.updateTransactionsUseCase(transaction)
     }
 
-    fun getBookmarkedTransactions(): LiveData<List<Transaction>> {
-        return repository.getBookmarkedTransactions()
+    suspend fun getBookmarkedTransactions(): Flow<List<Transaction>> {
+        return transactionUseCases.getBookmarkedTransactionsUseCase()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

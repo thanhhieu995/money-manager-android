@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 class GetAccountsUseCase(
     private val repository: AccountRepository
 ) {
-    suspend operator fun invoke(): Flow<List<Account>> {
+    operator fun invoke(): Flow<List<Account>> {
         return repository.getAllAccount()
     }
 }

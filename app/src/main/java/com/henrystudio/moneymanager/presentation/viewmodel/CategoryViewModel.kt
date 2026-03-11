@@ -7,45 +7,45 @@ import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.local.CategoryDao
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.repository.CategoryRepositoryImpl
+import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class CategoryViewModel(private val dao: CategoryDao) : ViewModel() {
+class CategoryViewModel(private val categoryUseCases: CategoryUseCases) : ViewModel() {
 
-    private val repository = CategoryRepositoryImpl(dao)
-
-    fun getParentCategories(type: CategoryType): LiveData<List<Category>> {
-        return repository.getParentCategories(type)
+    fun getParentCategories(type: CategoryType): Flow<List<Category>> {
+        return categoryUseCases.getParentCategories(type)
     }
 
-    fun getChildCategories(parentId: Int): LiveData<List<Category>> {
-        return repository.getChildCategories(parentId)
+    fun getChildCategories(parentId: Int): Flow<List<Category>> {
+        return categoryUseCases.getChildCategories(parentId)
     }
 
-    fun getAll() : LiveData<List<Category>> {
-        return repository.getAll()
+    fun getAll() : Flow<List<Category>> {
+        return categoryUseCases.getAllCategories()
     }
 
-    fun getCategoriesByType(type: CategoryType): LiveData<List<Category>> {
-        return repository.getCategoriesByType(type)
+    fun getCategoriesByType(type: CategoryType): Flow<List<Category>> {
+        return categoryUseCases.getCategoriesByType(type)
     }
 
     fun insert(category: Category) = viewModelScope.launch {
-        repository.insert(category)
+        categoryUseCases.insertCategory(category)
     }
 
     fun delete(category: Category) = viewModelScope.launch {
-        repository.delete(category)
+        categoryUseCases.deleteCategory(category)
     }
 
     fun deleteId(id: Int) = viewModelScope.launch {
-        repository.deleteId(id)
+        categoryUseCases.deleteCategoryById(id)
     }
 
     fun update(category: Category) = viewModelScope.launch {
-        repository.update(category)
+        categoryUseCases.updateCategory(category)
     }
 
     fun updateChildren(children: List<Category>) = viewModelScope.launch {
-        children.forEach{repository.update(it)}
+        children.forEach{categoryUseCases.updateCategory(it)}
     }
 }

@@ -4,10 +4,10 @@ import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 
-class GetTransactionsByDateUseCase(
+class GetTransactionsGroupUseCase(
     private val repository: TransactionRepository
 ) {
-    suspend operator fun invoke(date: String): Flow<List<TransactionGroup>> {
+    operator fun invoke(): Flow<List<TransactionGroup>> {
         return repository.getGroupedTransactions()
     }
 }
