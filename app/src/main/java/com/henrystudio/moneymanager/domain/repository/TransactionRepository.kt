@@ -1,13 +1,13 @@
 package com.henrystudio.moneymanager.domain.repository
 
-import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
+import kotlinx.coroutines.flow.Flow
 
 
 interface TransactionRepository {
 
-    val allTransactions: LiveData<List<Transaction>>
+    fun  getAllTransactions(): Flow<List<Transaction>>
 
     suspend fun insert(transaction: Transaction)
 
@@ -17,8 +17,8 @@ interface TransactionRepository {
 
     suspend fun update(transaction: Transaction)
 
-    fun getGroupedTransactions(): LiveData<List<TransactionGroup>>
+    fun getGroupedTransactions(): Flow<List<TransactionGroup>>
 
-    fun getBookmarkedTransactions(): LiveData<List<Transaction>>
+    fun getBookmarkedTransactions(): Flow<List<Transaction>>
 
 }

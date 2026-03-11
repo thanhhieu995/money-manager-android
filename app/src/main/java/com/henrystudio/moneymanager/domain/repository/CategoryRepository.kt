@@ -1,18 +1,18 @@
 package com.henrystudio.moneymanager.domain.repository
 
-import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
+import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {
 
-    fun getParentCategories(type: CategoryType): LiveData<List<Category>>
+    fun getParentCategories(type: CategoryType): Flow<List<Category>>
 
-    fun getChildCategories(parentId: Int): LiveData<List<Category>>
+    fun getChildCategories(parentId: Int): Flow<List<Category>>
 
-    fun getAll(): LiveData<List<Category>>
+    fun getAll(): Flow<List<Category>>
 
-    fun getCategoriesByType(type: CategoryType): LiveData<List<Category>>
+    fun getCategoriesByType(type: CategoryType): Flow<List<Category>>
 
     suspend fun insert(category: Category)
 

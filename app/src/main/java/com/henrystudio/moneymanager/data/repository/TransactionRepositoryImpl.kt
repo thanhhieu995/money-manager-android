@@ -8,7 +8,7 @@ import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.domain.repository.TransactionRepository
 
 class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRepository {
-    override val allTransactions: LiveData<List<Transaction>> = dao.getAll()
+    override val getAllTransactions: LiveData<List<Transaction>> = dao.getAll()
 
     override suspend fun insert(transaction: Transaction) {
         dao.insert(transaction)
@@ -27,7 +27,7 @@ class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRe
     }
 
     override fun getGroupedTransactions(): LiveData<List<TransactionGroup>> {
-        return allTransactions.map { transactionList ->
+        return getAllTransactions.map { transactionList ->
             transactionList
                 .groupBy { it.date }
                 .map { (date, transactionsOnDate) ->

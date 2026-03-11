@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 class TransactionViewModel(private val repository: TransactionRepositoryImpl) : ViewModel() {
-    val allTransactions: LiveData<List<Transaction>> = repository.allTransactions
+    val allTransactions: LiveData<List<Transaction>> = repository.getAllTransactions
     val groupedTransactions: LiveData<List<TransactionGroup>> = repository.getGroupedTransactions()
     @RequiresApi(Build.VERSION_CODES.O)
     private val _currentFilterDate = MutableLiveData(LocalDate.now())

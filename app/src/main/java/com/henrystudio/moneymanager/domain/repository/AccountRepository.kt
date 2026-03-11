@@ -2,9 +2,10 @@ package com.henrystudio.moneymanager.domain.repository
 
 import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.data.model.Account
+import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
-    fun getAllAccount(): LiveData<List<Account>>
+    fun getAllAccount(): Flow<List<Account>>
 
     suspend fun insert(account: Account)
 
