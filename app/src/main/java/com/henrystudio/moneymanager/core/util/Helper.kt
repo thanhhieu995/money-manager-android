@@ -15,10 +15,14 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
-import com.henrystudio.moneymanager.model.*
-import com.henrystudio.moneymanager.ui.addtransaction.AddTransactionActivity
-import com.henrystudio.moneymanager.ui.addtransaction.CategoryItem
+import com.henrystudio.moneymanager.data.model.Category
+import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.model.CategoryStat
+import com.henrystudio.moneymanager.presentation.model.FilterOption
+import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.views.addtransaction.AddTransactionActivity
+import com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -43,8 +47,8 @@ class Helper {
             return format.format(amount) + "đ"
         }
 
-        fun buildCategoryTree(categories: List<Category>): List<CategoryItem> {
-            val parentItems = mutableListOf<CategoryItem>()
+        fun buildCategoryTree(categories: List<Category>): List<com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem> {
+            val parentItems = mutableListOf<com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem>()
 
             categories.filter { it.parentId == null }.forEach { parent ->
                 val children = categories.filter { it.parentId == parent.id }
@@ -60,13 +64,14 @@ class Helper {
                         )
                     }
 
-                val parentItem = CategoryItem(
-                    id = parent.id,
-                    emoji = parent.emoji,
-                    name = parent.name,
-                    isParent = true,
-                    children = children
-                )
+                val parentItem =
+                    CategoryItem(
+                        id = parent.id,
+                        emoji = parent.emoji,
+                        name = parent.name,
+                        isParent = true,
+                        children = children
+                    )
 
                 parentItems.add(parentItem)
             }
@@ -74,7 +79,7 @@ class Helper {
             return parentItems
         }
 
-        fun CategoryItem.toCategory(type: CategoryType): Category {
+        fun com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem.toCategory(type: CategoryType): Category {
             return Category(
                 id = this.id,
                 name = this.name,

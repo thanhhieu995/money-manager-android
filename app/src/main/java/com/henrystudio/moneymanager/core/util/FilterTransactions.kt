@@ -2,13 +2,12 @@ package com.henrystudio.moneymanager.core.util
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.henrystudio.moneymanager.features.transaction.data.local.Transaction
-import com.henrystudio.moneymanager.features.transaction.data.local.TransactionGroup
+import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.data.model.TransactionGroup
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
-import java.util.*
 
 class FilterTransactions {
     companion object {
