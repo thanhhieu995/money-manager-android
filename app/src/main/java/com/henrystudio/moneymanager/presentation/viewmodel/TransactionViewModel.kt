@@ -2,6 +2,7 @@ package com.henrystudio.moneymanager.presentation.viewmodel
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.core.util.Pair
 import androidx.lifecycle.*
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
@@ -10,19 +11,32 @@ import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCas
 import com.henrystudio.moneymanager.presentation.model.Event
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Collections.emptyList
+import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)
-class TransactionViewModel(private val transactionUseCases: TransactionUseCases) : ViewModel() {
+@HiltViewModel
+class TransactionViewModel @Inject constructor (private val transactionUseCases: TransactionUseCases) : ViewModel() {
     val allTransactions: Flow<List<Transaction>> = transactionUseCases.getTransactionsUseCase()
-    val groupedTransactions: LiveData<List<TransactionGroup>> = transactionUseCases.getTransactionsGroupUseCase().asLiveData()
+    val groupedTransactions: StateFlow<List<TransactionGroup>> = transactionUseCases.getTransactionsGroupUseCase().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
     @RequiresApi(Build.VERSION_CODES.O)
-    private val _currentFilterDate = MutableLiveData(LocalDate.now())
+    private val _currentFilterDate = MutableStateFlow(LocalDate.now())
     @RequiresApi(Build.VERSION_CODES.O)
-    val currentFilterDate: LiveData<LocalDate> = _currentFilterDate
+    val currentFilterDate: StateFlow<LocalDate> = _currentFilterDate
     private val _currentDailyNavigateTabPosition = MutableLiveData<Int>()
     val currentDailyNavigateTabPosition: LiveData<Int> get() = _currentDailyNavigateTabPosition
     private val _selectionMode = MutableLiveData<Boolean>(false)
@@ -31,49 +45,30 @@ class TransactionViewModel(private val transactionUseCases: TransactionUseCases)
     val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
     private val _navigateToWeekFromMonthly = MutableLiveData<Event<LocalDate>>()
     val navigateToWeekFromMonthly: LiveData<Event<LocalDate>> = _navigateToWeekFromMonthly
-    private val _filterOption = MutableLiveData<FilterOption>()
-    val filterOption: LiveData<FilterOption> = _filterOption
-    private val _statisticCategoryType = MutableLiveData(CategoryType.EXPENSE)
-    val statisticCategoryType: LiveData<CategoryType> = _statisticCategoryType
-    private val _statisticListTransactionFilter = MutableLiveData<List<Transaction>>(emptyList())
-    val statisticListTransactionFilter : LiveData<List<Transaction>> = _statisticListTransactionFilter
+    private val _filterOption = MutableStateFlow<FilterOption>(
+        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
+    )
+    val filterOption: StateFlow<FilterOption> = _filterOption
+    private val _statisticCategoryType = MutableStateFlow(CategoryType.EXPENSE)
+    val statisticCategoryType: StateFlow<CategoryType> = _statisticCategoryType
+    private val _statisticListTransactionFilter = MutableStateFlow<List<Transaction>>(emptyList())
+    val statisticListTransactionFilter : StateFlow<List<Transaction>> = _statisticListTransactionFilter
 
     // noteFragment
-    val combinedFilter: MediatorLiveData<Pair<CategoryType, List<Transaction>>> = MediatorLiveData()
-
-    init {
-        var currentType: CategoryType? = null
-        var currentList: List<Transaction>? = null
-
-        val updateCombinedFilter = {
-            if (currentType != null && currentList != null) {
-                combinedFilter.value = Pair(currentType!!, currentList!!)
-            }
-        }
-
-        combinedFilter.addSource(statisticCategoryType) { type ->
-            currentType = type
-            updateCombinedFilter()
-        }
-
-        combinedFilter.addSource(statisticListTransactionFilter) { list ->
-            currentList = list
-            updateCombinedFilter()
-        }
+    val combinedFilter: Flow<Pair<CategoryType, List<Transaction>>> =  combine(
+        statisticCategoryType,
+        statisticListTransactionFilter
+    ) { type, list ->
+        Pair(type, list)
     }
 
-    val combineGroupAndDate = MediatorLiveData<Pair<List<TransactionGroup>, LocalDate>>()
-
-    init {
-        combineGroupAndDate.addSource(groupedTransactions) { transactions ->
-            val date = currentFilterDate.value
-            if (date != null) combineGroupAndDate.value = transactions to date
+    val combineGroupAndDate: Flow<Pair<List<TransactionGroup>, LocalDate>> =
+        combine(
+            groupedTransactions,
+            currentFilterDate
+        ) { transactions, date ->
+            Pair(transactions, date)
         }
-        combineGroupAndDate.addSource(currentFilterDate) { date ->
-            val transactions = groupedTransactions.value
-            if (transactions != null) combineGroupAndDate.value = transactions to date
-        }
-    }
 
     private val _currentStatisticTabPosition = MutableLiveData<Int>()
     val currentStatisticTabPosition: LiveData<Int> = _currentStatisticTabPosition

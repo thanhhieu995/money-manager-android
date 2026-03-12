@@ -5,7 +5,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentCategoryDetailBinding
@@ -16,14 +20,17 @@ import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFactory
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class CategoryDetailFragment : Fragment() {
 
     private var _binding : FragmentCategoryDetailBinding? = null
     private val binding  get() = _binding!!
     private lateinit var adapter : DetailCategoryAdapter
-    private lateinit var categoryViewModel: CategoryViewModel
-    private lateinit var accountViewModel : AccountViewModel
+    private val categoryViewModel: CategoryViewModel by viewModels()
+    private val accountViewModel : AccountViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,14 +44,6 @@ class CategoryDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val categoryDao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
-        val categoryViewModelFactory = CategoryViewModelFactory(categoryDao)
-        categoryViewModel = ViewModelProvider(this, categoryViewModelFactory)[CategoryViewModel::class.java]
-
-        val accountDao = AppDatabase.getDatabase(requireActivity().application).accountDao()
-        val accountViewModelFactory = AccountViewModelFactory(accountDao)
-        accountViewModel = ViewModelProvider(this, accountViewModelFactory)[AccountViewModel::class.java]
-
         val item = arguments?.getSerializable("edit_child_item") as EditItem
         val recyclerView = binding.fragmentCategoryDetailRecyclerView
         adapter = DetailCategoryAdapter(emptyList(),
@@ -54,19 +53,23 @@ class CategoryDetailFragment : Fragment() {
         recyclerView.adapter = adapter
         when(item) {
             is EditItem.Category -> {
-                categoryViewModel.getChildCategories(item.id).observe(viewLifecycleOwner) { list ->
-                    val categoryItemList = list.map { category ->
-                        CategoryItem(
-                            id = category.id,
-                            name = category.name,
-                            emoji = category.emoji,
-                            parentId = category.parentId ?: -1,
-                            isParent = false,
-                            parentName = item.item.parentName,
-                            parentEmoji = item.item.parentEmoji
-                        )
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        categoryViewModel.getChildCategories(item.id).collect { list ->
+                            val categoryItemList = list.map { category ->
+                                CategoryItem(
+                                    id = category.id,
+                                    name = category.name,
+                                    emoji = category.emoji,
+                                    parentId = category.parentId ?: -1,
+                                    isParent = false,
+                                    parentName = item.item.parentName,
+                                    parentEmoji = item.item.parentEmoji
+                                )
+                            }
+                            adapter.submitList(categoryItemList)
+                        }
                     }
-                    adapter.submitList(categoryItemList)
                 }
                 (requireActivity() as AddTransactionActivity).selectedCategoryItemForAdd = item.item
             }

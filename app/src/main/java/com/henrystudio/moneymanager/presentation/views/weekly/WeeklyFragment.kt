@@ -8,7 +8,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.core.util.component1
+import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.databinding.FragmentWeeklyBinding
@@ -25,10 +31,13 @@ import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTran
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyData
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@AndroidEntryPoint
 class WeeklyFragment : Fragment() {
     private var _binding : FragmentWeeklyBinding?= null
     private val binding get() = _binding!!
@@ -38,13 +47,7 @@ class WeeklyFragment : Fragment() {
     private var listMonthTransactionGroup: List<TransactionGroup>? = null
     private var listWeekData: List<WeeklyData> = emptyList()
 
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,12 +74,16 @@ class WeeklyFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 
-        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(allTransactionGroups, localDate) ->
-            listMonthTransactionGroup = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroups,
-                localDate)
-            listWeekData = groupTransactionsByWeek(listMonthTransactionGroup?: emptyList())
-            tvNoData.visibility = if (listWeekData.isEmpty()) View.VISIBLE else View.GONE
-            adapter.updateData(listWeekData)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.combineGroupAndDate.collect { (allTransactionGroups, localDate) ->
+                    listMonthTransactionGroup = FilterTransactions.filterTransactionGroupByMonth(allTransactionGroups,
+                        localDate)
+                    listWeekData = groupTransactionsByWeek(listMonthTransactionGroup?: emptyList())
+                    tvNoData.visibility = if (listWeekData.isEmpty()) View.VISIBLE else View.GONE
+                    adapter.updateData(listWeekData)
+                }
+            }
         }
     }
 

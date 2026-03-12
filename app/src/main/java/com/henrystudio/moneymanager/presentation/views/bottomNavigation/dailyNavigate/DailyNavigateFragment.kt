@@ -12,7 +12,12 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.fragment.app.activityViewModels
+import androidx.core.util.component1
+import androidx.core.util.component2
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
@@ -22,25 +27,24 @@ import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getAppLocale
 import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import com.henrystudio.moneymanager.presentation.views.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
 import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.*
 
+@AndroidEntryPoint
 class DailyNavigateFragment : Fragment() {
 
     private var _binding: FragmentDailyNavigateBinding? = null
@@ -63,11 +67,7 @@ class DailyNavigateFragment : Fragment() {
     private var month: LocalDate? = null
     private var listTransactionGroup: List<TransactionGroup> = listOf()
     private var selectedTransactionList: List<Transaction> = emptyList()
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(repository)
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     private lateinit var viewPagerAdapter: ViewPagerAdapter
     private lateinit var viewPager: ViewPager2
@@ -126,7 +126,7 @@ class DailyNavigateFragment : Fragment() {
             }
         }
 
-        viewModel.currentDailyNavigateTabPosition.observe(viewLifecycleOwner) { position ->
+        transactionViewModel.currentDailyNavigateTabPosition.observe(viewLifecycleOwner) { position ->
             val filteredMonth = month?.let {
                 FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
                     it
@@ -170,25 +170,25 @@ class DailyNavigateFragment : Fragment() {
                 // Parse thành LocalDate (ngày 1 của tháng → ngày cuối tháng)
                 val lastDay = LocalDate.of(year, month, 1).lengthOfMonth()
                 val selectedDate = LocalDate.of(year, month, lastDay)
-                viewModel.setLocalDateCurrentFilterDate(selectedDate)
+                transactionViewModel.setLocalDateCurrentFilterDate(selectedDate)
             }.show(parentFragmentManager, "monthPicker")
         }
 
         monthBack.setOnClickListener {
             val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
             if (fragment is MonthlyFragment) {
-                viewModel.changeYear(-1)
+                transactionViewModel.changeYear(-1)
             } else {
-                viewModel.changeMonth(-1)
+                transactionViewModel.changeMonth(-1)
             }
         }
 
         monthNext.setOnClickListener {
             val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
             if (fragment is MonthlyFragment) {
-                viewModel.changeYear(1)
+                transactionViewModel.changeYear(1)
             } else {
-                viewModel.changeMonth(1)
+                transactionViewModel.changeMonth(1)
             }
         }
 
@@ -207,29 +207,33 @@ class DailyNavigateFragment : Fragment() {
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
         }
 
-        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) { (groups, date) ->
-            month = date
-            listTransactionGroup = groups
-            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
-            val isMonthly = fragment is MonthlyFragment
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.combineGroupAndDate.collect { (groups, date) ->
+                    month = date
+                    listTransactionGroup = groups
+                    val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
+                    val isMonthly = fragment is MonthlyFragment
 
-            monthText.text = date.format(if (isMonthly) formatterYear() else formatterMonth())
+                    monthText.text = date.format(if (isMonthly) formatterYear() else formatterMonth())
 
-            val filtered = if (isMonthly) {
-                FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, date)
-            } else {
-                FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, date)
+                    val filtered = if (isMonthly) {
+                        FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, date)
+                    } else {
+                        FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, date)
+                    }
+
+                    handleSummarySection(filtered)
+                }
             }
-
-            handleSummarySection(filtered)
         }
 
         // observe selectionMode && id
-        viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
+        transactionViewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
             layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
         }
 
-        viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
+        transactionViewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
             selectedTransactionList = selectedTransactions
             // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
             binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
@@ -242,13 +246,13 @@ class DailyNavigateFragment : Fragment() {
         }
 
         btnEditClose.setOnClickListener {
-            viewModel.exitSelectionMode()
+            transactionViewModel.exitSelectionMode()
         }
 
         btnEditDelete.setOnClickListener {
             if (selectedTransactionList.isNotEmpty()) {
-                viewModel.deleteAll(selectedTransactionList)
-                viewModel.exitSelectionMode()
+                transactionViewModel.deleteAll(selectedTransactionList)
+                transactionViewModel.exitSelectionMode()
             }
         }
 
@@ -263,7 +267,7 @@ class DailyNavigateFragment : Fragment() {
             }
         })
 
-        viewModel.navigateToWeekFromMonthly.observe(viewLifecycleOwner) { event ->
+        transactionViewModel.navigateToWeekFromMonthly.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let { date ->
                 navigateToDailyTabAndScrollToWeek(date)
             }
@@ -279,7 +283,7 @@ class DailyNavigateFragment : Fragment() {
                 if (isRestoring) return  // bỏ qua trigger do khôi phục
                 PrefsManager.saveTabPosition(requireContext(), position)
                 // Nếu cần cập nhật ViewModel thì làm ở đây (KHÔNG set currentItem nữa)
-                 viewModel.setCurrentDailyNavigateTab(position)
+                 transactionViewModel.setCurrentDailyNavigateTab(position)
             }
         }
         viewPager.registerOnPageChangeCallback(pageCallback)

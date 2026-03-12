@@ -15,6 +15,10 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -35,8 +39,11 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@AndroidEntryPoint
 class StatisticStatsFragment : Fragment() {
     private var _binding: FragmentStatisticStatsBinding? = null
     private val binding get() = _binding!!
@@ -48,13 +55,7 @@ class StatisticStatsFragment : Fragment() {
     private var filterOptionTemp : FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    private val viewModel : TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    private val transactionViewModel : TransactionViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,21 +71,31 @@ class StatisticStatsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         init()
 
-        viewModel.statisticCategoryType.observe(viewLifecycleOwner) {type ->
-            updateCircleChart(type, filteredListTransaction)
-        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-        viewModel.allTransactions.observe(viewLifecycleOwner) { transactionList->
-            allTransactions = transactionList
-        }
+                launch {
+                    transactionViewModel.statisticCategoryType.collect { type ->
+                        updateCircleChart(type, filteredListTransaction)
+                    }
+                }
+                launch { transactionViewModel.allTransactions.collect { transactionList->
+                    allTransactions = transactionList
+                    }
+                }
 
-        viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
-            filterOptionTemp = filterOption
-            getListUpdateChart(filterOption)
-        }
+                launch { transactionViewModel.filterOption.collect { filterOption ->
+                    filterOptionTemp = filterOption
+                    getListUpdateChart(filterOption)
+                    }
+                }
 
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { filterDate ->
-            viewModel.setFilter(filterOptionTemp.type, filterDate)
+                launch {
+                    transactionViewModel.currentFilterDate.collect { filterDate ->
+                        transactionViewModel.setFilter(filterOptionTemp.type, filterDate)
+                    }
+                }
+            }
         }
     }
 
@@ -218,9 +229,9 @@ class StatisticStatsFragment : Fragment() {
             FilterPeriodStatistic.List -> emptyList()
             FilterPeriodStatistic.Trend -> emptyList()
         }
-        viewModel.setStatisticTransactionFilter(list)
+        transactionViewModel.setStatisticTransactionFilter(list)
         filteredListTransaction = list
-        currentStatType = viewModel.statisticCategoryType.value ?: CategoryType.EXPENSE
+        currentStatType = transactionViewModel.statisticCategoryType.value ?: CategoryType.EXPENSE
         if (filterOption.type == FilterPeriodStatistic.Trend) {
             updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
         } else {

@@ -9,7 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.core.util.component1
+import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
@@ -27,8 +33,11 @@ import com.henrystudio.moneymanager.presentation.model.SortField
 import com.henrystudio.moneymanager.presentation.model.SortOrder
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@AndroidEntryPoint
 class StatisticNoteFragment : Fragment() {
     private var _binding: FragmentStatisticNoteBinding? = null
     private val binding get() = _binding!!
@@ -46,13 +55,7 @@ class StatisticNoteFragment : Fragment() {
     private var filterOptionTemp : FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,28 +74,32 @@ class StatisticNoteFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 
-        viewModel.combinedFilter.observe(viewLifecycleOwner) { (type, filterList) ->
-            categoryType = type
-            val transactionsType = when (type) {
-                CategoryType.INCOME -> filterList.filter { it.isIncome }
-                CategoryType.EXPENSE -> filterList.filter { !it.isIncome }
-            }
-            listNotes = getListNoteFilter(transactionsType)
-            sortAndUpdate()
-            updateSortIndicators()
-        }
-
-        viewModel.filterOption.observe(viewLifecycleOwner) {filterOption ->
-            filterOptionTemp = filterOption
-            viewModel.allTransactions.observe(viewLifecycleOwner) {allTransactions->
-                val list = when (filterOption.type) {
-                    FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
-                    FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
-                    FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
-                    FilterPeriodStatistic.List -> emptyList()
-                    FilterPeriodStatistic.Trend -> emptyList()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                transactionViewModel.combinedFilter.collect { (type, filterList) ->
+                    categoryType = type
+                    val transactionsType = when (type) {
+                        CategoryType.INCOME -> filterList.filter { it.isIncome }
+                        CategoryType.EXPENSE -> filterList.filter { !it.isIncome }
+                    }
+                    listNotes = getListNoteFilter(transactionsType)
+                    sortAndUpdate()
+                    updateSortIndicators()
                 }
-                viewModel.setStatisticTransactionFilter(list)
+
+                transactionViewModel.filterOption.collect { filterOption ->
+                    filterOptionTemp = filterOption
+                    transactionViewModel.allTransactions.collect { allTransactions->
+                        val list = when (filterOption.type) {
+                            FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
+                            FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
+                            FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
+                            FilterPeriodStatistic.List -> emptyList()
+                            FilterPeriodStatistic.Trend -> emptyList()
+                        }
+                        transactionViewModel.setStatisticTransactionFilter(list)
+                    }
+                }
             }
         }
 

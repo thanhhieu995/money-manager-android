@@ -4,9 +4,13 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.activity.addCallback
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.tabs.TabLayout
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.local.AppDatabase
@@ -18,8 +22,11 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@AndroidEntryPoint
 class StatisticTrendActivity : AppCompatActivity() {
     private lateinit var btnClose: ImageView
     private lateinit var tabLayout: TabLayout
@@ -27,7 +34,7 @@ class StatisticTrendActivity : AppCompatActivity() {
     private lateinit var filterOption: FilterOption
     private lateinit var categoryType: CategoryType
     private lateinit var currentFilterPeriod: FilterPeriodStatistic
-    private lateinit var viewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private lateinit var currentDate : LocalDate
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,10 +45,6 @@ class StatisticTrendActivity : AppCompatActivity() {
             onBackAnimation()
         }
 
-        val database = AppDatabase.getDatabase(application)
-        val transactionRepository = TransactionRepositoryImpl(database.transactionDao())
-        val transactionFactory = TransactionViewModelFactory(transactionRepository)
-        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
         filterOption = intent.getSerializableExtra("filterOption") as FilterOption
         categoryType = intent.getSerializableExtra("categoryType") as CategoryType
         currentFilterPeriod = intent.getSerializableExtra("currentFilterPeriodStatistic") as FilterPeriodStatistic
@@ -65,9 +68,15 @@ class StatisticTrendActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.activity_statistic_trend_fragmentContainer, fragment)
             .commit()
-        viewModel.currentFilterDate.observe(this) { date ->
-            currentDate = date
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.currentFilterDate.collect { date ->
+                    currentDate = date
+                }
+            }
         }
+
         tabLayout.getTabAt(getTabPosition(filterOption.type))?.select()
         btnClose.setOnClickListener {
             onBackAnimation()
@@ -78,7 +87,7 @@ class StatisticTrendActivity : AppCompatActivity() {
                 val position = tab?.position ?: 0
 
                 val filterTemp = mapPositionToFilter(position, currentDate)
-                viewModel.setFilter(filterTemp.type, currentDate)
+                transactionViewModel.setFilter(filterTemp.type, currentDate)
                 val bundleTab = Bundle().apply {
                     putSerializable("item_click_statistic_category_name", Helper.getUpdateMonthText(filter))
                     putSerializable("item_click_statistic_category_type",categoryType)

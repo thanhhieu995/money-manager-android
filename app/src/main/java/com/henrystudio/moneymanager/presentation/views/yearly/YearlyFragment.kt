@@ -9,6 +9,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.databinding.FragmentYearlyBinding
@@ -22,10 +26,13 @@ import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+@AndroidEntryPoint
 class YearlyFragment : Fragment() {
     private var _binding: FragmentYearlyBinding? = null
     private val binding get() = _binding!!
@@ -33,11 +40,7 @@ class YearlyFragment : Fragment() {
     private lateinit var noData: TextView
     private lateinit var adapter: YearlyAdapter
     private var allTransactions: List<Transaction> = emptyList()
-    private val viewModel : TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(repository)
-    }
+    private val transactionViewModel : TransactionViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -59,10 +62,14 @@ class YearlyFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
 
-        viewModel.allTransactions.observe(viewLifecycleOwner) {transactions ->
-            allTransactions = transactions
-            adapter.updateData(mapTransactionsToYearlyData(transactions))
-            noData.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.allTransactions.collect { transactions ->
+                    allTransactions = transactions
+                    adapter.updateData(mapTransactionsToYearlyData(transactions))
+                    noData.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
+                }
+            }
         }
     }
 

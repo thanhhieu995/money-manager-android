@@ -21,8 +21,11 @@ import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -41,24 +44,23 @@ import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFacto
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.getValue
 
+@AndroidEntryPoint
 class AddTransactionFragment : Fragment() {
 
     private var _binding: FragmentAddTransactionBinding?= null
     private val binding get() = _binding!!
-
-    private lateinit var categoryViewModel: CategoryViewModel
-    private lateinit var accountViewModel: AccountViewModel
     private var isIncome: Boolean = false
     private var transactions: List<Transaction> = listOf()
     private lateinit var dateTextView: TextView
@@ -79,11 +81,9 @@ class AddTransactionFragment : Fragment() {
     private var transactionFromIntent: Transaction? = null
 
     private var isEditMode = false
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(repository)
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val categoryViewModel: CategoryViewModel by viewModels()
+    private val accountViewModel : AccountViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -128,14 +128,6 @@ class AddTransactionFragment : Fragment() {
         val currentDate = Calendar.getInstance().time
         val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Helper.getAppLocale())
         formattedDate = dateFormat.format(currentDate)
-
-        val daoCategory = AppDatabase.getDatabase(requireActivity().application).categoryDao()
-        val factoryCategory = CategoryViewModelFactory(daoCategory)
-        categoryViewModel = ViewModelProvider(this, factoryCategory)[CategoryViewModel::class.java]
-
-        val daoAccount = AppDatabase.getDatabase(requireActivity().application).accountDao()
-        val factoryAccount = AccountViewModelFactory(daoAccount)
-        accountViewModel = ViewModelProvider(this, factoryAccount)[AccountViewModel::class.java]
 
         handleToAddTransaction()
 
@@ -188,11 +180,18 @@ class AddTransactionFragment : Fragment() {
             if (edtAccount.text.isEmpty()) {
                 edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
-            accountViewModel.getAllAccount().observe(viewLifecycleOwner){ accountList ->
-                showAccountBottomDialog(requireContext().getString(R.string.account), accountList, edtAccount,
-                    onAddClick = {openAddItemFragment(ItemType.ACCOUNT, selectedType)},
-                    onEditClick = {openEditAccountFragment(ItemType.ACCOUNT, selectedType)}
-                )
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    accountViewModel.getAllAccount().collect { accountList ->
+                        showAccountBottomDialog(
+                            requireContext().getString(R.string.account),
+                            accountList,
+                            edtAccount,
+                            onAddClick = { openAddItemFragment(ItemType.ACCOUNT, selectedType) },
+                            onEditClick = { openEditAccountFragment(ItemType.ACCOUNT, selectedType) }
+                        )
+                    }
+                }
             }
         }
 
@@ -220,15 +219,19 @@ class AddTransactionFragment : Fragment() {
         }
 
         // xu ly goi y khi input vao note
-        viewModel.allTransactions.observe(viewLifecycleOwner) {
-            transactions = it
-            val contents = transactions.map { it.note }.distinct()
-            val adapter = ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                contents
-            )
-            edtNote.setAdapter(adapter)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.allTransactions.collect {
+                    transactions = it
+                    val contents = transactions.map { it.note }.distinct()
+                    val adapter = ArrayAdapter(
+                        requireContext(),
+                        android.R.layout.simple_dropdown_item_1line,
+                        contents
+                    )
+                    edtNote.setAdapter(adapter)
+                }
+            }
         }
     }
 
@@ -280,7 +283,7 @@ class AddTransactionFragment : Fragment() {
                     isIncome = isIncome,
                     date = dateForDb
                 )
-                viewModel.update(updatedTransaction)
+                transactionViewModel.update(updatedTransaction)
             }
         } else {
             val transaction = Transaction(
@@ -293,7 +296,7 @@ class AddTransactionFragment : Fragment() {
                 isIncome = isIncome,
                 date = dateForDb
             )
-            viewModel.insert(transaction)
+            transactionViewModel.insert(transaction)
         }
         isEditMode = false
         onSuccess()
@@ -503,7 +506,7 @@ class AddTransactionFragment : Fragment() {
                 .setTitle(requireContext().getString(R.string.confirm_delete))
                 .setMessage(requireContext().getString(R.string.question_delete))
                 .setPositiveButton(requireContext().getString(R.string.yes)) { dialog, _ ->
-                    viewModel.delete(transaction)
+                    transactionViewModel.delete(transaction)
                     Toast.makeText(context, requireContext().getString(R.string.transaction_delete), Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                     requireActivity().finish()
@@ -515,7 +518,7 @@ class AddTransactionFragment : Fragment() {
 
         bookMarkButton.setOnClickListener {
             val updated = transaction.copy(isBookmarked = true)
-            viewModel.update(updated)
+            transactionViewModel.update(updated)
             Toast.makeText(context, requireContext().getString(R.string.bookmarked), Toast.LENGTH_SHORT).show()
             requireActivity().finish()
             requireActivity().overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
@@ -538,12 +541,16 @@ class AddTransactionFragment : Fragment() {
                 edtCategory.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
 
-            categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
-                val treeItems = buildCategoryTree(list)
-                showCategoryBottomDialog(requireContext().getString(R.string.category), treeItems, edtCategory,
-                    onAddClick = { openAddItemFragment(ItemType.CATEGORY, selectedType) },
-                    onEditClick = { openEditCategoryFragment(ItemType.CATEGORY, selectedType) }
-                    )
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                    categoryViewModel.getCategoriesByType(selectedType).collect { list ->
+                        val treeItems = buildCategoryTree(list)
+                        showCategoryBottomDialog(requireContext().getString(R.string.category), treeItems, edtCategory,
+                            onAddClick = { openAddItemFragment(ItemType.CATEGORY, selectedType) },
+                            onEditClick = { openEditCategoryFragment(ItemType.CATEGORY, selectedType) }
+                        )
+                    }
+                }
             }
         }
     }

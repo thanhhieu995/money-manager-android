@@ -7,7 +7,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.core.util.component1
+import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.databinding.FragmentMonthlyBinding
 import com.henrystudio.moneymanager.core.util.FilterTransactions
@@ -22,23 +28,20 @@ import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelF
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+@AndroidEntryPoint
 class MonthlyFragment : Fragment() {
     private var _binding: FragmentMonthlyBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: MonthlyAdapter
     private var listMonthlyData: List<MonthlyData> = emptyList()
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-           repository
-        )
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,32 +55,37 @@ class MonthlyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // Gán layoutManager nếu chưa có
         binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
-        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(groups, date) ->
-            val filterTransactionYear = FilterTransactions.filterTransactionGroupByYear(
-                groups, date
-            )
-            listMonthlyData = groupTransactionsByMonth(filterTransactionYear)
 
-            adapter = MonthlyAdapter(listMonthlyData,
-            onMonthClick = { month ->
-                val activity = requireActivity()
-                if (activity is MainActivity) {
-                    month.isExpanded = !month.isExpanded
-                    val index = listMonthlyData.indexOf(month)
-                    adapter.notifyItemChanged(index)
-                } else if (activity is StatisticListActivity) {
-                    SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(month.monthStart.toString())
-                    SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Monthly, month.monthStart)
-                    activity.onBackAnimation()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.combineGroupAndDate.collect { (groups, date) ->
+                    val filterTransactionYear = FilterTransactions.filterTransactionGroupByYear(
+                        groups, date
+                    )
+                    listMonthlyData = groupTransactionsByMonth(filterTransactionYear)
+
+                    adapter = MonthlyAdapter(listMonthlyData,
+                        onMonthClick = { month ->
+                            val activity = requireActivity()
+                            if (activity is MainActivity) {
+                                month.isExpanded = !month.isExpanded
+                                val index = listMonthlyData.indexOf(month)
+                                adapter.notifyItemChanged(index)
+                            } else if (activity is StatisticListActivity) {
+                                SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(month.monthStart.toString())
+                                SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Monthly, month.monthStart)
+                                activity.onBackAnimation()
+                            }
+                        },
+                        onWeekClick = { weeklyData ->
+                            SharedTransactionHolder.navigateFromMonthly = true
+                            transactionViewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
+                        })
+                    adapter.updateData(listMonthlyData)
+                    binding.monthlyListSummary.adapter = adapter
+                    binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
                 }
-            },
-            onWeekClick = { weeklyData ->
-                SharedTransactionHolder.navigateFromMonthly = true
-                viewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
-            })
-            adapter.updateData(listMonthlyData)
-            binding.monthlyListSummary.adapter = adapter
-            binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
+            }
         }
     }
 

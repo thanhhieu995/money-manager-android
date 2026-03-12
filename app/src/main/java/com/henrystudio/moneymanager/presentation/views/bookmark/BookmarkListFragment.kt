@@ -12,7 +12,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,9 +27,12 @@ import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class BookmarkListFragment : Fragment() {
-    private lateinit var viewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private lateinit var adapter: BookmarkAdapter
     private lateinit var tvNoData: TextView
     private var isEditMode = false
@@ -44,15 +51,10 @@ class BookmarkListFragment : Fragment() {
         tvNoData = view.findViewById(R.id.bookmark_noData)
         val recyclerView = view.findViewById<RecyclerView>(R.id.bookmarkRecyclerView)
 
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val transactionRepository = TransactionRepositoryImpl(database.transactionDao())
-        val transactionFactory = TransactionViewModelFactory(transactionRepository)
-        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
-
         adapter = BookmarkAdapter(
             items = emptyList(),
             onDeleteClick = { transaction ->
-                viewModel.update(transaction.copy(isBookmarked = false))
+                transactionViewModel.update(transaction.copy(isBookmarked = false))
             }
         )
 
@@ -61,9 +63,13 @@ class BookmarkListFragment : Fragment() {
 
         ItemTouchHelper(swipeCallback).attachToRecyclerView(recyclerView)
 
-        viewModel.getBookmarkedTransactions().observe(viewLifecycleOwner) { list ->
-            adapter.updateList(list)
-            tvNoData.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.getBookmarkedTransactions().collect { list ->
+                    adapter.updateList(list)
+                    tvNoData.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                }
+            }
         }
 
         adapter.clickListener = object : BookmarkAdapter.OnBookmarkLickListener {
@@ -83,7 +89,7 @@ class BookmarkListFragment : Fragment() {
 
         override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {
             val item = adapter.items[vh.adapterPosition]
-            viewModel.update(item.copy(isBookmarked = false))
+            transactionViewModel.update(item.copy(isBookmarked = false))
         }
 
         override fun getSwipeEscapeVelocity(defaultValue: Float): Float = 0.5f

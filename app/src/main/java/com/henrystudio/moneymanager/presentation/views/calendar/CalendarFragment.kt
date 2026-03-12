@@ -16,6 +16,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.applandeo.materialcalendarview.EventDay
@@ -29,21 +33,20 @@ import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
 
+@AndroidEntryPoint
 class CalendarFragment : Fragment() {
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
     private lateinit var calendarResume: Calendar
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -65,31 +68,40 @@ class CalendarFragment : Fragment() {
         binding.calendarView.setHeaderLabelColor(getAttrColor(android.R.attr.textColorPrimary))
         binding.calendarView.setBackgroundColor(getAttrColor(android.R.attr.textColorSecondary))
         val events = mutableListOf<EventDay>()
-        viewModel.groupedTransactions.observe(viewLifecycleOwner) { list ->
-            for (group in list) {
-                val calendar = Calendar.getInstance()
-                calendar.time =
-                    SimpleDateFormat("dd/MM/yy", Locale.getDefault()).parse(group.date)!!
 
-                val drawable = createEventDrawable(
-                    requireContext(),
-                    group.income,
-                    group.expense,
-                    group.income - group.expense
-                )
-                events.add(EventDay(calendar, drawable))
-            }
-            binding.calendarView.setEvents(events)
-        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    transactionViewModel.groupedTransactions.collect { list ->
+                        for (group in list) {
+                            val calendar = Calendar.getInstance()
+                            calendar.time =
+                                SimpleDateFormat("dd/MM/yy", Locale.getDefault()).parse(group.date)!!
 
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { date ->
-            val calendar = Calendar.getInstance().apply {
-                set(Calendar.YEAR, date.year)
-                set(Calendar.MONTH, date.monthValue - 1) // Vì Calendar.MONTH bắt đầu từ 0
-                set(Calendar.DAY_OF_MONTH, 1)
+                            val drawable = createEventDrawable(
+                                requireContext(),
+                                group.income,
+                                group.expense,
+                                group.income - group.expense
+                            )
+                            events.add(EventDay(calendar, drawable))
+                        }
+                        binding.calendarView.setEvents(events)
+                    }
+                }
+
+                launch {
+                    transactionViewModel.currentFilterDate.collect { date ->
+                        val calendar = Calendar.getInstance().apply {
+                            set(Calendar.YEAR, date.year)
+                            set(Calendar.MONTH, date.monthValue - 1) // Vì Calendar.MONTH bắt đầu từ 0
+                            set(Calendar.DAY_OF_MONTH, 1)
+                        }
+                        calendarResume = calendar
+                        binding.calendarView.setDate(calendar)
+                    }
+                }
             }
-            calendarResume = calendar
-            binding.calendarView.setDate(calendar)
         }
 
         setupDayClickListener()
@@ -129,10 +141,10 @@ class CalendarFragment : Fragment() {
         )
         view.layout(0, 0, view.measuredWidth, view.measuredHeight)
         val bitmap =
-            Bitmap.createBitmap(view.measuredWidth, view.measuredHeight, Bitmap.Config.ARGB_8888)
+            createBitmap(view.measuredWidth, view.measuredHeight)
         val canvas = Canvas(bitmap)
         view.draw(canvas)
-        return BitmapDrawable(context.resources, bitmap)
+        return bitmap.toDrawable(context.resources)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -153,10 +165,10 @@ class CalendarFragment : Fragment() {
 
         val noDataText = dialogView.findViewById<TextView>(R.id.item_day_calendar_noData)
 
-        val groupTransaction = viewModel.groupedTransactions.value?.filter {
+        val groupTransaction = transactionViewModel.groupedTransactions.value.filter {
             val transactionDate = sdf.parse(it.date)
             transactionDate?.let { it1 -> sdf.format(it1) } == dateString
-        } ?: emptyList()
+        }
 
         adapter.submitList(groupTransaction)
         noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE

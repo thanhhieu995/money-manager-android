@@ -8,7 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
@@ -18,9 +22,12 @@ import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class AddBookmarkFragment : Fragment() {
-    private lateinit var viewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvNoData: TextView
@@ -40,24 +47,23 @@ class AddBookmarkFragment : Fragment() {
         tvNoData = view.findViewById(R.id.add_bookmark_noData)
         recyclerView = view.findViewById(R.id.add_bookmarkRecyclerView)
 
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val transactionRepository = TransactionRepositoryImpl(database.transactionDao())
-        val transactionFactory = TransactionViewModelFactory(transactionRepository)
-        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel :: class.java]
-
         transactionAdapter = TransactionAdapter(emptyList())
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = transactionAdapter
 
-        viewModel.allTransactions.observe(viewLifecycleOwner) { list ->
-            tvNoData.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
-            transactionAdapter.updateList(list)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.allTransactions.collect { list ->
+                    tvNoData.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                    transactionAdapter.updateList(list)
+                }
+            }
         }
 
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             override fun onTransactionClick(transaction: Transaction): Boolean {
                 val updated = transaction.copy(isBookmarked = true)
-                viewModel.update(updated)
+                transactionViewModel.update(updated)
                 requireActivity().supportFragmentManager.popBackStack()
                 return true
             }

@@ -5,10 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class CategoryViewModel(private val categoryUseCases: CategoryUseCases) : ViewModel() {
+@HiltViewModel
+class CategoryViewModel @Inject constructor (private val categoryUseCases: CategoryUseCases) : ViewModel() {
 
     fun getParentCategories(type: CategoryType): Flow<List<Category>> {
         return categoryUseCases.getParentCategories(type)

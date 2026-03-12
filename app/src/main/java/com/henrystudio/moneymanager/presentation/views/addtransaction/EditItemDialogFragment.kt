@@ -5,7 +5,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
@@ -19,14 +23,17 @@ import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFactory
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickListener {
     private var _binding : FragmentEditCategoryBinding? = null
     private val binding get() = _binding!!
 
     private var adapter: EditItemDialogAdapter?= null
-    private lateinit var categoryViewModel: CategoryViewModel
-    private lateinit var accountViewModel: AccountViewModel
+    private val categoryViewModel: CategoryViewModel by viewModels()
+    private val accountViewModel: AccountViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,14 +46,6 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val categoryDao = AppDatabase.getDatabase(requireActivity().application).categoryDao()
-        val categoryViewModelFactory = CategoryViewModelFactory(categoryDao)
-        categoryViewModel = ViewModelProvider(this, categoryViewModelFactory)[CategoryViewModel::class.java]
-
-        val accountDao = AppDatabase.getDatabase(requireActivity().application).accountDao()
-        val accountViewModelFactory = AccountViewModelFactory(accountDao)
-        accountViewModel = ViewModelProvider(this, accountViewModelFactory)[AccountViewModel::class.java]
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.fragment_edit_category_recycleView)
         adapter = EditItemDialogAdapter(emptyList(),
@@ -63,16 +62,24 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
 
         val selectedType = arguments?.getSerializable("selectedType") as? CategoryType
         if (selectedType == null) {
-            accountViewModel.getAllAccount().observe(viewLifecycleOwner) { list ->
-                val editItems = list.map { EditItem.AccountItem(it) }
-                adapter?.submitList(editItems)
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    accountViewModel.getAllAccount().collect { list ->
+                        val editItems = list.map { EditItem.AccountItem(it) }
+                        adapter?.submitList(editItems)
+                    }
+                }
             }
         } else {
-            categoryViewModel.getCategoriesByType(selectedType).observe(viewLifecycleOwner) { list ->
-                // xử lý dữ liệu tại đây
-                val treeItems = buildCategoryTree(list)
-                val editItems = treeItems.map { EditItem.Category(it) }
-                adapter?.submitList(editItems)
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    categoryViewModel.getCategoriesByType(selectedType).collect { list ->
+                        // xử lý dữ liệu tại đây
+                        val treeItems = buildCategoryTree(list)
+                        val editItems = treeItems.map { EditItem.Category(it) }
+                        adapter?.submitList(editItems)
+                    }
+                }
             }
         }
     }

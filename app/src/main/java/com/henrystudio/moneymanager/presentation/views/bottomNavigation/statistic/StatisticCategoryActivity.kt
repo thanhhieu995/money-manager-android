@@ -9,6 +9,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -20,7 +21,9 @@ import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class StatisticCategoryActivity : AppCompatActivity() {
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnBack: ImageButton
@@ -36,19 +39,14 @@ class StatisticCategoryActivity : AppCompatActivity() {
     val titleStack = ArrayDeque<String>()
 
     private var selectedTransactionList: List<Transaction> = emptyList()
-    private lateinit var viewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistic_category)
 
-        val database = AppDatabase.getDatabase(application)
-        val transactionRepository = TransactionRepositoryImpl(database.transactionDao())
-        val transactionFactory = TransactionViewModelFactory(transactionRepository)
-        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
         init()
-
         btnBack.setOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
@@ -82,12 +80,12 @@ class StatisticCategoryActivity : AppCompatActivity() {
             .commit()
 
         // observe selectionMode && id
-        viewModel.selectionMode.observe(this) { enabled ->
+        transactionViewModel.selectionMode.observe(this) { enabled ->
             layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
             toolbar.visibility = if (enabled) View.GONE else View.VISIBLE
         }
 
-        viewModel.selectedTransactions.observe(this) { selectedTransactions ->
+        transactionViewModel.selectedTransactions.observe(this) { selectedTransactions ->
             selectedTransactionList = selectedTransactions
             // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
             selectedCount.text =
@@ -100,13 +98,13 @@ class StatisticCategoryActivity : AppCompatActivity() {
         }
 
         btnEditClose.setOnClickListener {
-            viewModel.exitSelectionMode()
+            transactionViewModel.exitSelectionMode()
         }
 
         btnEditDelete.setOnClickListener {
             if (selectedTransactionList.isNotEmpty()) {
-                viewModel.deleteAll(selectedTransactionList)
-                viewModel.exitSelectionMode()
+                transactionViewModel.deleteAll(selectedTransactionList)
+                transactionViewModel.exitSelectionMode()
             }
         }
     }

@@ -7,9 +7,13 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.addCallback
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
@@ -25,12 +29,15 @@ import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
 
+@AndroidEntryPoint
 class StatisticListActivity : AppCompatActivity() {
     private lateinit var imgClose: ImageView
     private lateinit var monthText: TextView
@@ -48,7 +55,7 @@ class StatisticListActivity : AppCompatActivity() {
     private lateinit var filterOption: FilterOption
     private lateinit var categoryType: CategoryType
     private lateinit var currentFilterPeriod: FilterPeriodStatistic
-    private lateinit var viewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private var allTransactionGroup : List<TransactionGroup> = emptyList()
     @RequiresApi(Build.VERSION_CODES.O)
     private var currentDate: LocalDate = LocalDate.now()
@@ -60,10 +67,7 @@ class StatisticListActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this) {
             onBackAnimation()
         }
-        val database = AppDatabase.getDatabase(application)
-        val transactionRepository = TransactionRepositoryImpl(database.transactionDao())
-        val transactionFactory = TransactionViewModelFactory(transactionRepository)
-        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
+
         filterOption = intent.getSerializableExtra("filterOption") as FilterOption
         categoryType = intent.getSerializableExtra("categoryType") as CategoryType
         currentFilterPeriod = intent.getSerializableExtra("currentFilterPeriodStatistic") as FilterPeriodStatistic
@@ -91,7 +95,7 @@ class StatisticListActivity : AppCompatActivity() {
                 val filterYear = FilterTransactions.filterTransactionGroupByYear(allTransactionGroup, currentDate)
 
                 filterOption = mapPositionToFilter(position, currentDate)
-                viewModel.setFilter(filterOption.type, currentDate)
+                transactionViewModel.setFilter(filterOption.type, currentDate)
                 when (position) {
                     0 -> handleSummarySection(filterMonth)
                     1 -> handleSummarySection(filterYear)
@@ -100,53 +104,57 @@ class StatisticListActivity : AppCompatActivity() {
             }
         })
 
-        viewModel.setCurrentFilterDate(Helper.formatDateFromFilterOptionToDateDaily(filterOption.date.toString()))
-
-        viewModel.currentFilterDate.observe(this) {date ->
-            viewModel.setFilter(filterOption.type, date)
-            currentDate = date
-            initialSummarySection(allTransactionGroup)
-        }
-
-        viewModel.groupedTransactions.observe(this) { groups ->
-            layoutControl.visibility = when(currentFilterPeriod) {
-                FilterPeriodStatistic.Trend -> View.GONE
-                else -> View.VISIBLE
-            }
-            if (!groups.isNullOrEmpty()) {
-                // chỉ chạy 1 lần để update summary khi mới có dữ liệu
-                if (allTransactionGroup.isEmpty()) {
-                    allTransactionGroup = groups
-                    initialSummarySection(groups)
-                    updateMonthTextList(filterOption, allTransactionGroup)
-                } else {
-                    allTransactionGroup = groups
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.currentFilterDate.collect { date ->
+                    transactionViewModel.setFilter(filterOption.type, date)
+                    currentDate = date
+                    initialSummarySection(allTransactionGroup)
                 }
             }
+
+            transactionViewModel.groupedTransactions.collect { groups ->
+                layoutControl.visibility = when(currentFilterPeriod) {
+                    FilterPeriodStatistic.Trend -> View.GONE
+                    else -> View.VISIBLE
+                }
+                if (groups.isNotEmpty()) {
+                    // chỉ chạy 1 lần để update summary khi mới có dữ liệu
+                    if (allTransactionGroup.isEmpty()) {
+                        allTransactionGroup = groups
+                        initialSummarySection(groups)
+                        updateMonthTextList(filterOption, allTransactionGroup)
+                    } else {
+                        allTransactionGroup = groups
+                    }
+                }
+            }
+
+            transactionViewModel.filterOption.collect { option ->
+                imgBack.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
+                imgNext.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
+                layoutSummary.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
+                updateMonthTextList(option, allTransactionGroup)
+            }
         }
 
-        viewModel.filterOption.observe(this) {option ->
-            imgBack.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
-            imgNext.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
-            layoutSummary.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
-            updateMonthTextList(option, allTransactionGroup)
-        }
+        transactionViewModel.setCurrentFilterDate(Helper.formatDateFromFilterOptionToDateDaily(filterOption.date.toString()))
 
         imgBack.setOnClickListener {
             when(filterOption.type) {
-                FilterPeriodStatistic.Weekly -> viewModel.changeMonth(-1)
-                FilterPeriodStatistic.Monthly -> viewModel.changeYear(-1)
+                FilterPeriodStatistic.Weekly -> transactionViewModel.changeMonth(-1)
+                FilterPeriodStatistic.Monthly -> transactionViewModel.changeYear(-1)
                 FilterPeriodStatistic.Yearly -> {}
-                else -> viewModel.changeMonth(-1)
+                else -> transactionViewModel.changeMonth(-1)
             }
         }
 
         imgNext.setOnClickListener {
             when(filterOption.type) {
-                FilterPeriodStatistic.Weekly -> viewModel.changeMonth(1)
-                FilterPeriodStatistic.Monthly -> viewModel.changeYear(1)
+                FilterPeriodStatistic.Weekly -> transactionViewModel.changeMonth(1)
+                FilterPeriodStatistic.Monthly -> transactionViewModel.changeYear(1)
                 FilterPeriodStatistic.Yearly -> {}
-                else -> viewModel.changeMonth(1)
+                else -> transactionViewModel.changeMonth(1)
             }
         }
     }

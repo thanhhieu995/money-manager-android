@@ -9,6 +9,7 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
 import androidx.activity.addCallback
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -24,7 +25,11 @@ import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.internal.DoubleCheck.lazy
+import java.util.*
 
+@AndroidEntryPoint
 class AddTransactionActivity : AppCompatActivity() {
     lateinit var titleCurrent: TextView
     lateinit var titleIncoming: TextView
@@ -45,10 +50,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
     val titleStack = ArrayDeque<String>()
 
-    private lateinit var viewModel: TransactionViewModel
-    val transactionDao by lazy {
-        AppDatabase.getDatabase(application).transactionDao()
-    }
+    private val viewModel: TransactionViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
@@ -60,12 +62,6 @@ class AddTransactionActivity : AppCompatActivity() {
             finish()
             overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
         }
-        val database = AppDatabase.getDatabase(application)
-
-        val transactionRepository = TransactionRepositoryImpl(database.transactionDao())
-        val transactionFactory = TransactionViewModelFactory(transactionRepository)
-
-        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
 
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)

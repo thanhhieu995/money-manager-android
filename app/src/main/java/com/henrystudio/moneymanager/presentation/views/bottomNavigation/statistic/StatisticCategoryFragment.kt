@@ -11,6 +11,10 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.LineChart
@@ -41,6 +45,8 @@ import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFact
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
@@ -48,6 +54,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 
+@AndroidEntryPoint
 class StatisticCategoryFragment : Fragment() {
     private var _binding: FragmentStatisticCategoryBinding? = null
     private val binding get() = _binding!!
@@ -86,19 +93,9 @@ class StatisticCategoryFragment : Fragment() {
     private var filterOptionPushChild: FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    val transactionViewModel: TransactionViewModel by viewModels()
 
-    private val categoryViewModel: CategoryViewModel by activityViewModels {
-        CategoryViewModelFactory(
-            AppDatabase.getDatabase(requireActivity().application).categoryDao()
-        )
-    }
+    private val categoryViewModel: CategoryViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -131,45 +128,90 @@ class StatisticCategoryFragment : Fragment() {
 
         colorSetLine = if (categoryType == CategoryType.INCOME) Color.GREEN else Color.RED
 
-        viewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
+        transactionViewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
             lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
         }
 
-        viewModel.allTransactions.observe(viewLifecycleOwner) { list ->
-            allTransactions = list
-            chartPoints = getCategoryLinePoints(
-                list,
-                categoryName,
-                categoryType == CategoryType.INCOME,
-                filterOptionTemp
-            )
-            // Nếu view đã được tạo thì mới update chart
-            if (isAdded) {
-                refreshChart(chartPoints)
-            }
-        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-        viewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
-
-        clickLineChart()
-
-        categoryViewModel.getAll().observe(viewLifecycleOwner) { list ->
-            allCategories = list
-            val name = categoryName.substringBefore("/")
-            val nameOnly = name.replace(Regex("^[^\\p{L}\\p{N}]+"), "") // → "Transport"
-            for (tx in allCategories) {
-                val txName = tx.name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
-                if (txName.trim() == nameOnly.trim()) {
-                    parentId = tx.id
+                transactionViewModel.allTransactions.collect { list ->
+                    allTransactions = list
+                    chartPoints = getCategoryLinePoints(
+                        list,
+                        categoryName,
+                        categoryType == CategoryType.INCOME,
+                        filterOptionTemp
+                    )
+                    // Nếu view đã được tạo thì mới update chart
+                    if (isAdded) {
+                        refreshChart(chartPoints)
+                    }
                 }
-            }
-            if (parentId != -1) {
-                categoryViewModel.getChildCategories(parentId)
-                    .observe(viewLifecycleOwner) { listChild ->
-                        listChildCategories = listChild
-                        viewModel.allTransactions.observe(viewLifecycleOwner) { listTransactions ->
+
+                categoryViewModel.getAll().collect { list ->
+                    allCategories = list
+                    val name = categoryName.substringBefore("/")
+                    val nameOnly = name.replace(Regex("^[^\\p{L}\\p{N}]+"), "") // → "Transport"
+                    for (tx in allCategories) {
+                        val txName = tx.name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
+                        if (txName.trim() == nameOnly.trim()) {
+                            parentId = tx.id
+                        }
+                    }
+                    if (parentId != -1) {
+                        categoryViewModel.getChildCategories(parentId)
+                            .collect { listChild ->
+                                listChildCategories = listChild
+                                transactionViewModel.allTransactions.collect { listTransactions ->
+                                    listTransactionsFilterCategoryName =
+                                        FilterTransactions.filterTransactionsByCategoryName(
+                                            listTransactions,
+                                            categoryName
+                                        )
+                                    transactionList = getListTransactionsFilterType(
+                                        listTransactionsFilterCategoryName, filterOptionTemp,
+                                        filterOptionTemp.date
+                                    )
+                                    listChildCategoryStat = Helper.convertToCategoryStats(
+                                        listChild,
+                                        transactionList ?: emptyList(),
+                                        categoryType == CategoryType.INCOME,
+                                        colors
+                                    )
+                                    if (listChildCategoryStat.isNotEmpty()) {
+                                        layoutCategorySum.visibility = View.VISIBLE
+                                        recyclerView.visibility = View.VISIBLE
+                                        dailyContainer.visibility = View.GONE
+                                        adapter.submitList(listChildCategoryStat)
+                                    } else {
+                                        layoutCategorySum.visibility = View.GONE
+                                        recyclerView.visibility = View.GONE
+                                        dailyContainer.visibility = View.VISIBLE
+                                        // Gửi category id hoặc name vào DailyFragment nếu cần
+                                        val fragment = keyFilter?.let {
+                                            DailyFragment.newDailyInstance(
+                                                categoryName = categoryName,
+                                                it,
+                                                categoryType
+                                            )
+                                        }
+
+                                        if (fragment != null) {
+                                            childFragmentManager.beginTransaction()
+                                                .replace(
+                                                    R.id.fragment_statistic_category_dailyContainer,
+                                                    fragment
+                                                )
+                                                .commit()
+                                        }
+                                    }
+                                }
+                            }
+                    } else if (keyFilter != null) {
+                        transactionViewModel.allTransactions.collect { listTransactions ->
                             listTransactionsFilterCategoryName =
-                                FilterTransactions.filterTransactionsByCategoryName(
+                                FilterTransactions.filterTransactionsByNoteName(
                                     listTransactions,
                                     categoryName
                                 )
@@ -177,72 +219,40 @@ class StatisticCategoryFragment : Fragment() {
                                 listTransactionsFilterCategoryName, filterOptionTemp,
                                 filterOptionTemp.date
                             )
-                            listChildCategoryStat = Helper.convertToCategoryStats(
-                                listChild,
-                                transactionList ?: emptyList(),
-                                categoryType == CategoryType.INCOME,
-                                colors
+                        }
+                        // Gửi category id hoặc name vào DailyFragment nếu cần
+                        val fragment = keyFilter?.let {
+                            DailyFragment.newDailyInstance(
+                                categoryName = categoryName,
+                                it,
+                                categoryType
                             )
-                            if (listChildCategoryStat.isNotEmpty()) {
-                                layoutCategorySum.visibility = View.VISIBLE
-                                recyclerView.visibility = View.VISIBLE
-                                dailyContainer.visibility = View.GONE
-                                adapter.submitList(listChildCategoryStat)
-                            } else {
-                                layoutCategorySum.visibility = View.GONE
-                                recyclerView.visibility = View.GONE
-                                dailyContainer.visibility = View.VISIBLE
-                                // Gửi category id hoặc name vào DailyFragment nếu cần
-                                val fragment = keyFilter?.let {
-                                    DailyFragment.newDailyInstance(
-                                        categoryName = categoryName,
-                                        it,
-                                        categoryType
-                                    )
-                                }
+                        }
 
-                                if (fragment != null) {
-                                    childFragmentManager.beginTransaction()
-                                        .replace(
-                                            R.id.fragment_statistic_category_dailyContainer,
-                                            fragment
-                                        )
-                                        .commit()
-                                }
-                            }
+                        if (fragment != null) {
+                            childFragmentManager.beginTransaction()
+                                .replace(
+                                    R.id.fragment_statistic_category_dailyContainer,
+                                    fragment
+                                )
+                                .commit()
                         }
                     }
-            } else if (keyFilter != null) {
-                viewModel.allTransactions.observe(viewLifecycleOwner) { listTransactions ->
-                    listTransactionsFilterCategoryName =
-                        FilterTransactions.filterTransactionsByNoteName(
-                            listTransactions,
-                            categoryName
-                        )
-                    transactionList = getListTransactionsFilterType(
-                        listTransactionsFilterCategoryName, filterOptionTemp,
-                        filterOptionTemp.date
-                    )
-                }
-                // Gửi category id hoặc name vào DailyFragment nếu cần
-                val fragment = keyFilter?.let {
-                    DailyFragment.newDailyInstance(
-                        categoryName = categoryName,
-                        it,
-                        categoryType
-                    )
-                }
 
-                if (fragment != null) {
-                    childFragmentManager.beginTransaction()
-                        .replace(
-                            R.id.fragment_statistic_category_dailyContainer,
-                            fragment
-                        )
-                        .commit()
+
+                    transactionViewModel.currentFilterDate.collect { date ->
+                        filterOptionPushChild = FilterOption(filterOptionTemp.type, date)
+                    }
                 }
             }
         }
+
+
+        transactionViewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
+
+        clickLineChart()
+
+
 
         monthBack.setOnClickListener {
             if (currentIndex > 0) {
@@ -258,9 +268,6 @@ class StatisticCategoryFragment : Fragment() {
             }
         }
 
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { date ->
-            filterOptionPushChild = FilterOption(filterOptionTemp.type, date)
-        }
         // click into child category item
         adapter.onClickListener = { categoryStat ->
             (requireActivity() as StatisticCategoryActivity).titleStack.addLast(categoryName)
@@ -526,7 +533,7 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showChartAt(index: Int) {
         val point = chartPoints[index]
-        viewModel.setLocalDateCurrentFilterDate(point.date)
+        transactionViewModel.setLocalDateCurrentFilterDate(point.date)
 
         monthText.text = getMonthText(index)
 

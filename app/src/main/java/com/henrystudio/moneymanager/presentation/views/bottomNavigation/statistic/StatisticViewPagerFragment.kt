@@ -13,6 +13,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -34,8 +38,11 @@ import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@AndroidEntryPoint
 class StatisticViewPagerFragment : Fragment() {
     private lateinit var tabLayout: TabLayout
     private lateinit var filterDropdown: TextView
@@ -52,11 +59,7 @@ class StatisticViewPagerFragment : Fragment() {
     private val binding get() = _binding!!
     private var listTransactionFilter: List<Transaction> = emptyList()
 
-    private val viewModel : TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(repository)
-    }
+    private val transactionViewModel : TransactionViewModel by viewModels()
     private lateinit var pageCallback: ViewPager2.OnPageChangeCallback
     private var isRestoring = false
     private var mediator: TabLayoutMediator? = null
@@ -103,26 +106,50 @@ class StatisticViewPagerFragment : Fragment() {
             }
         }
 
-        viewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
+        transactionViewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
 
-        viewModel.statisticListTransactionFilter.observe(viewLifecycleOwner) {list ->
-            listTransactionFilter = list
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+
+                    transactionViewModel.statisticListTransactionFilter.collect { list ->
+                        listTransactionFilter = list
+                    }
+                }
+
+                launch {
+                    transactionViewModel.statisticCategoryType.collect { type ->
+                        currentStatType = type
+                        toggleGroupButton.check(
+                            if (currentStatType == CategoryType.INCOME) incomeBtn.id else expenseBtn.id
+                        )
+                    }
+                }
+
+                launch {
+                    transactionViewModel.filterOption.collect { filterOption ->
+                        filterOptionTemp = filterOption
+                        filterDropdown.text = getString(filterOption.type.stringRes)
+                        selectedOption = filterOption.type
+                        monthText.text = Helper.getUpdateMonthText(filterOption)
+                    }
+                }
+
+                launch {
+                    transactionViewModel.statisticListTransactionFilter.collect { listFilter->
+                        updateTextButton(listFilter)
+                    }
+                }
+            }
         }
 
-        viewModel.currentStatisticTabPosition.observe(viewLifecycleOwner) {position ->
+        transactionViewModel.currentStatisticTabPosition.observe(viewLifecycleOwner) { position ->
             viewPager.currentItem = position
             when(position) {
                 0 -> {}
                 1 -> {}
                 2 -> {}
             }
-        }
-
-        viewModel.statisticCategoryType.observe(viewLifecycleOwner) {type ->
-            currentStatType = type
-            toggleGroupButton.check(
-                if (currentStatType == CategoryType.INCOME) incomeBtn.id else expenseBtn.id
-            )
         }
 
         filterDropdown.setOnClickListener {
@@ -134,26 +161,15 @@ class StatisticViewPagerFragment : Fragment() {
                     incomeBtn.id -> CategoryType.INCOME
                     else -> CategoryType.EXPENSE
                 }
-                viewModel.setStatisticCategoryType(currentStatType)
+                transactionViewModel.setStatisticCategoryType(currentStatType)
             }
-        }
-
-        viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
-            filterOptionTemp = filterOption
-            filterDropdown.text = getString(filterOption.type.stringRes)
-            selectedOption = filterOption.type
-            monthText.text = Helper.getUpdateMonthText(filterOption)
-        }
-
-        viewModel.statisticListTransactionFilter.observe(viewLifecycleOwner) { listFilter->
-            updateTextButton(listFilter)
         }
 
         monthBack.setOnClickListener {
             when(filterOptionTemp.type) {
-                FilterPeriodStatistic.Monthly -> viewModel.changeMonth(-1)
-                FilterPeriodStatistic.Weekly -> viewModel.changeWeek(-1)
-                FilterPeriodStatistic.Yearly -> viewModel.changeYear(-1)
+                FilterPeriodStatistic.Monthly -> transactionViewModel.changeMonth(-1)
+                FilterPeriodStatistic.Weekly -> transactionViewModel.changeWeek(-1)
+                FilterPeriodStatistic.Yearly -> transactionViewModel.changeYear(-1)
                 FilterPeriodStatistic.List -> {}
                 FilterPeriodStatistic.Trend -> {}
             }
@@ -161,9 +177,9 @@ class StatisticViewPagerFragment : Fragment() {
 
         monthNext.setOnClickListener {
             when(filterOptionTemp.type) {
-                FilterPeriodStatistic.Monthly -> viewModel.changeMonth(1)
-                FilterPeriodStatistic.Weekly -> viewModel.changeWeek(1)
-                FilterPeriodStatistic.Yearly -> viewModel.changeYear(1)
+                FilterPeriodStatistic.Monthly -> transactionViewModel.changeMonth(1)
+                FilterPeriodStatistic.Weekly -> transactionViewModel.changeWeek(1)
+                FilterPeriodStatistic.Yearly -> transactionViewModel.changeYear(1)
                 FilterPeriodStatistic.List -> {}
                 FilterPeriodStatistic.Trend -> {}
             }
@@ -176,17 +192,17 @@ class StatisticViewPagerFragment : Fragment() {
         val shareDate = SharedTransactionHolder.currentFilterDate
         val shareFilterOption = SharedTransactionHolder.filterOption
         if (shareDate != null) {
-            viewModel.setCurrentFilterDate(shareDate)
+            transactionViewModel.setCurrentFilterDate(shareDate)
         }
         if (shareFilterOption != null) {
-            viewModel.setFilter(shareFilterOption.type, shareFilterOption.date)
+            transactionViewModel.setFilter(shareFilterOption.type, shareFilterOption.date)
         }
         pageCallback = object : OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 if (isRestoring) return  // bỏ qua trigger do khôi phục
                 PrefsManager.saveStatisticTabPosition(requireContext(), position)
-                viewModel.setCurrentStatisticTab(position)
+                transactionViewModel.setCurrentStatisticTab(position)
             }
         }
         viewPager.registerOnPageChangeCallback(pageCallback)
@@ -272,7 +288,7 @@ class StatisticViewPagerFragment : Fragment() {
                     else -> {
                         selectedOption = filterPeriod
                         updateCheckMarks(filterPeriod)
-                        viewModel.setFilter(filterPeriod, filterOptionTemp.date)
+                        transactionViewModel.setFilter(filterPeriod, filterOptionTemp.date)
                     }
                 }
             }

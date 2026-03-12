@@ -6,10 +6,14 @@ import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.activity.addCallback
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -20,9 +24,12 @@ import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class SearchActivity : AppCompatActivity() {
-    private lateinit var viewModel: TransactionViewModel
+    private val transactionViewModel: TransactionViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
     private var selectedOption: FilterPeriodSearch = FilterPeriodSearch.All
     private var keySearch = ""
@@ -60,11 +67,6 @@ class SearchActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = transactionAdapter
 
-        val database = AppDatabase.getDatabase(application)
-        val transactionRepository = TransactionRepositoryImpl(database.transactionDao())
-        val transactionFactory = TransactionViewModelFactory(transactionRepository)
-        viewModel = ViewModelProvider(this, transactionFactory)[TransactionViewModel::class.java]
-
         searchTitle.text = getString(R.string.all)
 
         btnBack.setOnClickListener {
@@ -84,8 +86,8 @@ class SearchActivity : AppCompatActivity() {
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onTransactionClick(transaction: Transaction): Boolean {
-                if (viewModel.selectionMode.value == true) {
-                    viewModel.toggleTransactionSelection(transaction)
+                if (transactionViewModel.selectionMode.value == true) {
+                    transactionViewModel.toggleTransactionSelection(transaction)
                     transactionAdapter.notifyDataSetChanged()
                 } else {
                     Helper.openTransactionDetail(this@SearchActivity, transaction)
@@ -96,18 +98,18 @@ class SearchActivity : AppCompatActivity() {
 
         transactionAdapter.longClickListener = object: TransactionAdapter.OnTransactionLongClickListener{
             override fun onTransactionLongClick(transaction: Transaction): Boolean {
-                viewModel.enterSelectionMode()
-                viewModel.toggleTransactionSelection(transaction)
+                transactionViewModel.enterSelectionMode()
+                transactionViewModel.toggleTransactionSelection(transaction)
                 transactionAdapter.notifyDataSetChanged()
                 return true
             }
         }
 
-        viewModel.selectionMode.observe(this) { enable ->
+        transactionViewModel.selectionMode.observe(this) { enable ->
             layoutEdit.visibility = if (enable) View.VISIBLE else View.GONE
         }
 
-        viewModel.selectedTransactions.observe(this) { selectedTransactionList ->
+        transactionViewModel.selectedTransactions.observe(this) { selectedTransactionList ->
             allSelectedTransactions = selectedTransactionList
             tvSelectedEdit.text = "${selectedTransactionList.size} selected"
             val selectedTransactions = transactions?.filter { selectedTransactionList.contains(it) } ?: emptyList()
@@ -118,45 +120,49 @@ class SearchActivity : AppCompatActivity() {
         }
 
         transactionAdapter.isSelected = {transaction ->
-            viewModel.selectionMode.value == true &&
-                    viewModel.selectedTransactions.value?.contains(transaction) == true
+            transactionViewModel.selectionMode.value == true &&
+                    transactionViewModel.selectedTransactions.value?.contains(transaction) == true
         }
 
         btnCloseLayoutEdit.setOnClickListener {
-            viewModel.exitSelectionMode()
+            transactionViewModel.exitSelectionMode()
             transactionAdapter.notifyDataSetChanged()
         }
 
         btnDeleteLayoutEdit.setOnClickListener {
             if (allSelectedTransactions.isNotEmpty()) {
-                viewModel.deleteAll(allSelectedTransactions)
-                viewModel.exitSelectionMode()
+                transactionViewModel.deleteAll(allSelectedTransactions)
+                transactionViewModel.exitSelectionMode()
             }
         }
 
-        viewModel.allTransactions.observe(this) { transactionList ->
-            transactions = transactionList
-            transactionAdapter.transactions = transactionList
-            transactionAdapter.filter.filter(keySearch)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.allTransactions.collect { transactionList ->
+                    transactions = transactionList
+                    transactionAdapter.transactions = transactionList
+                    transactionAdapter.filter.filter(keySearch)
 
-            val contents = transactionList.map { it.note }.distinct()
-            val arrayAdapter = ArrayAdapter(
-                this,
-                android.R.layout.simple_dropdown_item_1line,
-                contents
-            )
-            searchInput.setAdapter(arrayAdapter)
-            // Khi người dùng chọn 1 gợi ý
-            searchInput.setOnItemClickListener { _, _, position, _ ->
-                val selected = arrayAdapter.getItem(position)
-                keySearch = selected.toString()
-                searchInput.setText(selected)
-                searchInput.setSelection(selected?.length ?: 0)
-                transactionAdapter.transactions = transactionList
-                transactionAdapter.filter.filter(selected)
+                    val contents = transactionList.map { it.note }.distinct()
+                    val arrayAdapter = ArrayAdapter(
+                        this@SearchActivity,
+                        android.R.layout.simple_dropdown_item_1line,
+                        contents
+                    )
+                    searchInput.setAdapter(arrayAdapter)
+                    // Khi người dùng chọn 1 gợi ý
+                    searchInput.setOnItemClickListener { _, _, position, _ ->
+                        val selected = arrayAdapter.getItem(position)
+                        keySearch = selected.toString()
+                        searchInput.setText(selected)
+                        searchInput.setSelection(selected?.length ?: 0)
+                        transactionAdapter.transactions = transactionList
+                        transactionAdapter.filter.filter(selected)
+                    }
+
+                    tvNoData.visibility = if(transactionList.isEmpty()) View.VISIBLE else View.GONE
+                }
             }
-
-            tvNoData.visibility = if(transactionList.isEmpty()) View.VISIBLE else View.GONE
         }
 
         transactionAdapter.setOnFilterResultListener(object :

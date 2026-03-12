@@ -14,7 +14,13 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.util.component1
+import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.PieChart
@@ -37,8 +43,11 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@AndroidEntryPoint
 class StatisticAccountFragment : Fragment() {
     private var _binding : FragmentStatisticAccountBinding ?= null
     private val binding get() = _binding!!
@@ -52,13 +61,7 @@ class StatisticAccountFragment : Fragment() {
     private var filterOptionTemp : FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    private val viewModel : TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    private val transactionViewModel : TransactionViewModel by viewModels()
     private lateinit var adapter: CategoryStatAdapter
     private var categoryType = CategoryType.EXPENSE
 
@@ -87,22 +90,21 @@ class StatisticAccountFragment : Fragment() {
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
             true
         }
-        viewModel.combinedFilter.observe(viewLifecycleOwner) { (type, list) ->
-            categoryType = type
-            updateCircleChartByAccount(type, list)
-        }
 
-        viewModel.allTransactions.observe(viewLifecycleOwner) { transactionList->
-            allTransactions = transactionList
-        }
-
-        viewModel.filterOption.observe(viewLifecycleOwner) { filterOption ->
-            filterOptionTemp = filterOption
-            getListUpdateChart(filterOption)
-        }
-
-        viewModel.currentFilterDate.observe(viewLifecycleOwner) { filterDate ->
-            viewModel.setFilter(filterOptionTemp.type, filterDate)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.combinedFilter.collect { (type, list) ->
+                    categoryType = type
+                    updateCircleChartByAccount(type, list)
+                }
+                transactionViewModel.allTransactions.collect { transactionList ->
+                    allTransactions = transactionList
+                }
+                transactionViewModel.filterOption.collect { filterOption ->
+                    filterOptionTemp = filterOption
+                    getListUpdateChart(filterOption)
+                }
+            }
         }
     }
 
@@ -222,9 +224,9 @@ class StatisticAccountFragment : Fragment() {
             FilterPeriodStatistic.List -> emptyList()
             FilterPeriodStatistic.Trend -> emptyList()
         }
-        viewModel.setStatisticTransactionFilter(list)
+        transactionViewModel.setStatisticTransactionFilter(list)
         filteredListTransaction = list
-        currentStatType = viewModel.statisticCategoryType.value ?: CategoryType.EXPENSE
+        currentStatType = transactionViewModel.statisticCategoryType.value ?: CategoryType.EXPENSE
         if (filterOption.type == FilterPeriodStatistic.Trend) {
             updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
         } else {

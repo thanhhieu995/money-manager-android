@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.core.util.component1
+import androidx.core.util.component2
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
@@ -17,6 +19,10 @@ import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelF
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.core.util.FilterTransactions
@@ -33,8 +39,11 @@ import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNav
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import com.henrystudio.moneymanager.presentation.views.main.StickyHeaderItemDecoration
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.*
 
+@AndroidEntryPoint
 class DailyFragment : Fragment() {
     private lateinit var adapter: TransactionGroupAdapter
     private var _binding: FragmentDailyBinding? = null
@@ -50,13 +59,7 @@ class DailyFragment : Fragment() {
     private var filterOption: FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -117,29 +120,37 @@ class DailyFragment : Fragment() {
 
         binding.transactionList.addItemDecoration(decoration)
 
-        viewModel.filterOption.observe(viewLifecycleOwner) { option ->
-            filterOption = option
-            viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(transactions, selectedMonth) ->
-                updateAllTransactions(transactions, categoryName, categoryType)
-                filterAndDisplay(selectedMonth)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    transactionViewModel.filterOption.collect { option ->
+                        filterOption = option
+                        transactionViewModel.combineGroupAndDate.collect { (transactions, selectedMonth) ->
+                            updateAllTransactions(transactions, categoryName, categoryType)
+                            filterAndDisplay(selectedMonth)
+                        }
+                    }
+                }
+
+                launch {
+                    transactionViewModel.combineGroupAndDate.collect { (transactions, selectedMonth) ->
+                        updateAllTransactions(transactions, categoryName, categoryType)
+                        filterAndDisplay(selectedMonth)
+                    }
+                }
             }
         }
 
-        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(transactions, selectedMonth) ->
-            updateAllTransactions(transactions, categoryName, categoryType)
-            filterAndDisplay(selectedMonth)
-        }
-
         adapter.onTransactionLongClick = { transaction ->
-            viewModel.enterSelectionMode()
-            viewModel.toggleTransactionSelection(transaction)
+            transactionViewModel.enterSelectionMode()
+            transactionViewModel.toggleTransactionSelection(transaction)
             updateTransactionItem(transaction)
             true
         }
 
         adapter.onTransactionClick = { transaction ->
-            if (viewModel.selectionMode.value == true) {
-                viewModel.toggleTransactionSelection(transaction)
+            if (transactionViewModel.selectionMode.value == true) {
+                transactionViewModel.toggleTransactionSelection(transaction)
                 updateTransactionItem(transaction)
             } else {
                 // Mở màn hình sửa
@@ -150,14 +161,14 @@ class DailyFragment : Fragment() {
 
         // click to change color choose transaction
         adapter.isTransactionSelected = { transaction ->
-            val mode = viewModel.selectionMode.value == true
-            val selectedList = viewModel.selectedTransactions.value
+            val mode = transactionViewModel.selectionMode.value == true
+            val selectedList = transactionViewModel.selectedTransactions.value
             val selected = selectedList?.any { it.id == transaction.id } == true
             mode && selected
         }
 
         // Click close edit layout change color item transaction
-        viewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
+        transactionViewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
             if (selectedTransactions.isEmpty()) {
                 for (tx in selectedList) {
                     val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
@@ -212,7 +223,7 @@ class DailyFragment : Fragment() {
         super.onResume()
         val dateShare = SharedTransactionHolder.currentFilterDate
         if (dateShare != null) {
-            viewModel.setCurrentFilterDate(dateShare)
+            transactionViewModel.setCurrentFilterDate(dateShare)
             SharedTransactionHolder.currentFilterDate = null
         }
     }

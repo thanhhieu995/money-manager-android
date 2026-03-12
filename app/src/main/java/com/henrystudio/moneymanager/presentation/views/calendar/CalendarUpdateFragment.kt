@@ -13,7 +13,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.core.util.component1
+import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -31,22 +37,19 @@ import com.kizitonwose.calendar.core.daysOfWeek
 import com.kizitonwose.calendar.core.yearMonth
 import com.kizitonwose.calendar.view.MonthDayBinder
 import com.kizitonwose.calendar.view.ViewContainer
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.*
 
+@AndroidEntryPoint
 class CalendarUpdateFragment : Fragment() {
     private var eventsMap = mutableMapOf<LocalDate, TransactionGroup>()
     private lateinit var calendarView: com.kizitonwose.calendar.view.CalendarView
-    private val viewModel: TransactionViewModel by activityViewModels {
-        val database = AppDatabase.getDatabase(requireActivity().application)
-        val repository = TransactionRepositoryImpl(database.transactionDao())
-        TransactionViewModelFactory(
-            repository
-        )
-    }
+    private val transactionViewModel: TransactionViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -72,35 +75,39 @@ class CalendarUpdateFragment : Fragment() {
             }
         }
 
-        viewModel.combineGroupAndDate.observe(viewLifecycleOwner) {(groups, currentDate) ->
-            eventsMap.clear()
-            val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-            // Lấy ra tháng đang được filter
-            val month = currentDate.month
-            val year = currentDate.year
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.combineGroupAndDate.collect { (groups, currentDate) ->
+                    eventsMap.clear()
+                    val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+                    // Lấy ra tháng đang được filter
+                    val month = currentDate.month
+                    val year = currentDate.year
 
-            // Tạo map date -> TransactionGroup (dùng LocalDate làm key)
-            val monthGroups = groups.mapNotNull { group ->
-                val parsedDate = sdf.parse(group.date)
-                val localDate = parsedDate?.toInstant()
-                    ?.atZone(ZoneId.systemDefault())
-                    ?.toLocalDate()
-                if (localDate != null && localDate.month == month && localDate.year == year) {
-                    localDate to group
-                } else null
-            }.toMap()
+                    // Tạo map date -> TransactionGroup (dùng LocalDate làm key)
+                    val monthGroups = groups.mapNotNull { group ->
+                        val parsedDate = sdf.parse(group.date)
+                        val localDate = parsedDate?.toInstant()
+                            ?.atZone(ZoneId.systemDefault())
+                            ?.toLocalDate()
+                        if (localDate != null && localDate.month == month && localDate.year == year) {
+                            localDate to group
+                        } else null
+                    }.toMap()
 
-            eventsMap.putAll(monthGroups)
+                    eventsMap.putAll(monthGroups)
 
-            val daysOfWeek = daysOfWeek(firstDayOfWeek = DayOfWeek.MONDAY)
-            val currentMonth = currentDate.yearMonth
-            val startMonth = currentMonth.minusMonths(12)
-            val endMonth = currentMonth.plusMonths(12)
+                    val daysOfWeek = daysOfWeek(firstDayOfWeek = DayOfWeek.MONDAY)
+                    val currentMonth = currentDate.yearMonth
+                    val startMonth = currentMonth.minusMonths(12)
+                    val endMonth = currentMonth.plusMonths(12)
 
-            calendarView.setup(startMonth, endMonth, daysOfWeek.first())
-            calendarView.scrollToMonth(currentMonth)
-            // Gọi hàm update CalendarView
-            calendarView.notifyCalendarChanged()  // hoặc notifyDateChanged(date) tùy thư viện
+                    calendarView.setup(startMonth, endMonth, daysOfWeek.first())
+                    calendarView.scrollToMonth(currentMonth)
+                    // Gọi hàm update CalendarView
+                    calendarView.notifyCalendarChanged()  // hoặc notifyDateChanged(date) tùy thư viện
+                }
+            }
         }
 
         // Header hiển thị tháng
@@ -189,7 +196,7 @@ class CalendarUpdateFragment : Fragment() {
 
         val noDataText = dialogView.findViewById<TextView>(R.id.item_day_calendar_noData)
 
-        val groupTransaction = viewModel.groupedTransactions.value?.filter {
+        val groupTransaction = transactionViewModel.groupedTransactions.value?.filter {
             val transactionDate = sdf.parse(it.date)
             transactionDate?.let { it1 -> sdf.format(it1) } == dateString
         } ?: emptyList()

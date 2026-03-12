@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.domain.usecase.account.AccountUseCases
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AccountViewModel(private val accountUseCases: AccountUseCases) : ViewModel() {
+@HiltViewModel
+class AccountViewModel @Inject constructor (private val accountUseCases: AccountUseCases) : ViewModel() {
     fun getAllAccount(): Flow<List<Account>> {
         return accountUseCases.getAccountsUseCase()
     }

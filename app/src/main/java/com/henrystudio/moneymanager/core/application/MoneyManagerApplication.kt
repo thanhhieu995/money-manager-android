@@ -4,7 +4,9 @@ import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.google.android.gms.ads.MobileAds
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class MoneyManagerApplication: Application() {
     override fun onCreate() {
         super.onCreate()
