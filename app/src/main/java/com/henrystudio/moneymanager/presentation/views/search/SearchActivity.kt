@@ -11,7 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,11 +18,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -86,7 +82,7 @@ class SearchActivity : AppCompatActivity() {
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onTransactionClick(transaction: Transaction): Boolean {
-                if (transactionViewModel.selectionMode.value == true) {
+                if (transactionViewModel.selectionMode.value) {
                     transactionViewModel.toggleTransactionSelection(transaction)
                     transactionAdapter.notifyDataSetChanged()
                 } else {
@@ -105,23 +101,31 @@ class SearchActivity : AppCompatActivity() {
             }
         }
 
-        transactionViewModel.selectionMode.observe(this) { enable ->
-            layoutEdit.visibility = if (enable) View.VISIBLE else View.GONE
-        }
-
-        transactionViewModel.selectedTransactions.observe(this) { selectedTransactionList ->
-            allSelectedTransactions = selectedTransactionList
-            tvSelectedEdit.text = "${selectedTransactionList.size} selected"
-            val selectedTransactions = transactions?.filter { selectedTransactionList.contains(it) } ?: emptyList()
-            val totalAmount = selectedTransactions.sumOf {
-                if (it.isIncome) it.amount else -it.amount
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.selectionMode.collect { enable ->
+                    layoutEdit.visibility = if (enable) View.VISIBLE else View.GONE
+                }
             }
-            tvTotalAmountEdit.text = "Total: ${Helper.formatCurrency(totalAmount)}"
         }
 
-        transactionAdapter.isSelected = {transaction ->
-            transactionViewModel.selectionMode.value == true &&
-                    transactionViewModel.selectedTransactions.value?.contains(transaction) == true
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.selectedTransactions.collect { selectedTransactionList ->
+                    allSelectedTransactions = selectedTransactionList
+                    tvSelectedEdit.text = "${selectedTransactionList.size} selected"
+                    val selectedTransactions = transactions.filter { selectedTransactionList.contains(it) }
+                    val totalAmount = selectedTransactions.sumOf {
+                        if (it.isIncome) it.amount else -it.amount
+                    }
+                    tvTotalAmountEdit.text = "Total: ${Helper.formatCurrency(totalAmount)}"
+                }
+            }
+        }
+
+        transactionAdapter.isSelected = { transaction ->
+            transactionViewModel.selectionMode.value &&
+                    transactionViewModel.selectedTransactions.value.contains(transaction)
         }
 
         btnCloseLayoutEdit.setOnClickListener {

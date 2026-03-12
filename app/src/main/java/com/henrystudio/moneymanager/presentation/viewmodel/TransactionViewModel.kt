@@ -13,9 +13,12 @@ import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,14 +40,19 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
     private val _currentFilterDate = MutableStateFlow(LocalDate.now())
     @RequiresApi(Build.VERSION_CODES.O)
     val currentFilterDate: StateFlow<LocalDate> = _currentFilterDate
-    private val _currentDailyNavigateTabPosition = MutableLiveData<Int>()
-    val currentDailyNavigateTabPosition: LiveData<Int> get() = _currentDailyNavigateTabPosition
-    private val _selectionMode = MutableLiveData<Boolean>(false)
-    val selectionMode: LiveData<Boolean> = _selectionMode
-    private val _selectedTransactions = MutableLiveData<List<Transaction>>(emptyList())
-    val selectedTransactions: LiveData<List<Transaction>> = _selectedTransactions
-    private val _navigateToWeekFromMonthly = MutableLiveData<Event<LocalDate>>()
-    val navigateToWeekFromMonthly: LiveData<Event<LocalDate>> = _navigateToWeekFromMonthly
+
+    private val _currentDailyNavigateTabPosition = MutableStateFlow(0)
+    val currentDailyNavigateTabPosition: StateFlow<Int> = _currentDailyNavigateTabPosition
+
+    private val _selectionMode = MutableStateFlow(false)
+    val selectionMode: StateFlow<Boolean> = _selectionMode
+
+    private val _selectedTransactions = MutableStateFlow<List<Transaction>>(emptyList())
+    val selectedTransactions: StateFlow<List<Transaction>> = _selectedTransactions
+
+    private val _navigateToWeekFromMonthly = MutableSharedFlow<Event<LocalDate>>()
+    val navigateToWeekFromMonthly: SharedFlow<Event<LocalDate>> = _navigateToWeekFromMonthly.asSharedFlow()
+
     private val _filterOption = MutableStateFlow<FilterOption>(
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
     )
@@ -70,8 +78,8 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
             Pair(transactions, date)
         }
 
-    private val _currentStatisticTabPosition = MutableLiveData<Int>()
-    val currentStatisticTabPosition: LiveData<Int> = _currentStatisticTabPosition
+    private val _currentStatisticTabPosition = MutableStateFlow(0)
+    val currentStatisticTabPosition: StateFlow<Int> = _currentStatisticTabPosition
 
     fun insert(transaction: Transaction) = viewModelScope.launch {
         transactionUseCases.addTransactionUseCase(transaction)
@@ -109,17 +117,17 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun changeWeek(offset: Long) {
-        _currentFilterDate.value = _currentFilterDate.value?.plusWeeks(offset)
+        _currentFilterDate.value = _currentFilterDate.value.plusWeeks(offset)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun changeMonth(offset: Long) {
-        _currentFilterDate.value = _currentFilterDate.value?.plusMonths(offset)
+        _currentFilterDate.value = _currentFilterDate.value.plusMonths(offset)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun changeYear(offset: Long) {
-        _currentFilterDate.value = _currentFilterDate.value?.plusYears(offset)
+        _currentFilterDate.value = _currentFilterDate.value.plusYears(offset)
     }
 
     fun setCurrentDailyNavigateTab(position: Int) {
@@ -127,13 +135,13 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
     }
 
     fun toggleTransactionSelection(transaction: Transaction) {
-        val currentTransaction = _selectedTransactions.value ?: emptyList()
+        val currentTransaction = _selectedTransactions.value
         _selectedTransactions.value = if (currentTransaction.contains(transaction)) {
             currentTransaction - transaction
         } else {
             currentTransaction + transaction
         }
-        _selectionMode.value = _selectedTransactions.value?.isNotEmpty()
+        _selectionMode.value = _selectedTransactions.value.isNotEmpty()
     }
 
     private fun clearSelection() {
@@ -152,7 +160,9 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
     @RequiresApi(Build.VERSION_CODES.O)
     fun navigateToWeekFromMonthly(date: LocalDate) {
         _currentFilterDate.value = date.withDayOfMonth(date.dayOfMonth)
-        _navigateToWeekFromMonthly.value = Event(date) // Dùng để scroll sau khi cập nhật
+        viewModelScope.launch {
+            _navigateToWeekFromMonthly.emit(Event(date)) // Dùng để scroll sau khi cập nhật
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

@@ -38,6 +38,7 @@ import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Month
@@ -126,35 +127,37 @@ class DailyNavigateFragment : Fragment() {
             }
         }
 
-        transactionViewModel.currentDailyNavigateTabPosition.observe(viewLifecycleOwner) { position ->
-            val filteredMonth = month?.let {
-                FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup,
-                    it
-                )
-            }
-            val filteredYear =
-                month?.let { FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, it) }
-            when (position) {
-                0 -> {
-                    // Daily tab selected
-                    if (month != null) {
-                        monthText.text = month!!.format(formatterMonth())
-                        handleSummarySection(filteredMonth?: emptyList())
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.currentDailyNavigateTabPosition.collectLatest { position ->
+                    val filteredMonth = month?.let {
+                        FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, it)
                     }
-                }
-                1 -> {
-                    // Calendar tab selected
-                    if (month != null) {
-                        monthText.text = month!!.format(formatterMonth())
-                        handleSummarySection(filteredMonth ?: emptyList())
-                    }
-                }
-                2 -> {
-                    // Monthly tab selected
-                    if (month != null) {
-                        monthText.text = month!!.format(formatterYear())
-                        if (filteredYear != null) {
-                            handleSummarySection(filteredYear)
+                    val filteredYear =
+                        month?.let { FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, it) }
+                    when (position) {
+                        0 -> {
+                            // Daily tab selected
+                            if (month != null) {
+                                monthText.text = month!!.format(formatterMonth())
+                                handleSummarySection(filteredMonth ?: emptyList())
+                            }
+                        }
+                        1 -> {
+                            // Calendar tab selected
+                            if (month != null) {
+                                monthText.text = month!!.format(formatterMonth())
+                                handleSummarySection(filteredMonth ?: emptyList())
+                            }
+                        }
+                        2 -> {
+                            // Monthly tab selected
+                            if (month != null) {
+                                monthText.text = month!!.format(formatterYear())
+                                if (filteredYear != null) {
+                                    handleSummarySection(filteredYear)
+                                }
+                            }
                         }
                     }
                 }
@@ -229,20 +232,28 @@ class DailyNavigateFragment : Fragment() {
         }
 
         // observe selectionMode && id
-        transactionViewModel.selectionMode.observe(viewLifecycleOwner) { enabled ->
-            layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.selectionMode.collect { enabled ->
+                    layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
+                }
+            }
         }
 
-        transactionViewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
-            selectedTransactionList = selectedTransactions
-            // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
-            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
-                "${selectedTransactions.size} ${requireContext().getString(R.string.selected)}"
-            val totalAmount = selectedTransactions.sumOf {
-                if(it.isIncome) it.amount else -it.amount
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.selectedTransactions.collect { selectedTransactions ->
+                    selectedTransactionList = selectedTransactions
+                    // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
+                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
+                        "${selectedTransactions.size} ${requireContext().getString(R.string.selected)}"
+                    val totalAmount = selectedTransactions.sumOf {
+                        if (it.isIncome) it.amount else -it.amount
+                    }
+                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
+                        "${requireContext().getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
+                }
             }
-            binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
-                "${requireContext().getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
         }
 
         btnEditClose.setOnClickListener {
@@ -267,9 +278,13 @@ class DailyNavigateFragment : Fragment() {
             }
         })
 
-        transactionViewModel.navigateToWeekFromMonthly.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandled()?.let { date ->
-                navigateToDailyTabAndScrollToWeek(date)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.navigateToWeekFromMonthly.collect { event ->
+                    event.getContentIfNotHandled()?.let { date ->
+                        navigateToDailyTabAndScrollToWeek(date)
+                    }
+                }
             }
         }
     }

@@ -140,15 +140,12 @@ class StatisticViewPagerFragment : Fragment() {
                         updateTextButton(listFilter)
                     }
                 }
-            }
-        }
 
-        transactionViewModel.currentStatisticTabPosition.observe(viewLifecycleOwner) { position ->
-            viewPager.currentItem = position
-            when(position) {
-                0 -> {}
-                1 -> {}
-                2 -> {}
+                launch {
+                    transactionViewModel.currentStatisticTabPosition.collect { position ->
+                        viewPager.currentItem = position
+                    }
+                }
             }
         }
 

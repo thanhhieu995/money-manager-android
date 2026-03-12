@@ -149,7 +149,7 @@ class DailyFragment : Fragment() {
         }
 
         adapter.onTransactionClick = { transaction ->
-            if (transactionViewModel.selectionMode.value == true) {
+            if (transactionViewModel.selectionMode.value) {
                 transactionViewModel.toggleTransactionSelection(transaction)
                 updateTransactionItem(transaction)
             } else {
@@ -161,30 +161,34 @@ class DailyFragment : Fragment() {
 
         // click to change color choose transaction
         adapter.isTransactionSelected = { transaction ->
-            val mode = transactionViewModel.selectionMode.value == true
+            val mode = transactionViewModel.selectionMode.value
             val selectedList = transactionViewModel.selectedTransactions.value
-            val selected = selectedList?.any { it.id == transaction.id } == true
+            val selected = selectedList.any { it.id == transaction.id }
             mode && selected
         }
 
         // Click close edit layout change color item transaction
-        transactionViewModel.selectedTransactions.observe(viewLifecycleOwner) { selectedTransactions ->
-            if (selectedTransactions.isEmpty()) {
-                for (tx in selectedList) {
-                    val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
-                    childAdapter.updateTransaction(tx)
-                }
-            } else {
-                val added = selectedTransactions.filterNot { selectedList.contains(it) }
-                val removed = selectedList.filterNot { selectedTransactions.contains(it) }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.selectedTransactions.collect { selectedTransactions ->
+                    if (selectedTransactions.isEmpty()) {
+                        for (tx in selectedList) {
+                            val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
+                            childAdapter.updateTransaction(tx)
+                        }
+                    } else {
+                        val added = selectedTransactions.filterNot { selectedList.contains(it) }
+                        val removed = selectedList.filterNot { selectedTransactions.contains(it) }
 
-                for (tx in added + removed) {
-                    val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
-                    childAdapter.updateTransaction(tx)
+                        for (tx in added + removed) {
+                            val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
+                            childAdapter.updateTransaction(tx)
+                        }
+                    }
+
+                    selectedList = selectedTransactions
                 }
             }
-
-            selectedList = selectedTransactions
         }
 
         val lastDate = loadLastDate(requireContext()) // hàm tự viết lấy từ SharedPreferences

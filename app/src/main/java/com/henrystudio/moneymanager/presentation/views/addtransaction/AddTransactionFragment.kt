@@ -182,7 +182,7 @@ class AddTransactionFragment : Fragment() {
             }
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    accountViewModel.getAllAccount().collect { accountList ->
+                    accountViewModel.allAccounts.collect { accountList ->
                         showAccountBottomDialog(
                             requireContext().getString(R.string.account),
                             accountList,

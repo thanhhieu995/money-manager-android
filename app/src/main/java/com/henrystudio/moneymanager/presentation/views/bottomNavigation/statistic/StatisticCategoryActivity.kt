@@ -12,16 +12,16 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class StatisticCategoryActivity : AppCompatActivity() {
@@ -80,21 +80,29 @@ class StatisticCategoryActivity : AppCompatActivity() {
             .commit()
 
         // observe selectionMode && id
-        transactionViewModel.selectionMode.observe(this) { enabled ->
-            layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
-            toolbar.visibility = if (enabled) View.GONE else View.VISIBLE
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.selectionMode.collect { enabled ->
+                    layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
+                    toolbar.visibility = if (enabled) View.GONE else View.VISIBLE
+                }
+            }
         }
 
-        transactionViewModel.selectedTransactions.observe(this) { selectedTransactions ->
-            selectedTransactionList = selectedTransactions
-            // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
-            selectedCount.text =
-                "${selectedTransactions.size} ${getString(R.string.selected)}"
-            val totalAmount = selectedTransactions.sumOf {
-                if(it.isIncome) it.amount else -it.amount
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                transactionViewModel.selectedTransactions.collect { selectedTransactions ->
+                    selectedTransactionList = selectedTransactions
+                    // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
+                    selectedCount.text =
+                        "${selectedTransactions.size} ${getString(R.string.selected)}"
+                    val totalAmount = selectedTransactions.sumOf {
+                        if (it.isIncome) it.amount else -it.amount
+                    }
+                    selectedTotal.text =
+                        "${getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
+                }
             }
-            selectedTotal.text =
-                "${getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
         }
 
         btnEditClose.setOnClickListener {

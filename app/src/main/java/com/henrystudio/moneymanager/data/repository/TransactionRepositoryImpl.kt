@@ -1,6 +1,5 @@
 package com.henrystudio.moneymanager.data.repository
 
-import androidx.lifecycle.LiveData
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.local.TransactionDao
 import com.henrystudio.moneymanager.data.model.TransactionGroup

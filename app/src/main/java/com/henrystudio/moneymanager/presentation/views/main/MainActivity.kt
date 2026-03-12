@@ -216,7 +216,7 @@ class MainActivity : AppCompatActivity() {
     private fun defaultAccount() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                accountViewModel.getAllAccount().collect { accounts ->
+                accountViewModel.allAccounts.collect { accounts ->
                     if (accounts.isEmpty()) {
                         val defaultAccounts = listOf(
                             Account(name = "Cash"),

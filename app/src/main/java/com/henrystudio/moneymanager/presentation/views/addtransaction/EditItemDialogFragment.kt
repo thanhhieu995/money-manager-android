@@ -64,7 +64,7 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
         if (selectedType == null) {
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    accountViewModel.getAllAccount().collect { list ->
+                    accountViewModel.allAccounts.collect { list ->
                         val editItems = list.map { EditItem.AccountItem(it) }
                         adapter?.submitList(editItems)
                     }
