@@ -20,8 +20,7 @@ import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -34,7 +33,7 @@ class StatisticTrendActivity : AppCompatActivity() {
     private lateinit var filterOption: FilterOption
     private lateinit var categoryType: CategoryType
     private lateinit var currentFilterPeriod: FilterPeriodStatistic
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val transactionViewModel: SharedTransactionViewModel by viewModels()
     private lateinit var currentDate : LocalDate
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {

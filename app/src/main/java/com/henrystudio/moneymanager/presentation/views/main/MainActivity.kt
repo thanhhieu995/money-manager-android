@@ -8,7 +8,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.gms.ads.AdRequest
@@ -16,18 +15,13 @@ import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFactory
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.DailyNavigateFragment
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.presentation.views.setting.SettingFragment
@@ -41,10 +35,9 @@ import androidx.core.content.edit
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by viewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel: AccountViewModel by viewModels()
-    @RequiresApi(Build.VERSION_CODES.O)
 
     private lateinit var adView: AdView
 
@@ -54,19 +47,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Khởi tạo SDK AdMob (nên gọi 1 lần trong App)
         MobileAds.initialize(this) {}
 
         adView = findViewById(R.id.adView)
-//        val adUnitId = if (BuildConfig.DEBUG) {
-//            // Dùng ID test khi chạy debug
-//            "ca-app-pub-3940256099942544/6300978111"
-//        } else {
-//            // Dùng ID thật khi release
-//            "ca-app-pub-8536795401427760/2052264213"
-//        }
-//        adView.adUnitId = adUnitId
-//        adView.setAdSize(AdSize.BANNER) // 👈 bắt buộc khi set qua code
         val adRequest = AdRequest.Builder().build()
         adView.loadAd(adRequest)
 
@@ -76,17 +59,15 @@ class MainActivity : AppCompatActivity() {
         init()
         defaultCategory()
         defaultAccount()
-//        defaultTransactions()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.currentFilterDate.collect { month ->
-                    // Lấy locale hiện tại trong app (theo AppCompatDelegate)
+                sharedViewModel.currentFilterDate.collect { month ->
                     val currentLocales = AppCompatDelegate.getApplicationLocales()
                     val currentLocale: Locale = if (!currentLocales.isEmpty) {
                         currentLocales[0]!!
                     } else {
-                        Locale.getDefault() // fallback
+                        Locale.getDefault()
                     }
 
                     val formatterMonth = DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale)
@@ -96,7 +77,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         bottomNav.setOnItemSelectedListener { item ->
-            // lưu lại tab mỗi khi chọn
             prefs.edit { putInt("last_selected_tab", item.itemId) }
             when(item.itemId) {
                 R.id.nav_daily -> {
@@ -120,8 +100,6 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
-        // 🔑 Nếu app mới mở lại sau khi kill → vào daily
-        //     Nếu resume bình thường → mở lại tab cuối
         if (savedInstanceState == null) {
             bottomNav.selectedItemId = R.id.nav_daily
         } else {
@@ -141,8 +119,7 @@ class MainActivity : AppCompatActivity() {
                 categoryViewModel.getAll().collect { listCategory ->
                     if (listCategory.isEmpty()) {
                         val defaultCategories = listOf(
-                            // expense
-                            Category(emoji = " \uD83E\uDD57", name = "Food", type = typeExpense),
+                            Category(emoji = " 🥗", name = "Food", type = typeExpense),
                             Category(emoji = "🎉", name = "Social Life", type = typeExpense),
                             Category(emoji = "🚗", name = "Transport", type = typeExpense),
                             Category(emoji = "🎨", name = "Culture", type = typeExpense),
@@ -200,7 +177,6 @@ class MainActivity : AppCompatActivity() {
                                 parentId = 9
                             ),
                             Category(emoji = "", name = "Academy", type = typeExpense, parentId = 9),
-                            // income
                             Category(emoji = "💸", name = "Allowance", type = typeIncome),
                             Category(emoji = "💼", name = "Salary", type = typeIncome),
                             Category(emoji = "🎁", name = "Bonus", type = typeIncome),
@@ -230,75 +206,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun generateDefaultTransactions(
-        monthsBack: Int = 6,
-        locale: Locale = Locale.ENGLISH
-    ): List<Transaction> {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", locale)
-        val today = LocalDate.now()
-        val transactions = mutableListOf<Transaction>()
-
-        val sampleExpenses = listOf(
-            Triple("Food", "Breakfast", 40000.0),
-            Triple("Food", "Lunch", 60000.0),
-            Triple("Food", "Dinner", 70000.0),
-            Triple("Transport", "Bus", 15000.0),
-            Triple("Health", "Medicine", 50000.0)
-        )
-
-        val sampleIncomes = listOf(
-            Triple("Salary", "", 10000000.0),
-            Triple("Bonus", "", 2000000.0),
-            Triple("Allowance", "", 500000.0)
-        )
-
-        repeat(monthsBack) { i ->
-            val monthDate = today.minusMonths(i.toLong()).withDayOfMonth(1)
-            val daysInMonth = monthDate.lengthOfMonth()
-
-            for (day in 1..daysInMonth) {
-                val currentDate = monthDate.withDayOfMonth(day)
-                val dateStr = currentDate.format(formatter)
-
-                // Add expenses
-                sampleExpenses.forEach { (parent, sub, amount) ->
-                    transactions.add(
-                        Transaction(
-                            title = "$parent $sub",
-                            categoryParentName = parent,
-                            categorySubName = sub,
-                            note = "",
-                            account = "Cash",
-                            amount = amount,
-                            isIncome = false,
-                            date = dateStr
-                        )
-                    )
-                }
-
-                // Add incomes on first of the month only
-                if (day == 1) {
-                    sampleIncomes.forEach { (parent, _, amount) ->
-                        transactions.add(
-                            Transaction(
-                                title = parent,
-                                categoryParentName = parent,
-                                categorySubName = "",
-                                note = "",
-                                account = "Bank",
-                                amount = amount,
-                                isIncome = true,
-                                date = dateStr
-                            )
-                        )
-                    }
-                }
-            }
-
-        }
-        return transactions
     }
 }

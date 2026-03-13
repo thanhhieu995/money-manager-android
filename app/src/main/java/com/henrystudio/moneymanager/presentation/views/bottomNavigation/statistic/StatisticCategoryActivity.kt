@@ -19,9 +19,10 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.ArrayDeque
 
 @AndroidEntryPoint
 class StatisticCategoryActivity : AppCompatActivity() {
@@ -39,7 +40,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
     val titleStack = ArrayDeque<String>()
 
     private var selectedTransactionList: List<Transaction> = emptyList()
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +52,6 @@ class StatisticCategoryActivity : AppCompatActivity() {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
                 val previousTitle = if (titleStack.isNotEmpty()) titleStack.removeLast() else ""
-                // Áp dụng animation cho title khi quay lại
                 animateBackTitleTransition(previousTitle)
             } else {
                 finish()
@@ -79,10 +79,9 @@ class StatisticCategoryActivity : AppCompatActivity() {
             .replace(R.id.activity_statistic_category_container, statisticCategoryFragment)
             .commit()
 
-        // observe selectionMode && id
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.selectionMode.collect { enabled ->
+                sharedViewModel.selectionMode.collect { enabled ->
                     layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
                     toolbar.visibility = if (enabled) View.GONE else View.VISIBLE
                 }
@@ -91,9 +90,8 @@ class StatisticCategoryActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.selectedTransactions.collect { selectedTransactions ->
+                sharedViewModel.selectedTransactions.collect { selectedTransactions ->
                     selectedTransactionList = selectedTransactions
-                    // Cập nhật số lượng và tổng tiền khi người dùng chọn giao dịch
                     selectedCount.text =
                         "${selectedTransactions.size} ${getString(R.string.selected)}"
                     val totalAmount = selectedTransactions.sumOf {
@@ -106,13 +104,13 @@ class StatisticCategoryActivity : AppCompatActivity() {
         }
 
         btnEditClose.setOnClickListener {
-            transactionViewModel.exitSelectionMode()
+            sharedViewModel.exitSelectionMode()
         }
 
         btnEditDelete.setOnClickListener {
             if (selectedTransactionList.isNotEmpty()) {
-                transactionViewModel.deleteAll(selectedTransactionList)
-                transactionViewModel.exitSelectionMode()
+                sharedViewModel.deleteAll(selectedTransactionList)
+                sharedViewModel.exitSelectionMode()
             }
         }
     }
@@ -146,20 +144,15 @@ class StatisticCategoryActivity : AppCompatActivity() {
             val textCenterX = titleView.left + titleView.width / 2f
             val offsetToCenter = centerX - textCenterX
 
-            // Bắt đầu từ bên phải ngoài màn hình
             titleView.translationX = screenWidth.toFloat()
 
-            // Animate vào giữa
             titleView.animate()
                 .translationX(offsetToCenter)
                 .setDuration(300)
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .withEndAction {
-                    // Sau khi vào giữa, cập nhật lại titleCurrent
                     titleCurrent.text = newText
                     titleCurrent.translationX = 0f
-
-                    // Ẩn và reset titleIncoming
                     titleView.visibility = View.GONE
                     titleView.translationX = 0f
                 }
@@ -170,34 +163,28 @@ class StatisticCategoryActivity : AppCompatActivity() {
     private fun animateBackTitleTransition(previousTitle: String) {
         val toolbarWidth = toolbar.width.toFloat()
 
-        // 1. Animate titleCurrent trượt sang phải và ẩn
         titleCurrent.animate()
-            .translationX(toolbarWidth) // trượt ra bên phải
+            .translationX(toolbarWidth)
             .setDuration(300)
             .setInterpolator(AccelerateDecelerateInterpolator())
             .withEndAction {
                 titleCurrent.visibility = View.GONE
-                titleCurrent.translationX = 0f // reset để dùng lại
+                titleCurrent.translationX = 0f
             }
             .start()
 
-        // 2. titleIncoming xuất hiện từ bên trái
         titleIncoming.text = previousTitle
         titleIncoming.visibility = View.VISIBLE
-        titleIncoming.translationX = -toolbarWidth // bắt đầu từ ngoài trái
+        titleIncoming.translationX = -toolbarWidth
 
-        // 3. Animate titleIncoming vào giữa
         titleIncoming.animate()
             .translationX(0f)
             .setDuration(300)
             .setInterpolator(AccelerateDecelerateInterpolator())
             .withEndAction {
-                // Khi animation kết thúc: cập nhật titleCurrent
                 titleCurrent.text = previousTitle
                 titleCurrent.translationX = 0f
                 titleCurrent.visibility = View.VISIBLE
-
-                // Reset titleIncoming
                 titleIncoming.visibility = View.GONE
                 titleIncoming.translationX = 0f
             }

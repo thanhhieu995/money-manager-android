@@ -43,7 +43,7 @@ import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFactory
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
@@ -81,7 +81,7 @@ class AddTransactionFragment : Fragment() {
     private var transactionFromIntent: Transaction? = null
 
     private var isEditMode = false
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val transactionViewModel: SharedTransactionViewModel by viewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel : AccountViewModel by viewModels()
     override fun onCreateView(

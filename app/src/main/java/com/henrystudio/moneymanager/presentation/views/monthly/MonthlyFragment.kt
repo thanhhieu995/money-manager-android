@@ -16,24 +16,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.databinding.FragmentMonthlyBinding
-import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
-import com.henrystudio.moneymanager.data.model.TransactionGroup
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.MonthlyViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 @AndroidEntryPoint
 class MonthlyFragment : Fragment() {
@@ -41,108 +33,70 @@ class MonthlyFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: MonthlyAdapter
     private var listMonthlyData: List<MonthlyData> = emptyList()
-    private val transactionViewModel: TransactionViewModel by viewModels()
+
+    // Shared (cross-screen) transaction state + operations
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+
+    // Monthly screen-specific UiState
+    private val viewModel: MonthlyViewModel by viewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentMonthlyBinding.inflate(inflater, container, false)
-        // Inflate the layout for this fragment
         return binding.root
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Gán layoutManager nếu chưa có
+        super.onViewCreated(view, savedInstanceState)
+        
         binding.monthlyListSummary.layoutManager = LinearLayoutManager(requireContext())
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.combineGroupAndDate.collect { (groups, date) ->
-                    val filterTransactionYear = FilterTransactions.filterTransactionGroupByYear(
-                        groups, date
-                    )
-                    listMonthlyData = groupTransactionsByMonth(filterTransactionYear)
-
-                    adapter = MonthlyAdapter(listMonthlyData,
-                        onMonthClick = { month ->
-                            val activity = requireActivity()
-                            if (activity is MainActivity) {
-                                month.isExpanded = !month.isExpanded
-                                val index = listMonthlyData.indexOf(month)
-                                adapter.notifyItemChanged(index)
-                            } else if (activity is StatisticListActivity) {
-                                SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(month.monthStart.toString())
-                                SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Monthly, month.monthStart)
-                                activity.onBackAnimation()
+                launch {
+                    sharedViewModel.combineGroupAndDate.collect { (groups, date) ->
+                        viewModel.updateMonthlyData(groups = groups, anchorDate = date)
+                    }
+                }
+                launch {
+                    viewModel.uiState.collect { uiState ->
+                        listMonthlyData = uiState.monthlyData
+                        adapter = MonthlyAdapter(
+                            listMonthlyData,
+                            onMonthClick = { month ->
+                                val activity = requireActivity()
+                                if (activity is MainActivity) {
+                                    month.isExpanded = !month.isExpanded
+                                    val index = listMonthlyData.indexOf(month)
+                                    adapter.notifyItemChanged(index)
+                                } else if (activity is StatisticListActivity) {
+                                    SharedTransactionHolder.currentFilterDate =
+                                        Helper.formatDateFromFilterOptionToDateDaily(month.monthStart.toString())
+                                    SharedTransactionHolder.filterOption =
+                                        FilterOption(FilterPeriodStatistic.Monthly, month.monthStart)
+                                    activity.onBackAnimation()
+                                }
+                            },
+                            onWeekClick = { weeklyData ->
+                                SharedTransactionHolder.navigateFromMonthly = true
+                                sharedViewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
                             }
-                        },
-                        onWeekClick = { weeklyData ->
-                            SharedTransactionHolder.navigateFromMonthly = true
-                            transactionViewModel.navigateToWeekFromMonthly(weeklyData.weekStart)
-                        })
-                    adapter.updateData(listMonthlyData)
-                    binding.monthlyListSummary.adapter = adapter
-                    binding.monthlyNoData.visibility = if (listMonthlyData.isEmpty()) View.VISIBLE else View.GONE
+                        )
+                        adapter.updateData(listMonthlyData)
+                        binding.monthlyListSummary.adapter = adapter
+                        binding.monthlyNoData.visibility =
+                            if (uiState.isEmpty) View.VISIBLE else View.GONE
+                    }
                 }
             }
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun groupTransactionsByMonth(transactions: List<TransactionGroup>): List<MonthlyData> {
-        val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-        val outputFormatter = DateTimeFormatter.ofPattern("dd-MM")
-
-        return transactions
-            .groupBy {
-                val rawDate = it.date
-                val cleanedDate = rawDate.substringBefore(" ") // Bỏ phần (Tue)
-                val localDate = LocalDate.parse(cleanedDate, inputFormatter)
-                LocalDate.of(localDate.year, localDate.month, 1) // Nhóm theo tháng
-            }
-            .map { (monthStart, monthList) ->
-                val income = monthList.sumOf { it.income }
-                val expense = monthList.sumOf { it.expense }
-                val total = income - expense
-
-                val dateRange = "${monthStart.format(outputFormatter)} ~ ${monthStart.withDayOfMonth(monthStart.lengthOfMonth()).format(outputFormatter)}"
-
-                // ✅ Nhóm theo tuần trong từng tháng
-                val weeklyGroups = monthList.groupBy {
-                    val rawDate = it.date
-                    val cleanedDate = rawDate.substringBefore(" ")
-                    val date = LocalDate.parse(cleanedDate, inputFormatter)
-
-                    // Lấy ngày đầu tuần (thứ Hai) làm khóa
-                    date.with(DayOfWeek.MONDAY)
-                }
-
-                // ✅ Sort tuần theo weekStart giảm dần rồi map sang WeeklyData
-                val weeks = weeklyGroups.toSortedMap(compareByDescending { it }).map { (weekStart, weekList) ->
-                    val weekIncome = weekList.sumOf { it.income }
-                    val weekExpense = weekList.sumOf { it.expense }
-                    val weekTotal = weekIncome - weekExpense
-
-                    WeeklyData(
-                        weekStart = weekStart,
-                        weekRange = "${weekStart.format(outputFormatter)} ~ ${weekStart.plusDays(6).format(outputFormatter)}",
-                        income = weekIncome,
-                        expense = weekExpense,
-                        total = weekTotal
-                    )
-                }
-                val monthFormatter = DateTimeFormatter.ofPattern("MMMM", Locale.getDefault())
-                // ✅ Trả về MonthlyData đầy đủ
-                MonthlyData(
-                    monthName = monthStart.format(monthFormatter),
-                    monthStart = monthStart,
-                    dateRange = dateRange,
-                    income = income,
-                    expense = expense,
-                    total = total,
-                    weeks = weeks
-                )
-            }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

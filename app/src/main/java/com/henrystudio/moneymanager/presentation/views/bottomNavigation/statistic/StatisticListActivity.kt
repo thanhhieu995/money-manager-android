@@ -11,7 +11,6 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
@@ -19,16 +18,13 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.TransactionGroup
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -55,11 +51,12 @@ class StatisticListActivity : AppCompatActivity() {
     private lateinit var filterOption: FilterOption
     private lateinit var categoryType: CategoryType
     private lateinit var currentFilterPeriod: FilterPeriodStatistic
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by viewModels()
     private var allTransactionGroup : List<TransactionGroup> = emptyList()
     @RequiresApi(Build.VERSION_CODES.O)
     private var currentDate: LocalDate = LocalDate.now()
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistic_list)
@@ -71,9 +68,11 @@ class StatisticListActivity : AppCompatActivity() {
         filterOption = intent.getSerializableExtra("filterOption") as FilterOption
         categoryType = intent.getSerializableExtra("categoryType") as CategoryType
         currentFilterPeriod = intent.getSerializableExtra("currentFilterPeriodStatistic") as FilterPeriodStatistic
+        
         imgClose.setOnClickListener {
             onBackAnimation()
         }
+        
         adapter = StatisticListAdapter(this, filterOption)
         viewPager.adapter = adapter
         TabLayoutMediator(tabLayout, viewPager) {tab, position ->
@@ -85,7 +84,6 @@ class StatisticListActivity : AppCompatActivity() {
             }
         }.attach()
         viewPager.offscreenPageLimit = 3
-        // ✅ Chuyển tab dựa vào oldFilterPeriod
         viewPager.currentItem = getTabPosition(filterOption.type)
 
         viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback(){
@@ -95,7 +93,7 @@ class StatisticListActivity : AppCompatActivity() {
                 val filterYear = FilterTransactions.filterTransactionGroupByYear(allTransactionGroup, currentDate)
 
                 filterOption = mapPositionToFilter(position, currentDate)
-                transactionViewModel.setFilter(filterOption.type, currentDate)
+                sharedViewModel.setFilter(filterOption.type, currentDate)
                 when (position) {
                     0 -> handleSummarySection(filterMonth)
                     1 -> handleSummarySection(filterYear)
@@ -106,55 +104,58 @@ class StatisticListActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.currentFilterDate.collect { date ->
-                    transactionViewModel.setFilter(filterOption.type, date)
-                    currentDate = date
-                    initialSummarySection(allTransactionGroup)
+                launch {
+                    sharedViewModel.currentFilterDate.collect { date ->
+                        sharedViewModel.setFilter(filterOption.type, date)
+                        currentDate = date
+                        initialSummarySection(allTransactionGroup)
+                    }
                 }
-            }
 
-            transactionViewModel.groupedTransactions.collect { groups ->
-                layoutControl.visibility = when(currentFilterPeriod) {
-                    FilterPeriodStatistic.Trend -> View.GONE
-                    else -> View.VISIBLE
+                launch {
+                    sharedViewModel.groupedTransactions.collect { groups ->
+                        layoutControl.visibility = when(currentFilterPeriod) {
+                            FilterPeriodStatistic.Trend -> View.GONE
+                            else -> View.VISIBLE
+                        }
+                        if (groups.isNotEmpty()) {
+                            if (allTransactionGroup.isEmpty()) {
+                                allTransactionGroup = groups
+                                initialSummarySection(groups)
+                                updateMonthTextList(filterOption, allTransactionGroup)
+                            } else {
+                                allTransactionGroup = groups
+                            }
+                        }
+                    }
                 }
-                if (groups.isNotEmpty()) {
-                    // chỉ chạy 1 lần để update summary khi mới có dữ liệu
-                    if (allTransactionGroup.isEmpty()) {
-                        allTransactionGroup = groups
-                        initialSummarySection(groups)
-                        updateMonthTextList(filterOption, allTransactionGroup)
-                    } else {
-                        allTransactionGroup = groups
+
+                launch {
+                    sharedViewModel.filterOption.collect { option ->
+                        imgBack.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
+                        imgNext.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
+                        layoutSummary.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
+                        updateMonthTextList(option, allTransactionGroup)
                     }
                 }
             }
-
-            transactionViewModel.filterOption.collect { option ->
-                imgBack.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
-                imgNext.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
-                layoutSummary.visibility = if(option.type == FilterPeriodStatistic.Yearly) View.GONE else View.VISIBLE
-                updateMonthTextList(option, allTransactionGroup)
-            }
         }
 
-        transactionViewModel.setCurrentFilterDate(Helper.formatDateFromFilterOptionToDateDaily(filterOption.date.toString()))
+        sharedViewModel.setCurrentFilterDate(Helper.formatDateFromFilterOptionToDateDaily(filterOption.date.toString()))
 
         imgBack.setOnClickListener {
             when(filterOption.type) {
-                FilterPeriodStatistic.Weekly -> transactionViewModel.changeMonth(-1)
-                FilterPeriodStatistic.Monthly -> transactionViewModel.changeYear(-1)
-                FilterPeriodStatistic.Yearly -> {}
-                else -> transactionViewModel.changeMonth(-1)
+                FilterPeriodStatistic.Weekly -> sharedViewModel.changeMonth(-1)
+                FilterPeriodStatistic.Monthly -> sharedViewModel.changeYear(-1)
+                else -> sharedViewModel.changeMonth(-1)
             }
         }
 
         imgNext.setOnClickListener {
             when(filterOption.type) {
-                FilterPeriodStatistic.Weekly -> transactionViewModel.changeMonth(1)
-                FilterPeriodStatistic.Monthly -> transactionViewModel.changeYear(1)
-                FilterPeriodStatistic.Yearly -> {}
-                else -> transactionViewModel.changeMonth(1)
+                FilterPeriodStatistic.Weekly -> sharedViewModel.changeMonth(1)
+                FilterPeriodStatistic.Monthly -> sharedViewModel.changeYear(1)
+                else -> sharedViewModel.changeMonth(1)
             }
         }
     }
@@ -190,41 +191,25 @@ class StatisticListActivity : AppCompatActivity() {
             FilterPeriodStatistic.Weekly -> {
                 val formatterFirst = DateTimeFormatter.ofPattern("dd/MM")
                 val formatterLast = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                // Ép tuần bắt đầu từ thứ Hai
                 val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
-                // Ngày đầu tiên của tháng
                 val firstDayOfMonth = LocalDate.of(filterOption.date.year, filterOption.date.month, 1)
-                // Ngày cuối cùng của tháng
                 val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
-
-                // Lùi về thứ Hai của tuần chứa ngày đầu tháng
                 val firstMonday = firstDayOfMonth.with(weekFields.dayOfWeek(), 1)
-
-                // Tiến tới Chủ Nhật của tuần chứa ngày cuối tháng
                 val lastSunday = lastDayOfMonth.with(weekFields.dayOfWeek(), 7)
-
                 "${firstMonday.format(formatterFirst)} ~ ${lastSunday.format(formatterLast)}"
             }
             FilterPeriodStatistic.Yearly -> getYearRangeFromTransactionGroups(groups)
-            FilterPeriodStatistic.List -> "Not code now"
-            FilterPeriodStatistic.Trend -> "Not code now"
+            else -> "N/A"
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getYearRangeFromTransactionGroups(groups: List<TransactionGroup>): String {
         if (groups.isEmpty()) return ""
-
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
-
         val minYear = groups.minOf { LocalDate.parse(it.date, formatter).year }
         val maxYear = groups.maxOf { LocalDate.parse(it.date, formatter).year }
-
-        return if (minYear == maxYear) {
-            "$minYear"
-        } else {
-            "$minYear ~ $maxYear"
-        }
+        return if (minYear == maxYear) "$minYear" else "$minYear ~ $maxYear"
     }
 
     private fun handleSummarySection(filtered: List<TransactionGroup>) {

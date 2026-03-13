@@ -19,13 +19,13 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class SearchActivity : AppCompatActivity() {
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
     private var selectedOption: FilterPeriodSearch = FilterPeriodSearch.All
     private var keySearch = ""
@@ -82,8 +82,8 @@ class SearchActivity : AppCompatActivity() {
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onTransactionClick(transaction: Transaction): Boolean {
-                if (transactionViewModel.selectionMode.value) {
-                    transactionViewModel.toggleTransactionSelection(transaction)
+                if (sharedViewModel.selectionMode.value) {
+                    sharedViewModel.toggleTransactionSelection(transaction)
                     transactionAdapter.notifyDataSetChanged()
                 } else {
                     Helper.openTransactionDetail(this@SearchActivity, transaction)
@@ -94,8 +94,8 @@ class SearchActivity : AppCompatActivity() {
 
         transactionAdapter.longClickListener = object: TransactionAdapter.OnTransactionLongClickListener{
             override fun onTransactionLongClick(transaction: Transaction): Boolean {
-                transactionViewModel.enterSelectionMode()
-                transactionViewModel.toggleTransactionSelection(transaction)
+                sharedViewModel.enterSelectionMode()
+                sharedViewModel.toggleTransactionSelection(transaction)
                 transactionAdapter.notifyDataSetChanged()
                 return true
             }
@@ -103,7 +103,7 @@ class SearchActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.selectionMode.collect { enable ->
+                sharedViewModel.selectionMode.collect { enable ->
                     layoutEdit.visibility = if (enable) View.VISIBLE else View.GONE
                 }
             }
@@ -111,7 +111,7 @@ class SearchActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.selectedTransactions.collect { selectedTransactionList ->
+                sharedViewModel.selectedTransactions.collect { selectedTransactionList ->
                     allSelectedTransactions = selectedTransactionList
                     tvSelectedEdit.text = "${selectedTransactionList.size} selected"
                     val selectedTransactions = transactions.filter { selectedTransactionList.contains(it) }
@@ -124,25 +124,25 @@ class SearchActivity : AppCompatActivity() {
         }
 
         transactionAdapter.isSelected = { transaction ->
-            transactionViewModel.selectionMode.value &&
-                    transactionViewModel.selectedTransactions.value.contains(transaction)
+            sharedViewModel.selectionMode.value &&
+                    sharedViewModel.selectedTransactions.value.contains(transaction)
         }
 
         btnCloseLayoutEdit.setOnClickListener {
-            transactionViewModel.exitSelectionMode()
+            sharedViewModel.exitSelectionMode()
             transactionAdapter.notifyDataSetChanged()
         }
 
         btnDeleteLayoutEdit.setOnClickListener {
             if (allSelectedTransactions.isNotEmpty()) {
-                transactionViewModel.deleteAll(allSelectedTransactions)
-                transactionViewModel.exitSelectionMode()
+                sharedViewModel.deleteAll(allSelectedTransactions)
+                sharedViewModel.exitSelectionMode()
             }
         }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.allTransactions.collect { transactionList ->
+                sharedViewModel.allTransactions.collect { transactionList ->
                     transactions = transactionList
                     transactionAdapter.transactions = transactionList
                     transactionAdapter.filter.filter(keySearch)
@@ -154,7 +154,6 @@ class SearchActivity : AppCompatActivity() {
                         contents
                     )
                     searchInput.setAdapter(arrayAdapter)
-                    // Khi người dùng chọn 1 gợi ý
                     searchInput.setOnItemClickListener { _, _, position, _ ->
                         val selected = arrayAdapter.getItem(position)
                         keySearch = selected.toString()
@@ -172,7 +171,6 @@ class SearchActivity : AppCompatActivity() {
         transactionAdapter.setOnFilterResultListener(object :
             TransactionAdapter.OnFilterResultListener {
             override fun onFilterResult(filteredList: List<Transaction>) {
-                // TODO: cập nhật UI khác nếu cần
                 var totalIncome = 0.0
                 var totalExpense = 0.0
                 for (tx in filteredList) {
@@ -253,7 +251,7 @@ class SearchActivity : AppCompatActivity() {
             bottomSheetDialog.dismiss()
         }
 
-        updateCheckMarks(selectedOption) // cập nhật ban đầu
+        updateCheckMarks(selectedOption)
 
         optionLayouts.forEach { (filterPeriod, layoutId) ->
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {

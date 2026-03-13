@@ -26,20 +26,18 @@ import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.color.MaterialColors
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.databinding.FragmentStatisticStatsBinding
 import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.CategoryTotal
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -55,14 +53,13 @@ class StatisticStatsFragment : Fragment() {
     private var filterOptionTemp : FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    private val transactionViewModel : TransactionViewModel by viewModels()
+    private val sharedViewModel : SharedTransactionViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentStatisticStatsBinding.inflate(inflater, container, false)
-        // Inflate the layout for this fragment
         return binding.root
     }
 
@@ -75,24 +72,26 @@ class StatisticStatsFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
                 launch {
-                    transactionViewModel.statisticCategoryType.collect { type ->
+                    sharedViewModel.statisticCategoryType.collect { type ->
                         updateCircleChart(type, filteredListTransaction)
                     }
                 }
-                launch { transactionViewModel.allTransactions.collect { transactionList->
-                    allTransactions = transactionList
+                launch { 
+                    sharedViewModel.allTransactions.collect { transactionList ->
+                        allTransactions = transactionList
                     }
                 }
 
-                launch { transactionViewModel.filterOption.collect { filterOption ->
-                    filterOptionTemp = filterOption
-                    getListUpdateChart(filterOption)
+                launch { 
+                    sharedViewModel.filterOption.collectLatest { filterOption ->
+                        filterOptionTemp = filterOption
+                        getListUpdateChart(filterOption)
                     }
                 }
 
                 launch {
-                    transactionViewModel.currentFilterDate.collect { filterDate ->
-                        transactionViewModel.setFilter(filterOptionTemp.type, filterDate)
+                    sharedViewModel.currentFilterDate.collect { filterDate ->
+                        sharedViewModel.setFilter(filterOptionTemp.type, filterDate)
                     }
                 }
             }
@@ -226,16 +225,15 @@ class StatisticStatsFragment : Fragment() {
             FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
             FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
             FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
-            FilterPeriodStatistic.List -> emptyList()
-            FilterPeriodStatistic.Trend -> emptyList()
+            else -> emptyList()
         }
-        transactionViewModel.setStatisticTransactionFilter(list)
+        sharedViewModel.setStatisticTransactionFilter(list)
         filteredListTransaction = list
-        currentStatType = transactionViewModel.statisticCategoryType.value ?: CategoryType.EXPENSE
+        currentStatType = sharedViewModel.statisticCategoryType.value
         if (filterOption.type == FilterPeriodStatistic.Trend) {
-            updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
+            updateLineChart(currentStatType, list)
         } else {
-            updateCircleChart(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn
+            updateCircleChart(currentStatType, list)
         }
     }
 }

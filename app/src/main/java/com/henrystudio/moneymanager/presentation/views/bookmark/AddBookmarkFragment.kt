@@ -19,15 +19,14 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AddBookmarkFragment : Fragment() {
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val transactionViewModel: SharedTransactionViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvNoData: TextView

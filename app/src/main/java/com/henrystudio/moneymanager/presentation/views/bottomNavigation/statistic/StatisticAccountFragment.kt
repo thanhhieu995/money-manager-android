@@ -14,10 +14,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
-import androidx.core.util.component1
-import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -30,20 +27,19 @@ import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.color.MaterialColors
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.databinding.FragmentStatisticAccountBinding
 import com.henrystudio.moneymanager.core.util.FilterTransactions
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.CategoryTotal
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -61,16 +57,15 @@ class StatisticAccountFragment : Fragment() {
     private var filterOptionTemp : FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    private val transactionViewModel : TransactionViewModel by viewModels()
+    private val sharedViewModel : SharedTransactionViewModel by activityViewModels()
     private lateinit var adapter: CategoryStatAdapter
     private var categoryType = CategoryType.EXPENSE
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentStatisticAccountBinding.inflate(inflater, container, false)
-        // Inflate the layout for this fragment
         return binding.root
     }
 
@@ -93,16 +88,22 @@ class StatisticAccountFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.combinedFilter.collect { (type, list) ->
-                    categoryType = type
-                    updateCircleChartByAccount(type, list)
+                launch {
+                    sharedViewModel.combinedFilter.collect { (type, list) ->
+                        categoryType = type
+                        updateCircleChartByAccount(type, list)
+                    }
                 }
-                transactionViewModel.allTransactions.collect { transactionList ->
-                    allTransactions = transactionList
+                launch {
+                    sharedViewModel.allTransactions.collect { transactionList ->
+                        allTransactions = transactionList
+                    }
                 }
-                transactionViewModel.filterOption.collect { filterOption ->
-                    filterOptionTemp = filterOption
-                    getListUpdateChart(filterOption)
+                launch {
+                    sharedViewModel.filterOption.collectLatest { filterOption ->
+                        filterOptionTemp = filterOption
+                        getListUpdateChart(filterOption)
+                    }
                 }
             }
         }
@@ -123,9 +124,8 @@ class StatisticAccountFragment : Fragment() {
             CategoryType.INCOME -> list.filter { it.isIncome }
         }
 
-        // 🟢 Nhóm theo account thay vì category
         val accountTotals = filtered
-            .groupBy { it.account ?: "Unknown" } // field accountName cần có trong Transaction
+            .groupBy { it.account }
             .map { (account, transactions) ->
                 CategoryTotal(
                     categoryName = account,
@@ -221,18 +221,22 @@ class StatisticAccountFragment : Fragment() {
             FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
             FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
             FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
-            FilterPeriodStatistic.List -> emptyList()
-            FilterPeriodStatistic.Trend -> emptyList()
+            else -> emptyList()
         }
-        transactionViewModel.setStatisticTransactionFilter(list)
+        sharedViewModel.setStatisticTransactionFilter(list)
         filteredListTransaction = list
-        currentStatType = transactionViewModel.statisticCategoryType.value ?: CategoryType.EXPENSE
+        currentStatType = sharedViewModel.statisticCategoryType.value
         if (filterOption.type == FilterPeriodStatistic.Trend) {
-            updateLineChart(currentStatType, list) // Hàm riêng để vẽ biểu đồ đường
+            updateLineChart(currentStatType, list)
         } else {
-            updateCircleChartByAccount(currentStatType, list) // Hàm biểu đồ tròn đã có sẵn
+            updateCircleChartByAccount(currentStatType, list)
         }
     }
 
     private fun updateLineChart(categoryType: CategoryType, list: List<Transaction>) {}
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

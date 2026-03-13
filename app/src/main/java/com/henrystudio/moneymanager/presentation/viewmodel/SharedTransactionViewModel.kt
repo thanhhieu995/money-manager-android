@@ -2,8 +2,8 @@ package com.henrystudio.moneymanager.presentation.viewmodel
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.core.util.Pair
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
@@ -27,18 +27,31 @@ import java.time.format.DateTimeFormatter
 import java.util.Collections.emptyList
 import javax.inject.Inject
 
+/**
+ * Shared transaction-level state and operations used across multiple screens
+ * (daily, monthly, statistics, search, etc.).
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
-class TransactionViewModel @Inject constructor (private val transactionUseCases: TransactionUseCases) : ViewModel() {
-    val allTransactions: Flow<List<Transaction>> = transactionUseCases.getTransactionsUseCase()
-    val groupedTransactions: StateFlow<List<TransactionGroup>> = transactionUseCases.getTransactionsGroupUseCase().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        emptyList()
-    )
-    @RequiresApi(Build.VERSION_CODES.O)
+class SharedTransactionViewModel @Inject constructor(
+    private val transactionUseCases: TransactionUseCases
+) : ViewModel() {
+
+    val allTransactions: StateFlow<List<Transaction>> =
+        transactionUseCases.getTransactionsUseCase().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+
+    val groupedTransactions: StateFlow<List<TransactionGroup>> =
+        transactionUseCases.getTransactionsGroupUseCase().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+
     private val _currentFilterDate = MutableStateFlow(LocalDate.now())
-    @RequiresApi(Build.VERSION_CODES.O)
     val currentFilterDate: StateFlow<LocalDate> = _currentFilterDate
 
     private val _currentDailyNavigateTabPosition = MutableStateFlow(0)
@@ -51,36 +64,38 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
     val selectedTransactions: StateFlow<List<Transaction>> = _selectedTransactions
 
     private val _navigateToWeekFromMonthly = MutableSharedFlow<Event<LocalDate>>()
-    val navigateToWeekFromMonthly: SharedFlow<Event<LocalDate>> = _navigateToWeekFromMonthly.asSharedFlow()
+    val navigateToWeekFromMonthly: SharedFlow<Event<LocalDate>> =
+        _navigateToWeekFromMonthly.asSharedFlow()
 
-    private val _filterOption = MutableStateFlow<FilterOption>(
+    private val _filterOption = MutableStateFlow(
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
     )
     val filterOption: StateFlow<FilterOption> = _filterOption
+
     private val _statisticCategoryType = MutableStateFlow(CategoryType.EXPENSE)
     val statisticCategoryType: StateFlow<CategoryType> = _statisticCategoryType
-    private val _statisticListTransactionFilter = MutableStateFlow<List<Transaction>>(emptyList())
-    val statisticListTransactionFilter : StateFlow<List<Transaction>> = _statisticListTransactionFilter
 
-    // noteFragment
-    val combinedFilter: Flow<Pair<CategoryType, List<Transaction>>> =  combine(
-        statisticCategoryType,
-        statisticListTransactionFilter
-    ) { type, list ->
-        Pair(type, list)
-    }
+    private val _statisticListTransactionFilter =
+        MutableStateFlow<List<Transaction>>(emptyList())
+    val statisticListTransactionFilter: StateFlow<List<Transaction>> =
+        _statisticListTransactionFilter
 
+    // Note screen: combined category type + filtered transactions
+    val combinedFilter: Flow<Pair<CategoryType, List<Transaction>>> =
+        combine(statisticCategoryType, statisticListTransactionFilter) { type, list ->
+            type to list
+        }
+
+    // Daily / Monthly screens: grouped transactions + currently selected date
     val combineGroupAndDate: Flow<Pair<List<TransactionGroup>, LocalDate>> =
-        combine(
-            groupedTransactions,
-            currentFilterDate
-        ) { transactions, date ->
-            Pair(transactions, date)
+        combine(groupedTransactions, currentFilterDate) { transactions, date ->
+            transactions to date
         }
 
     private val _currentStatisticTabPosition = MutableStateFlow(0)
     val currentStatisticTabPosition: StateFlow<Int> = _currentStatisticTabPosition
 
+    // CRUD operations
     fun insert(transaction: Transaction) = viewModelScope.launch {
         transactionUseCases.addTransactionUseCase(transaction)
     }
@@ -93,39 +108,37 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
         transactionUseCases.deleteAllTransactionsUseCase(transactionList)
     }
 
-    fun update(transaction: Transaction) = viewModelScope.launch{
-       transactionUseCases.updateTransactionsUseCase(transaction)
+    fun update(transaction: Transaction) = viewModelScope.launch {
+        transactionUseCases.updateTransactionsUseCase(transaction)
     }
 
     suspend fun getBookmarkedTransactions(): Flow<List<Transaction>> {
         return transactionUseCases.getBookmarkedTransactionsUseCase()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun setCurrentFilterDate(date: String) {
         val cleanedDate = date.substringBefore(" ")
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-        val localDate = LocalDate.parse(cleanedDate, formatter)
-
-        _currentFilterDate.value = localDate
+        try {
+            val localDate = LocalDate.parse(cleanedDate, formatter)
+            _currentFilterDate.value = localDate
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun setLocalDateCurrentFilterDate(localDate: LocalDate) {
         _currentFilterDate.value = localDate
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun changeWeek(offset: Long) {
         _currentFilterDate.value = _currentFilterDate.value.plusWeeks(offset)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun changeMonth(offset: Long) {
         _currentFilterDate.value = _currentFilterDate.value.plusMonths(offset)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun changeYear(offset: Long) {
         _currentFilterDate.value = _currentFilterDate.value.plusYears(offset)
     }
@@ -157,15 +170,13 @@ class TransactionViewModel @Inject constructor (private val transactionUseCases:
         clearSelection()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun navigateToWeekFromMonthly(date: LocalDate) {
-        _currentFilterDate.value = date.withDayOfMonth(date.dayOfMonth)
+        _currentFilterDate.value = date
         viewModelScope.launch {
-            _navigateToWeekFromMonthly.emit(Event(date)) // Dùng để scroll sau khi cập nhật
+            _navigateToWeekFromMonthly.emit(Event(date))
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun setFilter(type: FilterPeriodStatistic, date: LocalDate) {
         _filterOption.value = FilterOption(type, date)
     }

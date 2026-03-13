@@ -9,21 +9,17 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.henrystudio.moneymanager.databinding.FragmentYearlyBinding
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.local.AppDatabase
+import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.databinding.FragmentYearlyBinding
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
-import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
 import dagger.hilt.android.AndroidEntryPoint
@@ -39,14 +35,14 @@ class YearlyFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var noData: TextView
     private lateinit var adapter: YearlyAdapter
-    private var allTransactions: List<Transaction> = emptyList()
-    private val transactionViewModel : TransactionViewModel by viewModels()
+    
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentYearlyBinding.inflate(inflater, container, false)
-        // Inflate the layout for this fragment
         return binding.root
     }
 
@@ -64,8 +60,7 @@ class YearlyFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.allTransactions.collect { transactions ->
-                    allTransactions = transactions
+                sharedViewModel.allTransactions.collect { transactions ->
                     adapter.updateData(mapTransactionsToYearlyData(transactions))
                     noData.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
                 }
@@ -81,10 +76,10 @@ class YearlyFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun mapTransactionsToYearlyData(transactions: List<Transaction>): List<YearlyData> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
-        val outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy") // dạng hiển thị
+        val outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
         return transactions
-            .groupBy { LocalDate.parse(it.date, formatter).year } // group theo năm
+            .groupBy { LocalDate.parse(it.date, formatter).year }
             .map { (year, yearTransactions) ->
                 val income = yearTransactions.filter { it.isIncome }.sumOf { it.amount }
                 val expense = yearTransactions.filter { !it.isIncome }.sumOf { it.amount }
@@ -95,12 +90,17 @@ class YearlyFragment : Fragment() {
                 YearlyData(
                     name = year,
                     date = LocalDate.of(year, 1, 1),
-                    arrange = "$startDate ~ $endDate",  // ví dụ: 01/01/2025 - 31/12/2025
+                    arrange = "$startDate ~ $endDate",
                     income = income,
                     expense = expense,
                     total = income - expense
                 )
             }
             .sortedByDescending { it.name }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

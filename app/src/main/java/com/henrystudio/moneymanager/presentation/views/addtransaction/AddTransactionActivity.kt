@@ -22,8 +22,7 @@ import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.internal.DoubleCheck.lazy
@@ -50,7 +49,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
     val titleStack = ArrayDeque<String>()
 
-    private val viewModel: TransactionViewModel by viewModels()
+    private val viewModel: SharedTransactionViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")

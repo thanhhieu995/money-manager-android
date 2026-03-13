@@ -25,14 +25,13 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class BookmarkListFragment : Fragment() {
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val transactionViewModel: SharedTransactionViewModel by viewModels()
     private lateinit var adapter: BookmarkAdapter
     private lateinit var tvNoData: TextView
     private var isEditMode = false

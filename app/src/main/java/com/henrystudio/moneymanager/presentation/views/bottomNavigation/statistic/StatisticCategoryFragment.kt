@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -27,23 +26,19 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.LineChartPoint
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -53,6 +48,7 @@ import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
+import androidx.fragment.app.viewModels
 
 @AndroidEntryPoint
 class StatisticCategoryFragment : Fragment() {
@@ -93,15 +89,14 @@ class StatisticCategoryFragment : Fragment() {
     private var filterOptionPushChild: FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
-    val transactionViewModel: TransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
 
     private val categoryViewModel: CategoryViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
+    ): View {
         _binding = FragmentStatisticCategoryBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -130,17 +125,14 @@ class StatisticCategoryFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.selectionMode.collect { enabled ->
-                    lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
+                launch {
+                    sharedViewModel.selectionMode.collect { enabled ->
+                        lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
+                    }
                 }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
                 launch {
-                    transactionViewModel.allTransactions.collect { list ->
+                    sharedViewModel.allTransactions.collect { list ->
                         allTransactions = list
                         chartPoints = getCategoryLinePoints(
                             list,
@@ -148,7 +140,6 @@ class StatisticCategoryFragment : Fragment() {
                             categoryType == CategoryType.INCOME,
                             filterOptionTemp
                         )
-                        // Nếu view đã được tạo thì mới update chart
                         if (isAdded) {
                             refreshChart(chartPoints)
                         }
@@ -159,7 +150,7 @@ class StatisticCategoryFragment : Fragment() {
                     categoryViewModel.getAll().collect { list ->
                         allCategories = list
                         val name = categoryName.substringBefore("/")
-                        val nameOnly = name.replace(Regex("^[^\\p{L}\\p{N}]+"), "") // → "Transport"
+                        val nameOnly = name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
                         for (tx in allCategories) {
                             val txName = tx.name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
                             if (txName.trim() == nameOnly.trim()) {
@@ -170,7 +161,7 @@ class StatisticCategoryFragment : Fragment() {
                             categoryViewModel.getChildCategories(parentId)
                                 .collect { listChild ->
                                     listChildCategories = listChild
-                                    transactionViewModel.allTransactions.collect { listTransactions ->
+                                    sharedViewModel.allTransactions.collect { listTransactions ->
                                         listTransactionsFilterCategoryName =
                                             FilterTransactions.filterTransactionsByCategoryName(
                                                 listTransactions,
@@ -182,7 +173,7 @@ class StatisticCategoryFragment : Fragment() {
                                         )
                                         listChildCategoryStat = Helper.convertToCategoryStats(
                                             listChild,
-                                            transactionList ?: emptyList(),
+                                            transactionList,
                                             categoryType == CategoryType.INCOME,
                                             colors
                                         )
@@ -195,7 +186,6 @@ class StatisticCategoryFragment : Fragment() {
                                             layoutCategorySum.visibility = View.GONE
                                             recyclerView.visibility = View.GONE
                                             dailyContainer.visibility = View.VISIBLE
-                                            // Gửi category id hoặc name vào DailyFragment nếu cần
                                             val fragment = keyFilter?.let {
                                                 DailyFragment.newDailyInstance(
                                                     categoryName = categoryName,
@@ -216,7 +206,7 @@ class StatisticCategoryFragment : Fragment() {
                                     }
                                 }
                         } else if (keyFilter != null) {
-                            transactionViewModel.allTransactions.collect { listTransactions ->
+                            sharedViewModel.allTransactions.collect { listTransactions ->
                                 listTransactionsFilterCategoryName =
                                     FilterTransactions.filterTransactionsByNoteName(
                                         listTransactions,
@@ -227,7 +217,6 @@ class StatisticCategoryFragment : Fragment() {
                                     filterOptionTemp.date
                                 )
                             }
-                            // Gửi category id hoặc name vào DailyFragment nếu cần
                             val fragment = keyFilter?.let {
                                 DailyFragment.newDailyInstance(
                                     categoryName = categoryName,
@@ -248,21 +237,17 @@ class StatisticCategoryFragment : Fragment() {
                     }
                 }
 
-
                 launch {
-                    transactionViewModel.currentFilterDate.collect { date ->
+                    sharedViewModel.currentFilterDate.collect { date ->
                         filterOptionPushChild = FilterOption(filterOptionTemp.type, date)
                     }
                 }
             }
         }
 
-
-        transactionViewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
+        sharedViewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
 
         clickLineChart()
-
-
 
         monthBack.setOnClickListener {
             if (currentIndex > 0) {
@@ -278,7 +263,6 @@ class StatisticCategoryFragment : Fragment() {
             }
         }
 
-        // click into child category item
         adapter.onClickListener = { categoryStat ->
             (requireActivity() as StatisticCategoryActivity).titleStack.addLast(categoryName)
             val titleCurrent = (requireActivity() as StatisticCategoryActivity).titleCurrent
@@ -288,7 +272,6 @@ class StatisticCategoryFragment : Fragment() {
                 titleIncoming,
                 categoryStat.name
             )
-            // Gửi category id hoặc name vào DailyFragment nếu cần
             val fragment = StatisticCategoryFragment()
             val bundle = Bundle().apply {
                 putSerializable("item_click_statistic_category_name", categoryStat.name)
@@ -296,15 +279,13 @@ class StatisticCategoryFragment : Fragment() {
                 putSerializable("item_click_statistic_filterOption", filterOptionPushChild)
                 putSerializable("item_click_statistic_keyWord", KeyFilter.CategorySub)
             }
-            fragment.apply {
-                arguments = bundle
-            }
+            fragment.arguments = bundle
             parentFragmentManager.beginTransaction()
                 .setCustomAnimations(
-                    R.anim.slide_in_right,  // enter
-                    R.anim.no_animation,    // exit
-                    R.anim.no_animation,    // popEnter (khi quay lại)
-                    R.anim.slide_out_right  // popExit (khi quay lại)
+                    R.anim.slide_in_right,
+                    R.anim.no_animation,
+                    R.anim.no_animation,
+                    R.anim.slide_out_right
                 )
                 .replace(R.id.activity_statistic_category_container, fragment)
                 .addToBackStack(null)
@@ -328,20 +309,7 @@ class StatisticCategoryFragment : Fragment() {
                     val month = Month.of(point.label.toInt())
                     month.getDisplayName(TextStyle.FULL, appLocale)
                 }
-                FilterPeriodStatistic.Weekly -> {
-                    point.label
-                }
-                FilterPeriodStatistic.Yearly -> {
-                    point.label
-                }
-                FilterPeriodStatistic.List -> {
-                    val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, appLocale)
-                }
-                FilterPeriodStatistic.Trend -> {
-                    val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, appLocale)
-                }
+                else -> point.label
             }
         }
 
@@ -357,14 +325,13 @@ class StatisticCategoryFragment : Fragment() {
         val lineData = LineData(dataSet)
         lineChart.data = lineData
 
-        // Cấu hình trục X
         with(lineChart.xAxis) {
-            position = XAxis.XAxisPosition.BOTTOM  // 👈 chuyển xuống dưới
-            valueFormatter = IndexAxisValueFormatter(labels) // 👈 dùng nhãn tháng
+            position = XAxis.XAxisPosition.BOTTOM
+            valueFormatter = IndexAxisValueFormatter(labels)
             granularity = 1f
             setDrawGridLines(false)
             textSize = 12f
-            labelRotationAngle = 0f // hoặc 45f nếu label dài
+            labelRotationAngle = 0f
             textColor = textColorTheme
         }
 
@@ -378,12 +345,11 @@ class StatisticCategoryFragment : Fragment() {
         lineChart.setPinchZoom(true)
 
         lineChart.xAxis.isGranularityEnabled = true
-        lineChart.xAxis.granularity = 1f // mỗi bước 1 label
-        lineChart.setVisibleXRangeMaximum(5f) // CHỈ HIỆN 5 điểm 1 lần
+        lineChart.xAxis.granularity = 1f
+        lineChart.setVisibleXRangeMaximum(5f)
 
-        // Các thiết lập khác (nếu cần)
-        lineChart.axisRight.isEnabled = false // tắt trục Y bên phải
-        lineChart.description.isEnabled = false // tắt description mặc định
+        lineChart.axisRight.isEnabled = false
+        lineChart.description.isEnabled = false
         lineChart.legend.isEnabled = false
         lineChart.invalidate()
     }
@@ -432,11 +398,10 @@ class StatisticCategoryFragment : Fragment() {
         val grouped: Map<String, List<Transaction>> = when (filterOption.type) {
             FilterPeriodStatistic.Weekly -> {
                 val targetYear = filterOption.date.year
-                // Nhóm theo ngày (dd/MM)
                 filtered.filter {
                     val dateSub = it.date.substringBefore(" ")
                     val date = LocalDate.parse(dateSub, formatter)
-                    date.with(DayOfWeek.MONDAY).year == targetYear // 🟢 chỉ lấy giao dịch trong năm cần
+                    date.with(DayOfWeek.MONDAY).year == targetYear
                 }
                     .groupBy {
                         val dateSub = it.date.substringBefore(" ")
@@ -447,7 +412,6 @@ class StatisticCategoryFragment : Fragment() {
 
             FilterPeriodStatistic.Monthly -> {
                 val targetYear = filterOption.date.year
-                // Nhóm theo tháng trong năm (Tháng 1, Tháng 2, ...)
                 filtered.filter {
                     val dateSub = it.date.substringBefore(" ")
                     val date = LocalDate.parse(dateSub, formatter)
@@ -461,21 +425,13 @@ class StatisticCategoryFragment : Fragment() {
             }
 
             FilterPeriodStatistic.Yearly -> {
-                // Nhóm theo năm
                 filtered.groupBy {
                     val dateSub = it.date.substringBefore(" ")
                     val date = LocalDate.parse(dateSub, formatter)
                     date.year.toString()
                 }
             }
-            FilterPeriodStatistic.Trend -> {
-                filtered.groupBy {
-                    val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter)
-                    date.year.toString()
-                }
-            }
-            FilterPeriodStatistic.List -> {
+            else -> {
                 filtered.groupBy {
                     val dateSub = it.date.substringBefore(" ")
                     val date = LocalDate.parse(dateSub, formatter)
@@ -502,9 +458,9 @@ class StatisticCategoryFragment : Fragment() {
                     if (localDate.year == now.year) {
                         filterOption.date
                     } else {
-                        LocalDate.of(localDate.year, 12, 31) // năm cũ -> ngày cuối năm
+                        LocalDate.of(localDate.year, 12, 31)
                     }
-                }   // đại diện cho cuối năm
+                }
                 else -> localDate
             }
 
@@ -530,24 +486,22 @@ class StatisticCategoryFragment : Fragment() {
             override fun onValueSelected(e: Entry?, h: Highlight?) {
                 if (e == null) return
 
-                val xIndex = e.x.toInt() // Vị trí trên trục X
+                val xIndex = e.x.toInt()
                 updateDateList(xIndex)
                 showChartAt(xIndex)
             }
 
-            override fun onNothingSelected() {
-            }
+            override fun onNothingSelected() {}
         })
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showChartAt(index: Int) {
         val point = chartPoints[index]
-        transactionViewModel.setLocalDateCurrentFilterDate(point.date)
+        sharedViewModel.setLocalDateCurrentFilterDate(point.date)
 
         monthText.text = getMonthText(index)
 
-        // Enable / disable back/next button
         binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
         binding.fragmentStatisticCategoryMonthNext.isEnabled = index < chartPoints.lastIndex
     }
@@ -578,9 +532,7 @@ class StatisticCategoryFragment : Fragment() {
     private fun highlightChartPoint(index: Int) {
         val dataSet = lineChart.data.getDataSetByIndex(0) as LineDataSet
 
-        // Đổi màu highlight line
         dataSet.highLightColor = colorSetLine
-        // Đổi màu vòng tròn của tất cả điểm
         dataSet.setCircleColor(colorSetLine)
 
         lineChart.highlightValue(Highlight(index.toFloat(), 0f, 0))
@@ -610,7 +562,6 @@ class StatisticCategoryFragment : Fragment() {
             currentIndex = index
             highlightChartPoint(index)
         } else {
-            // Optional: chọn điểm gần nhất trước hôm nay
             val fallbackIndex = chartPoints.indexOfLast { it.date.isBefore(localDate) }
             if (fallbackIndex != -1) {
                 currentIndex = fallbackIndex
@@ -620,7 +571,8 @@ class StatisticCategoryFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateDateList(index: Int) { val point = chartPoints.getOrNull(index)
+    private fun updateDateList(index: Int) { 
+        val point = chartPoints.getOrNull(index)
         currentIndex = index
         transactionList = point?.let { getListTransactionsFilterType( listTransactionsFilterCategoryName, filterOptionTemp, it.date ) } ?: emptyList()
         listChildCategoryStat = Helper.convertToCategoryStats( listChildCategories, transactionList, categoryType == CategoryType.INCOME, colors )
@@ -685,7 +637,6 @@ class StatisticCategoryFragment : Fragment() {
                 categoryType == CategoryType.INCOME,
                 filterOptionTemp
             )
-        // Cập nhật UI an toàn
         if (isAdded && view != null) {
             refreshChart(chartPoints)
         }
@@ -704,5 +655,10 @@ class StatisticCategoryFragment : Fragment() {
         val theme = requireContext().theme
         theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

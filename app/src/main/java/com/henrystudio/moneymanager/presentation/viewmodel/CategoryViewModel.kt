@@ -5,30 +5,43 @@ import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
-import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor (private val categoryUseCases: CategoryUseCases) : ViewModel() {
 
-    fun getParentCategories(type: CategoryType): Flow<List<Category>> {
-        return categoryUseCases.getParentCategories(type)
-    }
+    fun getParentCategories(type: CategoryType): StateFlow<List<Category>> =
+        categoryUseCases.getParentCategories(type).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    fun getChildCategories(parentId: Int): Flow<List<Category>> {
-        return categoryUseCases.getChildCategories(parentId)
-    }
+    fun getChildCategories(parentId: Int): StateFlow<List<Category>> =
+        categoryUseCases.getChildCategories(parentId).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    fun getAll() : Flow<List<Category>> {
-        return categoryUseCases.getAllCategories()
-    }
+    fun getAll(): StateFlow<List<Category>> =
+        categoryUseCases.getAllCategories().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    fun getCategoriesByType(type: CategoryType): Flow<List<Category>> {
-        return categoryUseCases.getCategoriesByType(type)
-    }
+    fun getCategoriesByType(type: CategoryType): StateFlow<List<Category>> =
+        categoryUseCases.getCategoriesByType(type).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun insert(category: Category) = viewModelScope.launch {
         categoryUseCases.insertCategory(category)

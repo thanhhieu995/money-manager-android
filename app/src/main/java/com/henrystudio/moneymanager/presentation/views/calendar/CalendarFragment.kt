@@ -2,9 +2,7 @@ package com.henrystudio.moneymanager.presentation.views.calendar
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
@@ -16,7 +14,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -28,10 +25,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentCalendarBinding
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.local.AppDatabase
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -46,13 +40,14 @@ class CalendarFragment : Fragment() {
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
     private lateinit var calendarResume: Calendar
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentCalendarBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -63,7 +58,6 @@ class CalendarFragment : Fragment() {
         val bgColor = getAttrColor(android.R.attr.colorBackground)
         binding.calendarView.setBackgroundColor(bgColor)
 
-        // Đổi màu chữ ngày, tiêu đề theo theme
         binding.calendarView.setHeaderColor(bgColor)
         binding.calendarView.setHeaderLabelColor(getAttrColor(android.R.attr.textColorPrimary))
         binding.calendarView.setBackgroundColor(getAttrColor(android.R.attr.textColorSecondary))
@@ -72,7 +66,8 @@ class CalendarFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    transactionViewModel.groupedTransactions.collect { list ->
+                    sharedViewModel.groupedTransactions.collect { list ->
+                        events.clear()
                         for (group in list) {
                             val calendar = Calendar.getInstance()
                             calendar.time =
@@ -91,10 +86,10 @@ class CalendarFragment : Fragment() {
                 }
 
                 launch {
-                    transactionViewModel.currentFilterDate.collect { date ->
+                    sharedViewModel.currentFilterDate.collect { date ->
                         val calendar = Calendar.getInstance().apply {
                             set(Calendar.YEAR, date.year)
-                            set(Calendar.MONTH, date.monthValue - 1) // Vì Calendar.MONTH bắt đầu từ 0
+                            set(Calendar.MONTH, date.monthValue - 1)
                             set(Calendar.DAY_OF_MONTH, 1)
                         }
                         calendarResume = calendar
@@ -121,7 +116,9 @@ class CalendarFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        binding.calendarView.setDate(calendarResume)
+        if (::calendarResume.isInitialized) {
+            binding.calendarView.setDate(calendarResume)
+        }
     }
 
     private fun createEventDrawable(
@@ -140,8 +137,7 @@ class CalendarFragment : Fragment() {
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )
         view.layout(0, 0, view.measuredWidth, view.measuredHeight)
-        val bitmap =
-            createBitmap(view.measuredWidth, view.measuredHeight)
+        val bitmap = createBitmap(view.measuredWidth, view.measuredHeight)
         val canvas = Canvas(bitmap)
         view.draw(canvas)
         return bitmap.toDrawable(context.resources)
@@ -165,14 +161,14 @@ class CalendarFragment : Fragment() {
 
         val noDataText = dialogView.findViewById<TextView>(R.id.item_day_calendar_noData)
 
-        val groupTransaction = transactionViewModel.groupedTransactions.value.filter {
+        val groupTransaction = sharedViewModel.groupedTransactions.value.filter {
             val transactionDate = sdf.parse(it.date)
             transactionDate?.let { it1 -> sdf.format(it1) } == dateString
         }
 
         adapter.submitList(groupTransaction)
         noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE
-        adapter.onTransactionClick = {transaction ->
+        adapter.onTransactionClick = { transaction ->
             Helper.openTransactionDetail(requireContext(), transaction)
             true
         }
@@ -187,5 +183,8 @@ class CalendarFragment : Fragment() {
         return typedValue.data
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }
-

@@ -14,8 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.TransactionViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.DailyViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.fragment.app.activityViewModels
@@ -24,14 +24,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
-import com.henrystudio.moneymanager.data.local.AppDatabase
-import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
-import com.henrystudio.moneymanager.presentation.model.FilterOption
-import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
@@ -48,18 +43,13 @@ class DailyFragment : Fragment() {
     private lateinit var adapter: TransactionGroupAdapter
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
-    private var transactionGroupListFilter: List<TransactionGroup> = emptyList()
-    private var allTransactions: List<TransactionGroup> = emptyList()
-    private var month: LocalDate? = null
+    private var currentList: List<TransactionGroup> = emptyList()
     private var selectedList: List<Transaction> = emptyList()
     private var keyFilter: KeyFilter = KeyFilter.CategoryParent
-    private var categoryType : CategoryType = CategoryType.EXPENSE
+    private var categoryType: CategoryType = CategoryType.EXPENSE
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOption: FilterOption =
-        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-
-    private val transactionViewModel: TransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val viewModel: DailyViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -83,7 +73,7 @@ class DailyFragment : Fragment() {
         binding.transactionList.adapter = adapter
 
         val decoration = StickyHeaderItemDecoration(
-            isHeader = { position -> true }, // mọi item đều có header riêng
+            isHeader = { position -> true },
             createHeaderView = {
                 LayoutInflater.from(requireContext())
                     .inflate(R.layout.item_transaction_header, binding.transactionList, false)
@@ -91,110 +81,113 @@ class DailyFragment : Fragment() {
             bindHeader = { header, position ->
                 val group = adapter.getGroupAt(position)
                 val headerText = header.findViewById<TextView>(R.id.item_transaction_header_date)
-                val headerIncome =
-                    header.findViewById<TextView>(R.id.item_transaction_header_income)
-                val headerExpense =
-                    header.findViewById<TextView>(R.id.item_transaction_header_expense)
+                val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
+                val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
 
-                // group.date đang là "13/05/25 (Tue)"
-                val cleanedDate = group.date.substringBefore(" ") // "13/05/25"
-
+                val cleanedDate = group.date.substringBefore(" ")
                 val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
                 val localDate = LocalDate.parse(cleanedDate, inputFormatter)
-
-                // Locale hiện tại app đang dùng
                 val currentLocale = requireContext().resources.configuration.locales[0]
 
                 val dayPart = localDate.format(DateTimeFormatter.ofPattern("dd", currentLocale))
-                val dayOfWeek = localDate.format(
-                    DateTimeFormatter.ofPattern(
-                        "EEE",
-                        currentLocale
-                    )
-                ) // thứ, ngôn ngữ theo locale
+                val dayOfWeek = localDate.format(DateTimeFormatter.ofPattern("EEE", currentLocale))
                 headerText.text = "$dayPart $dayOfWeek"
                 headerIncome.text = Helper.formatCurrency(group.income)
                 headerExpense.text = Helper.formatCurrency(group.expense)
             }
         )
-
         binding.transactionList.addItemDecoration(decoration)
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    transactionViewModel.filterOption.collect { option ->
-                        filterOption = option
-                        transactionViewModel.combineGroupAndDate.collect { (transactions, selectedMonth) ->
-                            updateAllTransactions(transactions, categoryName, categoryType)
-                            filterAndDisplay(selectedMonth)
+                    sharedViewModel.filterOption.collect { option ->
+                        sharedViewModel.combineGroupAndDate.collect { (transactions, selectedMonth) ->
+                            viewModel.updateData(
+                                transactions = transactions,
+                                filterOption = option,
+                                selectedMonth = selectedMonth,
+                                categoryName = categoryName,
+                                categoryType = categoryType,
+                                keyFilter = keyFilter,
+                                isFromMainActivity = requireActivity() is MainActivity
+                            )
                         }
                     }
                 }
 
                 launch {
-                    transactionViewModel.combineGroupAndDate.collect { (transactions, selectedMonth) ->
-                        updateAllTransactions(transactions, categoryName, categoryType)
-                        filterAndDisplay(selectedMonth)
+                    viewModel.uiState.collect { uiState ->
+                        currentList = uiState.transactions
+                        adapter.setFilterYear(uiState.isYearly)
+                        adapter.submitList(uiState.transactions)
+                        binding.noDataText.visibility = if (uiState.isEmpty) View.VISIBLE else View.GONE
+
+                        if (SharedTransactionHolder.scrollToAddedTransaction) {
+                            val targetPosition = findPositionForDate(uiState.transactions, uiState.selectedDate)
+                            if (targetPosition >= 0) {
+                                binding.transactionList.scrollToPosition(targetPosition)
+                            }
+                            SharedTransactionHolder.scrollToAddedTransaction = false
+                        }
+                    }
+                }
+
+                launch {
+                    sharedViewModel.selectedTransactions.collect { selectedTransactions ->
+                        if (selectedTransactions.isEmpty()) {
+                            for (tx in selectedList) {
+                                val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
+                                childAdapter.updateTransaction(tx)
+                            }
+                        } else {
+                            val added = selectedTransactions.filterNot { selectedList.contains(it) }
+                            val removed = selectedList.filterNot { selectedTransactions.contains(it) }
+
+                            for (tx in added + removed) {
+                                val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
+                                childAdapter.updateTransaction(tx)
+                            }
+                        }
+
+                        selectedList = selectedTransactions
+                        viewModel.updateSelection(
+                            selectionMode = sharedViewModel.selectionMode.value,
+                            selectedTransactions = selectedTransactions
+                        )
                     }
                 }
             }
         }
 
         adapter.onTransactionLongClick = { transaction ->
-            transactionViewModel.enterSelectionMode()
-            transactionViewModel.toggleTransactionSelection(transaction)
+            sharedViewModel.enterSelectionMode()
+            sharedViewModel.toggleTransactionSelection(transaction)
             updateTransactionItem(transaction)
             true
         }
 
         adapter.onTransactionClick = { transaction ->
-            if (transactionViewModel.selectionMode.value) {
-                transactionViewModel.toggleTransactionSelection(transaction)
+            if (sharedViewModel.selectionMode.value) {
+                sharedViewModel.toggleTransactionSelection(transaction)
                 updateTransactionItem(transaction)
             } else {
-                // Mở màn hình sửa
                 Helper.openTransactionDetail(requireContext(), transaction)
             }
             true
         }
 
-        // click to change color choose transaction
         adapter.isTransactionSelected = { transaction ->
-            val mode = transactionViewModel.selectionMode.value
-            val selectedList = transactionViewModel.selectedTransactions.value
+            val mode = sharedViewModel.selectionMode.value
+            val selectedList = sharedViewModel.selectedTransactions.value
             val selected = selectedList.any { it.id == transaction.id }
             mode && selected
         }
 
-        // Click close edit layout change color item transaction
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.selectedTransactions.collect { selectedTransactions ->
-                    if (selectedTransactions.isEmpty()) {
-                        for (tx in selectedList) {
-                            val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
-                            childAdapter.updateTransaction(tx)
-                        }
-                    } else {
-                        val added = selectedTransactions.filterNot { selectedList.contains(it) }
-                        val removed = selectedList.filterNot { selectedTransactions.contains(it) }
-
-                        for (tx in added + removed) {
-                            val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
-                            childAdapter.updateTransaction(tx)
-                        }
-                    }
-
-                    selectedList = selectedTransactions
-                }
-            }
-        }
-
-        val lastDate = loadLastDate(requireContext()) // hàm tự viết lấy từ SharedPreferences
+        val lastDate = loadLastDate(requireContext())
         if (lastDate != null && !SharedTransactionHolder.navigateFromMonthly) {
             binding.transactionList.post {
-                val position = findPositionForDate(getFilterListGroupTransaction(lastDate), lastDate)
+                val position = findPositionForDate(currentList, lastDate)
                 if (position != -1) {
                     (binding.transactionList.layoutManager as LinearLayoutManager)
                         .scrollToPositionWithOffset(position, 0)
@@ -205,7 +198,7 @@ class DailyFragment : Fragment() {
         binding.transactionList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) { // chỉ khi user dừng scroll
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     val lm = recyclerView.layoutManager as LinearLayoutManager
                     val firstPos = lm.findFirstVisibleItemPosition()
                     if (firstPos != RecyclerView.NO_POSITION) {
@@ -213,13 +206,11 @@ class DailyFragment : Fragment() {
                         val cleanedDate = txGroup.date.substringBefore(" ")
                         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
                         val date = LocalDate.parse(cleanedDate, formatter)
-
                         saveLastDate(requireContext(), date)
                     }
                 }
             }
         })
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -227,19 +218,19 @@ class DailyFragment : Fragment() {
         super.onResume()
         val dateShare = SharedTransactionHolder.currentFilterDate
         if (dateShare != null) {
-            transactionViewModel.setCurrentFilterDate(dateShare)
+            sharedViewModel.setCurrentFilterDate(dateShare)
             SharedTransactionHolder.currentFilterDate = null
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun scrollToWeek(weekStart: LocalDate) {
-        val matchedIndex = findPositionForDate(getFilterListGroupTransaction(weekStart), weekStart)
+        val matchedIndex = findPositionForDate(currentList, weekStart)
         if (matchedIndex != -1) {
             binding.transactionList.scrollToPosition(matchedIndex)
             saveLastDate(requireContext(), weekStart)
         }
-        SharedTransactionHolder.navigateFromMonthly = false // 🟡 reset flag
+        SharedTransactionHolder.navigateFromMonthly = false
     }
 
     override fun onDestroyView() {
@@ -248,15 +239,13 @@ class DailyFragment : Fragment() {
     }
 
     private fun updateTransactionItem(transaction: Transaction) {
-        // Tìm group chứa transaction
-        val groupIndex = transactionGroupListFilter.indexOfFirst { group ->
+        val groupIndex = currentList.indexOfFirst { group ->
             group.transactions.contains(transaction)
         }
         if (groupIndex != -1) {
-            val group = transactionGroupListFilter[groupIndex]
+            val group = currentList[groupIndex]
             val transactionIndex = group.transactions.indexOf(transaction)
-
-            val childAdapter = adapter.getChildAdapterForGroup(group.date) // custom method
+            val childAdapter = adapter.getChildAdapterForGroup(group.date)
             if (childAdapter != null && transactionIndex != -1) {
                 childAdapter.notifyItemChanged(transactionIndex)
             }
@@ -286,102 +275,6 @@ class DailyFragment : Fragment() {
             args.putSerializable(ARG_CATEGORY_TYPE, categoryType)
             fragment.arguments = args
             return fragment
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateAllTransactions(transactions: List<TransactionGroup>, categoryName: String?, categoryType: CategoryType) {
-        allTransactions = if (categoryName != null) {
-            val isInCome = categoryType == CategoryType.INCOME
-            transactions.mapNotNull { group ->
-                val filteredTransactions = when (keyFilter) {
-                    KeyFilter.CategoryParent -> {
-                        group.transactions.filter {
-                            it.categoryParentName.equals(categoryName, ignoreCase = true)
-                        }
-                    }
-                    KeyFilter.CategorySub -> {
-                        group.transactions.filter {
-                            it.categorySubName.trim().equals(categoryName.trim(), ignoreCase = true)
-                        }
-                    }
-                    KeyFilter.Note -> {
-                        group.transactions.filter {
-                            it.note.trim().equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isInCome
-                        }
-                    }
-                    KeyFilter.Account -> {
-                        group.transactions.filter {
-                            it.account.trim().equals(categoryName.trim(), ignoreCase = true)
-                        }
-                    }
-                    else -> group.transactions.filter { it.isIncome == isInCome }
-                }
-
-                if (filteredTransactions.isNotEmpty()) {
-                    group.copy(
-                        income = filteredTransactions.filter { it.isIncome }.sumOf { it.amount },
-                        expense = filteredTransactions.filter { !it.isIncome }.sumOf { it.amount },
-                        transactions = filteredTransactions
-                    )
-                } else null
-            }
-        } else {
-            transactions
-        }
-        val filteredList =
-            month?.let { FilterTransactions.filterTransactionGroupByMonth(allTransactions, it) }
-                ?: emptyList()
-        transactionGroupListFilter = filteredList
-        adapter.submitList(filteredList)
-        binding.noDataText.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun filterAndDisplay(selectedMonth: LocalDate) {
-        val firstDayOfMonth = LocalDate.of(selectedMonth.year, selectedMonth.month, 1)
-        val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
-        month = lastDayOfMonth
-        val filtered = getFilterListGroupTransaction(selectedMonth)
-        adapter.submitList(filtered)
-        binding.noDataText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-
-        if (SharedTransactionHolder.scrollToAddedTransaction) {
-            // 🟡 Scroll đến ngày vừa thêm
-            val targetPosition = findPositionForDate(filtered, selectedMonth)
-            if (targetPosition >= 0) {
-                binding.transactionList.scrollToPosition(targetPosition)
-            }
-            SharedTransactionHolder.scrollToAddedTransaction = false
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getFilterListGroupTransaction(selectedMonth: LocalDate): List<TransactionGroup> {
-        val firstDayOfMonth = LocalDate.of(selectedMonth.year, selectedMonth.month, 1)
-        val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
-        return if (requireActivity() is MainActivity) {
-            adapter.setFilterYear(false)
-            FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
-        } else {
-            when (filterOption.type) {
-                FilterPeriodStatistic.Weekly -> {
-                    adapter.setFilterYear(false)
-                    FilterTransactions.filterTransactionGroupByWeek(allTransactions, selectedMonth)
-                }
-                FilterPeriodStatistic.Monthly -> {
-                    adapter.setFilterYear(false)
-                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
-                }
-                FilterPeriodStatistic.Yearly -> {
-                    adapter.setFilterYear(true)
-                    FilterTransactions.filterTransactionGroupByYear(allTransactions, lastDayOfMonth)
-                }
-                else -> {
-                    adapter.setFilterYear(false)
-                    FilterTransactions.filterTransactionGroupByMonth(allTransactions, lastDayOfMonth)
-                }
-            }
         }
     }
 }
