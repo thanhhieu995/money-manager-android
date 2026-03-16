@@ -1,13 +1,14 @@
-package com.henrystudio.moneymanager.presentation.viewmodel
+package com.henrystudio.moneymanager.presentation.views.addtransaction
 
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
-import com.henrystudio.moneymanager.presentation.views.addtransaction.SaveResult
+import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -31,75 +32,41 @@ class AddTransactionViewModel @Inject constructor(
     val uiState: StateFlow<AddTransactionUiState> = _uiState.asStateFlow()
 
     init {
-        loadNoteSuggestions()
-    }
-
-    private fun loadNoteSuggestions() {
         viewModelScope.launch {
-            transactionUseCases.getTransactionsUseCase().collect { transactions ->
-                val suggestions = transactions.map { it.note }.distinct()
-                _uiState.update { it.copy(noteSuggestions = suggestions) }
-            }
-        }
-    }
-
-    fun getFormattedDateToday(): String {
-        val currentDate = Calendar.getInstance().time
-        val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Helper.getAppLocale())
-        return dateFormat.format(currentDate)
-    }
-
-    fun formatPickedDate(year: Int, month: Int, day: Int): String {
-        val calendar = Calendar.getInstance()
-        calendar.set(year, month, day)
-        val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Helper.getAppLocale())
-        return dateFormat.format(calendar.time)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun parseDisplayDateToLocalDate(dateStr: String): LocalDate? {
-        return try {
-            val inputLocale = Helper.getAppLocale()
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", inputLocale)
-            LocalDate.parse(dateStr, inputFormatter)
-        } catch (e: Exception) {
-            null
+            transactionUseCases.getTransactionsUseCase()
+                .map { list -> list.map { it.note }.distinct() }
+                .collect { suggestions ->
+                    _uiState.update { it.copy(noteSuggestions = suggestions) }
+                }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun saveTransaction(
-        amountStr: String,
-        categoryStr: String,
-        accountStr: String,
-        noteStr: String,
-        dateStr: String,
-        isIncome: Boolean,
-        existingTransaction: Transaction?,
-        closeAfterSave: Boolean
+        params: SaveTransactionParams
     ) {
-        if (categoryStr.isEmpty() || accountStr.isEmpty()) {
+        if (params.category.isEmpty() || params.account.isEmpty()) {
             _uiState.update { it.copy(saveResult = SaveResult.Error("fill_required")) }
             return
         }
 
-        val amount = amountStr.replace("[^\\d]".toRegex(), "").toDoubleOrNull() ?: 0.0
-        val categoryParts = Helper.splitCategoryName(categoryStr)
+        val amount = params.amount.replace("[^\\d]".toRegex(), "").toDoubleOrNull() ?: 0.0
+        val categoryParts = Helper.splitCategoryName(params.category)
         
-        val localDate = parseDisplayDateToLocalDate(dateStr) ?: LocalDate.now()
+        val localDate = parseDisplayDateToLocalDate(params.date) ?: LocalDate.now()
         val englishFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
         val dateForDb = localDate.format(englishFormatter)
 
         viewModelScope.launch {
             try {
-                if (existingTransaction != null) {
-                    val updated = existingTransaction.copy(
+                if (params.existing != null) {
+                    val updated = params.existing.copy(
                         categoryParentName = categoryParts.parent,
                         categorySubName = categoryParts.sub,
-                        note = noteStr.trim(),
-                        account = accountStr,
+                        note = params.note.trim(),
+                        account = params.account,
                         amount = amount,
-                        isIncome = isIncome,
+                        isIncome = params.isIncome,
                         date = dateForDb
                     )
                     transactionUseCases.updateTransactionsUseCase(updated)
@@ -108,15 +75,15 @@ class AddTransactionViewModel @Inject constructor(
                         title = "",
                         categoryParentName = categoryParts.parent,
                         categorySubName = categoryParts.sub,
-                        note = noteStr.trim(),
-                        account = accountStr,
+                        note = params.note.trim(),
+                        account = params.account,
                         amount = amount,
-                        isIncome = isIncome,
+                        isIncome = params.isIncome,
                         date = dateForDb
                     )
                     transactionUseCases.addTransactionUseCase(newTransaction)
                 }
-                _uiState.update { it.copy(saveResult = SaveResult.Success(closeAfterSave)) }
+                _uiState.update { it.copy(saveResult = SaveResult.Success(params.closeAfterSave)) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(saveResult = SaveResult.Error(e.message ?: "Unknown Error")) }
             }

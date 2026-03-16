@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,8 +28,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.button.MaterialButton
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.getFormattedDateToday
+import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.data.model.Account
@@ -36,13 +40,12 @@ import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
+import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.AddTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
-import com.henrystudio.moneymanager.presentation.views.addtransaction.SaveResult
-import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -113,7 +116,7 @@ class AddTransactionFragment : Fragment() {
             false
         }
 
-        formattedDate = viewModel.getFormattedDateToday()
+        formattedDate = getFormattedDateToday()
 
         handleToAddTransaction()
 
@@ -124,7 +127,7 @@ class AddTransactionFragment : Fragment() {
             val day = calendar.get(Calendar.DAY_OF_MONTH)
 
             val datePicker = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
-                val newFormattedDate = viewModel.formatPickedDate(selectedYear, selectedMonth, selectedDay)
+                val newFormattedDate = formatPickedDate(selectedYear, selectedMonth, selectedDay)
                 dateTextView.text = newFormattedDate
             }, year, month, day)
 
@@ -159,44 +162,26 @@ class AddTransactionFragment : Fragment() {
                 edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
             viewLifecycleOwner.lifecycleScope.launch {
-                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    accountViewModel.allAccounts.collect { accountList ->
-                        showAccountBottomDialog(
-                            requireContext().getString(R.string.account),
-                            accountList,
-                            edtAccount,
-                            onAddClick = { openAddItemFragment(ItemType.ACCOUNT, selectedType) },
-                            onEditClick = { openEditAccountFragment(ItemType.ACCOUNT, selectedType) }
-                        )
-                    }
-                }
+                val accountList = accountViewModel.allAccounts.first()
+
+                showAccountBottomDialog(
+                    requireContext().getString(R.string.account),
+                    accountList,
+                    edtAccount,
+                    onAddClick = { openAddItemFragment(ItemType.ACCOUNT, selectedType) },
+                    onEditClick = { openEditAccountFragment(ItemType.ACCOUNT, selectedType) }
+                )
             }
         }
 
         saveButton.setOnClickListener {
             viewModel.saveTransaction(
-                amountStr = edtAmount.text.toString(),
-                categoryStr = edtCategory.text.toString(),
-                accountStr = edtAccount.text.toString(),
-                noteStr = edtNote.text.toString(),
-                dateStr = dateTextView.text.toString(),
-                isIncome = isIncome,
-                existingTransaction = transactionFromIntent,
-                closeAfterSave = true
+               buildSaveParams(true)
             )
         }
 
         continueButton.setOnClickListener {
-            viewModel.saveTransaction(
-                amountStr = edtAmount.text.toString(),
-                categoryStr = edtCategory.text.toString(),
-                accountStr = edtAccount.text.toString(),
-                noteStr = edtNote.text.toString(),
-                dateStr = dateTextView.text.toString(),
-                isIncome = isIncome,
-                existingTransaction = transactionFromIntent,
-                closeAfterSave = false
-            )
+            viewModel.saveTransaction(buildSaveParams(false))
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -215,7 +200,7 @@ class AddTransactionFragment : Fragment() {
                             is SaveResult.Success -> {
                                 viewModel.clearSaveResult()
                                 SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
-                                viewModel.parseDisplayDateToLocalDate(dateTextView.text.toString())
+                                parseDisplayDateToLocalDate(dateTextView.text.toString())
                                     ?.let { saveLastDate(requireContext(), it) }
                                 if (result.closeAfterSave) {
                                     SharedTransactionHolder.scrollToAddedTransaction = true
@@ -414,13 +399,27 @@ class AddTransactionFragment : Fragment() {
 
     private fun categoryClick() {
         edtCategory.setOnClickListener {
+
             val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
+            val tintColor = if (isIncome) R.color.income else R.color.red
+            if (edtCategory.text.isEmpty()) {
+                edtCategory.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+            }
+
             viewLifecycleOwner.lifecycleScope.launch {
-                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    categoryViewModel.getParentCategories(selectedType).collect { parentCategories ->
-                        // Build tree and show dialog
-                    }
-                }
+                val list = categoryViewModel
+                    .getCategoriesByType(selectedType)
+                    .first()
+
+                val treeItems = Helper.buildCategoryTree(list)
+
+                showCategoryBottomDialog(
+                    requireContext().getString(R.string.category),
+                    treeItems,
+                    edtCategory,
+                    onAddClick = { openAddItemFragment(ItemType.CATEGORY, selectedType) },
+                    onEditClick = { openEditAccountFragment(ItemType.CATEGORY, selectedType) }
+                )
             }
         }
     }
@@ -521,5 +520,79 @@ class AddTransactionFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun buildSaveParams(closeAfterSave: Boolean): SaveTransactionParams {
+        return SaveTransactionParams(
+            amount = edtAmount.text.toString(),
+            category = edtCategory.text.toString(),
+            account = edtAccount.text.toString(),
+            note = edtNote.text.toString(),
+            date = dateTextView.text.toString(),
+            isIncome = isIncome,
+            existing = transactionFromIntent,
+            closeAfterSave = closeAfterSave
+        )
+    }
+
+    private fun showCategoryBottomDialog(
+        title: String,
+        categoryItems: List<CategoryItem>,
+        targetEditText: EditText,
+        onEditClick: () -> Unit,
+        onAddClick: () -> Unit
+    ) {
+        val bottomSheetDialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
+        val recyclerView = view.findViewById<RecyclerView>(R.id.bottom_dialog_add_recyclerView)
+        val titleBottom = view.findViewById<TextView>(R.id.bottom_dialog_add_title)
+        val addButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_add)
+        val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
+        val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
+        titleBottom.text = title
+        val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
+            val parentEmoji = selectedItem.parentEmoji ?: ""
+            val parentName =
+                if (selectedItem.parentName == null) "" else selectedItem.parentName + "/"
+            targetEditText.setText("$parentEmoji $parentName ${selectedItem.emoji} ${selectedItem.name}")
+
+            // Finish choose category and show account, finish account and show note auto
+            if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    focusNextField()
+                }, 100)
+            }
+            bottomSheetDialog.dismiss()
+        }
+
+        val layoutManager = GridLayoutManager(context, 3)
+        layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                return when (adapter.getItemViewType(position)) {
+                    0 -> 1 // cha
+                    1 -> 3 // nhóm con
+                    else -> 1
+                }
+            }
+        }
+        recyclerView.layoutManager = layoutManager
+        recyclerView.adapter = adapter
+
+        addButton.setOnClickListener {
+            onAddClick()
+            bottomSheetDialog.dismiss()
+        }
+
+        editButton.setOnClickListener {
+            onEditClick()
+            bottomSheetDialog.dismiss()
+        }
+
+        closeButton.setOnClickListener {
+            bottomSheetDialog.dismiss()
+        }
+
+        bottomSheetDialog.setContentView(view)
+        bottomSheetDialog.show()
     }
 }

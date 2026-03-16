@@ -24,6 +24,7 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.views.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -235,6 +236,30 @@ class Helper {
             val cal = Calendar.getInstance()
             cal.time = sdf.parse(dateKey)!!
             return cal
+        }
+
+        fun getFormattedDateToday(): String {
+            val currentDate = Calendar.getInstance().time
+            val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Helper.getAppLocale())
+            return dateFormat.format(currentDate)
+        }
+
+        fun formatPickedDate(year: Int, month: Int, day: Int): String {
+            val calendar = Calendar.getInstance()
+            calendar.set(year, month, day)
+            val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Helper.getAppLocale())
+            return dateFormat.format(calendar.time)
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun parseDisplayDateToLocalDate(dateStr: String): LocalDate? {
+            return try {
+                val inputLocale = Helper.getAppLocale()
+                val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", inputLocale)
+                LocalDate.parse(dateStr, inputFormatter)
+            } catch (e: Exception) {
+                null
+            }
         }
      }
 }
