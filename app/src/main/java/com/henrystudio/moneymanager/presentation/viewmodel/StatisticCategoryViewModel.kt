@@ -38,6 +38,7 @@ data class StatisticCategoryUiState(
     val isLoading: Boolean = false
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class StatisticCategoryViewModel @Inject constructor(
     private val transactionUseCases: TransactionUseCases,
@@ -197,5 +198,71 @@ class StatisticCategoryViewModel @Inject constructor(
             val pointDate = if (filterOption.type == FilterPeriodStatistic.Weekly) lastTxDate.with(DayOfWeek.MONDAY) else lastTxDate
             LineChartPoint(label = label, amount = group.sumOf { it.amount }, date = pointDate)
         }.sortedBy { it.date }
+    }
+
+    fun bindTransactions(transactionsFlow: Flow<List<Transaction>>) {
+
+        viewModelScope.launch {
+            combine(
+                transactionsFlow,
+                categoryUseCases.getAllCategories(),
+                _initParams.filterNotNull(),
+                _uiState.map { it.keyFilter }.distinctUntilChanged()
+            ) { transactions, categories, params, keyFilter ->
+
+                allTransactions = transactions
+                allCategories = categories
+
+                val (name, type, filter) = params
+                val state = _uiState.value
+
+                var parentId = state.parentId
+                if (parentId == -1) {
+                    val nameOnly = name.substringBefore("/")
+                        .replace(Regex("^[^\\p{L}\\p{N}]+"), "")
+                        .trim()
+
+                    parentId = categories.find {
+                        it.name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
+                            .trim() == nameOnly
+                    }?.id ?: -1
+                }
+
+                val locale = Helper.getAppLocale()
+
+                val chartPoints = calculateChartPoints(
+                    transactions,
+                    name,
+                    type == CategoryType.INCOME,
+                    filter,
+                    keyFilter,
+                    locale
+                )
+
+                val targetIndex =
+                    if (state.chartPoints.isEmpty())
+                        findInitialIndex(chartPoints, filter)
+                    else
+                        state.currentIndex.coerceIn(
+                            0,
+                            chartPoints.lastIndex.coerceAtLeast(0)
+                        )
+
+                updateStateWithPoint(
+                    state.copy(
+                        categoryName = name,
+                        categoryType = type,
+                        filterOption = filter,
+                        parentId = parentId,
+                        chartPoints = chartPoints
+                    ),
+                    targetIndex,
+                    locale
+                )
+
+            }.collect {
+                _uiState.value = it
+            }
+        }
     }
 }

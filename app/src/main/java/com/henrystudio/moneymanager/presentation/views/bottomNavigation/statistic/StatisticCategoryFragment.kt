@@ -79,23 +79,12 @@ class StatisticCategoryFragment : Fragment() {
         binding.fragmentStatisticCategoryStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.fragmentStatisticCategoryStatsRecyclerView.adapter = adapter
 
+        viewModel.bindTransactions(sharedViewModel.allTransactions)
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     sharedViewModel.selectionMode.collect { enabled ->
                         viewModel.updateSelectionMode(enabled)
-                    }
-                }
-
-                launch {
-                    combine(
-                        sharedViewModel.allTransactions,
-                        categoryViewModel.allAccounts, // Assuming this is all categories, but it says allAccounts? Wait.
-                        categoryViewModel.getAll() // Let's use getAll() for categories
-                    ) { transactions, _, categories ->
-                        Triple(transactions, categories, categories.filter { it.parentId == viewModel.uiState.value.parentId })
-                    }.collect { (transactions, categories, childCategories) ->
-                        viewModel.processData(transactions, categories, childCategories, Helper.getAppLocale(), colors)
                     }
                 }
 

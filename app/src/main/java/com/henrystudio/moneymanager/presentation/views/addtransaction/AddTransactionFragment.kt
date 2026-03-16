@@ -9,7 +9,14 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -24,12 +31,15 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.data.model.Account
-import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.model.AddItemSource
+import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.AddTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
+import com.henrystudio.moneymanager.presentation.views.addtransaction.SaveResult
+import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -311,20 +321,102 @@ class AddTransactionFragment : Fragment() {
     private fun setTransactionType(isIncomeType: Boolean, isEdit: Boolean) {
         isIncome = isIncomeType
         if (isIncome) {
-            incomeButton.setBackgroundResource(R.drawable.bg_btn_income_selected)
-            expenseButton.setBackgroundResource(R.drawable.bg_btn_expense_unselected)
+            incomeButton.setBackgroundResource(R.drawable.bg_month_selected)
+            expenseButton.setBackgroundResource(R.drawable.bg_month_normal)
             incomeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
             expenseButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.red))
         } else {
-            incomeButton.setBackgroundResource(R.drawable.bg_btn_income_unselected)
-            expenseButton.setBackgroundResource(R.drawable.bg_btn_expense_selected)
+            incomeButton.setBackgroundResource(R.drawable.bg_month_normal)
+            expenseButton.setBackgroundResource(R.drawable.bg_month_selected)
             incomeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.income))
             expenseButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
         }
     }
 
     private fun handleToAddTransaction() {
-        // ... (implementation omitted for brevity in this response, assume it exists)
+        transactionFromIntent = arguments?.getSerializable("transaction") as? Transaction
+
+        if (transactionFromIntent == null) {
+            showAddMode()
+        } else {
+            showEditMode(transactionFromIntent!!)
+        }
+    }
+
+    private fun showAddMode() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            setTransactionType(isIncome, false)
+            if (!isEditMode) {
+                edtAmount.requestFocus()
+            }
+        }, 200)
+        layoutSave.visibility = View.VISIBLE
+        layoutEdit.visibility = View.GONE
+        continueButton.visibility = View.VISIBLE
+        if (!isEditMode) {
+            dateTextView.text = formattedDate
+        }
+    }
+
+    private fun showEditMode(transaction: Transaction) {
+        isEditMode = true
+        continueButton.visibility = View.GONE
+        layoutSave.visibility = View.GONE
+        layoutEdit.visibility = View.VISIBLE
+
+        populateTransactionFields(transaction)
+        setTransactionType(transaction.isIncome, true)
+
+        copyButton.setOnClickListener {
+            isEditMode = false
+            layoutSave.visibility = View.VISIBLE
+            layoutEdit.visibility = View.GONE
+            populateTransactionFields(transaction)
+            dateTextView.text = formattedDate
+        }
+
+        deleteButton.setOnClickListener {
+            viewModel.deleteTransaction(transaction)
+            Toast.makeText(
+                context,
+                requireContext().getString(R.string.transaction_delete),
+                Toast.LENGTH_SHORT
+            ).show()
+            requireActivity().finish()
+            requireActivity().overridePendingTransition(
+                R.anim.no_animation,
+                R.anim.slide_out_right
+            )
+        }
+
+        bookMarkButton.setOnClickListener {
+            val updated = transaction.copy(isBookmarked = true)
+            viewModel.updateTransaction(updated)
+            Toast.makeText(
+                context,
+                requireContext().getString(R.string.bookmarked),
+                Toast.LENGTH_SHORT
+            ).show()
+            requireActivity().finish()
+            requireActivity().overridePendingTransition(
+                R.anim.no_animation,
+                R.anim.slide_out_right
+            )
+        }
+    }
+
+    private fun populateTransactionFields(transaction: Transaction) {
+        edtAmount.setText(transaction.amount.toString())
+        edtCategory.setText(
+            if (transaction.categorySubName.isNotEmpty()) {
+                "${transaction.categoryParentName}/${transaction.categorySubName}"
+            } else {
+                transaction.categoryParentName
+            }
+        )
+        edtAccount.setText(transaction.account)
+        edtNote.setText(transaction.note)
+        dateTextView.text = transaction.date
     }
 
     private fun categoryClick() {
@@ -343,11 +435,95 @@ class AddTransactionFragment : Fragment() {
     private fun amountTextChangeListener() {}
     private fun categoryTextChangeListener() {}
     private fun accountTextChangeListener() {}
-    private fun focusNextField() {}
-    private fun openAddItemFragment(type: ItemType, categoryType: CategoryType) {}
-    private fun openEditAccountFragment(type: ItemType, categoryType: CategoryType) {}
 
-    enum class ItemType { CATEGORY, ACCOUNT }
+    private fun focusNextField() {
+        when {
+            edtAmount.text.isNullOrBlank() -> {
+                edtAmount.requestFocus()
+            }
+            edtCategory.text.isNullOrBlank() -> {
+                edtCategory.requestFocus()
+                edtCategory.performClick()
+            }
+            edtAccount.text.isNullOrBlank() -> {
+                edtAccount.requestFocus()
+                edtAccount.performClick()
+            }
+            edtNote.text.isNullOrBlank() -> {
+                edtNote.requestFocus()
+            }
+        }
+    }
+
+    private fun openAddItemFragment(type: ItemType, categoryType: CategoryType) {
+        val activity = requireActivity() as AddTransactionActivity
+        val titleView = activity.titleCurrent
+        activity.animateTitleToLeftOfIcon(titleView)
+        activity.bookmarkIcon.visibility = View.GONE
+        activity.addIcon.visibility = View.GONE
+        activity.titleStack.addLast(titleView.text.toString())
+        val titleIncoming = activity.titleIncoming
+        activity.animateIncomingTitleToCenter(
+            titleIncoming,
+            requireContext().getString(R.string.add)
+        )
+
+        val fragment = AddItemFragment().apply {
+            arguments = Bundle().apply {
+                putSerializable("item_type", type)
+                putSerializable("category_type", categoryType)
+                putSerializable("source", AddItemSource.FROM_ADD_TRANSACTION)
+            }
+        }
+
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,
+                R.anim.no_animation,
+                R.anim.no_animation,
+                R.anim.slide_out_right
+            )
+            .replace(R.id.fragment_container_add_transaction, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun openEditAccountFragment(type: ItemType, categoryType: CategoryType) {
+        val activity = requireActivity() as AddTransactionActivity
+        val titleView = activity.titleCurrent
+        activity.animateTitleToLeftOfIcon(titleView)
+        activity.updateTitleIncoming(
+            if (type == ItemType.CATEGORY)
+                requireContext().getString(R.string.category)
+            else
+                requireContext().getString(R.string.account)
+        )
+        val extraEditText = activity.titleIncoming
+        activity.animateIncomingTitleToCenter(extraEditText, extraEditText.text.toString())
+        activity.switchToAddIconWithFade()
+        activity.titleStack.addLast(titleView.text.toString())
+        activity.apply {
+            currentItemType = type
+            currentCategoryType = categoryType
+        }
+
+        val fragment = EditItemDialogFragment().apply {
+            arguments = Bundle().apply {
+                putSerializable("source", AddItemSource.FROM_ADD_TRANSACTION)
+            }
+        }
+
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,
+                R.anim.no_animation,
+                R.anim.no_animation,
+                R.anim.slide_out_right
+            )
+            .replace(R.id.fragment_container_add_transaction, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
