@@ -11,6 +11,7 @@ import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -29,7 +30,7 @@ import javax.inject.Inject
 class MonthlyViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow(MonthlyUiState())
-    val uiState: StateFlow<MonthlyUiState> = _uiState
+    val uiState: StateFlow<MonthlyUiState> = _uiState.asStateFlow()
 
     fun updateMonthlyData(
         groups: List<TransactionGroup>,

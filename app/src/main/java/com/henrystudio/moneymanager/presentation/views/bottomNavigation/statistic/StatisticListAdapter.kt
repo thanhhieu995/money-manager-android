@@ -17,6 +17,10 @@ class StatisticListAdapter(
     private var filterOption: FilterOption
 ) : FragmentStateAdapter(activity) {
 
+    fun updateFilterOption(option: FilterOption) {
+        filterOption = option
+    }
+
     override fun getItemCount(): Int = 3
 
     @RequiresApi(Build.VERSION_CODES.O)

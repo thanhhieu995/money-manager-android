@@ -33,7 +33,7 @@ class StatisticTrendActivity : AppCompatActivity() {
     private lateinit var filterOption: FilterOption
     private lateinit var categoryType: CategoryType
     private lateinit var currentFilterPeriod: FilterPeriodStatistic
-    private val transactionViewModel: SharedTransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by viewModels()
     private lateinit var currentDate : LocalDate
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,7 +70,7 @@ class StatisticTrendActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.currentFilterDate.collect { date ->
+                sharedViewModel.currentFilterDate.collect { date ->
                     currentDate = date
                 }
             }
@@ -86,7 +86,7 @@ class StatisticTrendActivity : AppCompatActivity() {
                 val position = tab?.position ?: 0
 
                 val filterTemp = mapPositionToFilter(position, currentDate)
-                transactionViewModel.setFilter(filterTemp.type, currentDate)
+                sharedViewModel.setFilter(filterTemp.type, currentDate)
                 val bundleTab = Bundle().apply {
                     putSerializable("item_click_statistic_category_name", Helper.getUpdateMonthText(filter))
                     putSerializable("item_click_statistic_category_type",categoryType)

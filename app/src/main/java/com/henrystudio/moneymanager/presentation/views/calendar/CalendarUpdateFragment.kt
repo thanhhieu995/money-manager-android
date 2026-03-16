@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -23,6 +24,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.TransactionGroup
+import com.henrystudio.moneymanager.presentation.viewmodel.CalendarUpdateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
 import com.kizitonwose.calendar.core.CalendarDay
@@ -33,18 +35,18 @@ import com.kizitonwose.calendar.view.MonthDayBinder
 import com.kizitonwose.calendar.view.ViewContainer
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.ZoneId
-import java.util.*
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @AndroidEntryPoint
 class CalendarUpdateFragment : Fragment() {
     private var eventsMap = mutableMapOf<LocalDate, TransactionGroup>()
     private lateinit var calendarView: com.kizitonwose.calendar.view.CalendarView
-    
+
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val viewModel: CalendarUpdateViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,28 +72,19 @@ class CalendarUpdateFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.combineGroupAndDate.collect { (groups, currentDate) ->
+                    viewModel.updateData(groups, currentDate)
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
                     eventsMap.clear()
-                    val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-                    val month = currentDate.month
-                    val year = currentDate.year
-
-                    val monthGroups = groups.mapNotNull { group ->
-                        val parsedDate = sdf.parse(group.date)
-                        val localDate = parsedDate?.toInstant()
-                            ?.atZone(ZoneId.systemDefault())
-                            ?.toLocalDate()
-                        if (localDate != null && localDate.month == month && localDate.year == year) {
-                            localDate to group
-                        } else null
-                    }.toMap()
-
-                    eventsMap.putAll(monthGroups)
-
+                    eventsMap.putAll(state.monthEvents)
                     val daysOfWeek = daysOfWeek(firstDayOfWeek = DayOfWeek.MONDAY)
-                    val currentMonth = currentDate.yearMonth
+                    val currentMonth = state.currentDate.yearMonth
                     val startMonth = currentMonth.minusMonths(12)
                     val endMonth = currentMonth.plusMonths(12)
-
                     calendarView.setup(startMonth, endMonth, daysOfWeek.first())
                     calendarView.scrollToMonth(currentMonth)
                     calendarView.notifyCalendarChanged()
@@ -165,8 +158,7 @@ class CalendarUpdateFragment : Fragment() {
         val bottomSheet = BottomSheetDialog(requireContext())
         bottomSheet.setContentView(dialogView)
 
-        val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-        val dateString = sdf.format(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+        val dateString = date.format(DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault()))
 
         val dayListTransaction = dialogView.findViewById<RecyclerView>(R.id.item_day_calendar_list)
         dayListTransaction.layoutManager = LinearLayoutManager(requireContext())
@@ -174,10 +166,7 @@ class CalendarUpdateFragment : Fragment() {
 
         val noDataText = dialogView.findViewById<TextView>(R.id.item_day_calendar_noData)
 
-        val groupTransaction = sharedViewModel.groupedTransactions.value.filter {
-            val transactionDate = sdf.parse(it.date)
-            transactionDate?.let { it1 -> sdf.format(it1) } == dateString
-        }
+        val groupTransaction = viewModel.getGroupsForDate(dateString)
 
         adapter.submitList(groupTransaction)
         noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE

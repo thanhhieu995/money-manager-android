@@ -229,5 +229,12 @@ class Helper {
             val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             return LocalDate.parse(cleanedDate, formatter)
         }
+
+        fun dateKeyToCalendar(dateKey: String): Calendar {
+            val sdf = java.text.SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+            val cal = Calendar.getInstance()
+            cal.time = sdf.parse(dateKey)!!
+            return cal
+        }
      }
 }

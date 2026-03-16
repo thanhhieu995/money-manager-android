@@ -7,22 +7,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentEditCategoryBinding
-import com.henrystudio.moneymanager.core.util.Helper.Companion.buildCategoryTree
-import com.henrystudio.moneymanager.presentation.model.AddItemSource
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
-import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFactory
-import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.EditItemDialogViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -31,9 +25,8 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
     private var _binding : FragmentEditCategoryBinding? = null
     private val binding get() = _binding!!
 
-    private var adapter: EditItemDialogAdapter?= null
-    private val categoryViewModel: CategoryViewModel by viewModels()
-    private val accountViewModel: AccountViewModel by viewModels()
+    private var adapter: EditItemDialogAdapter? = null
+    private val viewModel: EditItemDialogViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,36 +42,18 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.fragment_edit_category_recycleView)
         adapter = EditItemDialogAdapter(emptyList(),
-        onDeleteClick = {item ->
-            when(item) {
-                is EditItem.Category -> categoryViewModel.deleteId(item.item.id)
-                is EditItem.AccountItem -> accountViewModel.delete(item.item)
-            }
-        },
-        clickItemListener = this)
+            onDeleteClick = { item -> viewModel.deleteItem(item) },
+            clickItemListener = this)
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
         val selectedType = arguments?.getSerializable("selectedType") as? CategoryType
-        if (selectedType == null) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    accountViewModel.allAccounts.collect { list ->
-                        val editItems = list.map { EditItem.AccountItem(it) }
-                        adapter?.submitList(editItems)
-                    }
-                }
-            }
-        } else {
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    categoryViewModel.getCategoriesByType(selectedType).collect { list ->
-                        // xử lý dữ liệu tại đây
-                        val treeItems = buildCategoryTree(list)
-                        val editItems = treeItems.map { EditItem.Category(it) }
-                        adapter?.submitList(editItems)
-                    }
+        viewModel.loadItems(selectedType)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    adapter?.submitList(state.editItems)
                 }
             }
         }

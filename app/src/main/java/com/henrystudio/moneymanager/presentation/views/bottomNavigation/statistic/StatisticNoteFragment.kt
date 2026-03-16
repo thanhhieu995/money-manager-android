@@ -9,8 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.util.component1
-import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -20,20 +18,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticNoteBinding
-import com.henrystudio.moneymanager.core.util.FilterTransactions
-import com.henrystudio.moneymanager.data.model.CategoryType
-import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.model.FilterOption
-import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
-import com.henrystudio.moneymanager.presentation.model.Note
 import com.henrystudio.moneymanager.presentation.model.SortField
-import com.henrystudio.moneymanager.presentation.model.SortOrder
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.StatisticNoteViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 @AndroidEntryPoint
 class StatisticNoteFragment : Fragment() {
@@ -45,15 +36,9 @@ class StatisticNoteFragment : Fragment() {
     private lateinit var tvNoData: TextView
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: NoteAdapter
-    private var listNotes: List<Note> = emptyList()
-    private var currentSortField = SortField.AMOUNT
-    private var currentSortOrder = SortOrder.DESC
-    private var categoryType: CategoryType = CategoryType.EXPENSE
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOptionTemp : FilterOption =
-        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
 
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val viewModel: StatisticNoteViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -72,73 +57,47 @@ class StatisticNoteFragment : Fragment() {
         recyclerView.adapter = adapter
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.combinedFilter.collect { (type, filterList) ->
-                        categoryType = type
-                        val transactionsType = when (type) {
-                            CategoryType.INCOME -> filterList.filter { it.isIncome }
-                            CategoryType.EXPENSE -> filterList.filter { !it.isIncome }
-                        }
-                        listNotes = getListNoteFilter(transactionsType)
-                        sortAndUpdate()
-                        updateSortIndicators()
+                    combine(
+                        sharedViewModel.allTransactions,
+                        sharedViewModel.filterOption,
+                        sharedViewModel.statisticCategoryType
+                    ) { transactions, option, type ->
+                        Triple(transactions, option, type)
+                    }.collect { (transactions, option, type) ->
+                        viewModel.updateAllTransactions(transactions)
+                        viewModel.updateFilterOption(option)
+                        viewModel.updateCategoryType(type)
                     }
                 }
-
                 launch {
-                    sharedViewModel.filterOption.collectLatest { filterOption ->
-                        filterOptionTemp = filterOption
-                        sharedViewModel.allTransactions.collect { allTransactions ->
-                            val list = when (filterOption.type) {
-                                FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
-                                FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
-                                FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
-                                else -> emptyList()
-                            }
-                            sharedViewModel.setStatisticTransactionFilter(list)
-                        }
+                    viewModel.uiState.collect { state ->
+                        sharedViewModel.setStatisticTransactionFilter(state.filteredTransactions)
+                        tvNoData.visibility = if (state.isEmpty) View.VISIBLE else View.GONE
+                        adapter.submitList(state.notes)
+                        updateSortIndicators(state.sortField, state.sortOrder)
                     }
                 }
             }
         }
 
         tvNote.setOnClickListener {
-            if (currentSortField == SortField.NOTE) {
-                toggleSortOrder()
-            } else {
-                currentSortField = SortField.NOTE
-                currentSortOrder = SortOrder.ASC
-            }
-            sortAndUpdate()
-            updateSortIndicators()
+            viewModel.onSortFieldClicked(SortField.NOTE)
         }
         tvCount.setOnClickListener {
-            if (currentSortField == SortField.COUNT) {
-                toggleSortOrder()
-            } else {
-                currentSortField = SortField.COUNT
-                currentSortOrder = SortOrder.ASC
-            }
-            sortAndUpdate()
-            updateSortIndicators()
+            viewModel.onSortFieldClicked(SortField.COUNT)
         }
         tvAmount.setOnClickListener {
-            if (currentSortField == SortField.AMOUNT) {
-                toggleSortOrder()
-            } else {
-                currentSortField = SortField.AMOUNT
-                currentSortOrder = SortOrder.ASC
-            }
-            sortAndUpdate()
-            updateSortIndicators()
+            viewModel.onSortFieldClicked(SortField.AMOUNT)
         }
 
         adapter.onClickListener = { note ->
+            val state = viewModel.uiState.value
             val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
             intent.putExtra("item_click_statistic_category_name", note.note)
-            intent.putExtra("item_click_statistic_category_type", categoryType)
-            intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
+            intent.putExtra("item_click_statistic_category_type", state.categoryType)
+            intent.putExtra("item_click_statistic_filterOption", state.filterOption)
             intent.putExtra("item_click_statistic_keyWord", KeyFilter.Note)
             startActivity(intent)
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
@@ -154,53 +113,18 @@ class StatisticNoteFragment : Fragment() {
         recyclerView = binding.fragmentStatisticNoteRecyclerView
     }
 
-    private fun sortAndUpdate() {
-        val sortedList = when (currentSortField) {
-            SortField.NOTE -> {
-                if (currentSortOrder == SortOrder.ASC) listNotes.sortedBy { it.note }
-                else listNotes.sortedByDescending { it.note }
-            }
-            SortField.COUNT -> {
-                if (currentSortOrder == SortOrder.ASC) listNotes.sortedBy { it.count }
-                else listNotes.sortedByDescending { it.count }
-            }
-            SortField.AMOUNT -> {
-                if (currentSortOrder == SortOrder.ASC) listNotes.sortedBy { it.amount }
-                else listNotes.sortedByDescending { it.amount }
-            }
-        }
-        tvNoData.visibility = if (sortedList.isEmpty()) View.VISIBLE else View.GONE
-        adapter.submitList(sortedList)
-    }
-
-    private fun toggleSortOrder() {
-        currentSortOrder = if (currentSortOrder == SortOrder.ASC) SortOrder.DESC else SortOrder.ASC
-    }
-
-    private fun updateSortIndicators() {
+    private fun updateSortIndicators(sortField: SortField, sortOrder: com.henrystudio.moneymanager.presentation.model.SortOrder) {
         val upIcon = R.drawable.ic_baseline_arrow_upward_24
         val downIcon = R.drawable.ic_baseline_arrow_downward_24
         val noneIcon = 0
-
         fun setDrawable(textView: TextView, isActive: Boolean) {
             val icon = if (!isActive) noneIcon
-            else if (currentSortOrder == SortOrder.ASC) upIcon else downIcon
+            else if (sortOrder == com.henrystudio.moneymanager.presentation.model.SortOrder.ASC) upIcon else downIcon
             textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, icon, 0)
         }
-
-        setDrawable(tvNote, currentSortField == SortField.NOTE)
-        setDrawable(tvCount, currentSortField == SortField.COUNT)
-        setDrawable(tvAmount, currentSortField == SortField.AMOUNT)
-    }
-
-    private fun getListNoteFilter(listTransactionFilter: List<Transaction>) : List<Note> {
-        return listTransactionFilter
-            .groupBy { it.note }
-            .map { (note, transactions) ->
-                val count = transactions.size
-                val totalAmount = transactions.sumOf { it.amount }
-                Note(note = note, count = count, amount = totalAmount)
-            }.sortedByDescending { it.amount }
+        setDrawable(tvNote, sortField == SortField.NOTE)
+        setDrawable(tvCount, sortField == SortField.COUNT)
+        setDrawable(tvAmount, sortField == SortField.AMOUNT)
     }
 
     override fun onDestroyView() {

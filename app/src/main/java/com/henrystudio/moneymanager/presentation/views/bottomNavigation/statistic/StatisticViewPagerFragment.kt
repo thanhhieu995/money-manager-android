@@ -13,6 +13,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -27,11 +28,11 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticViewPagerBinding
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.CategoryType
-import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.stringRes
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.StatisticViewPagerViewModel
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -53,9 +54,9 @@ class StatisticViewPagerFragment : Fragment() {
     private lateinit var adapter: StatisticPagerAdapter
     private var _binding: FragmentStatisticViewPagerBinding? = null
     private val binding get() = _binding!!
-    private var listTransactionFilter: List<Transaction> = emptyList()
 
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val viewModel: StatisticViewPagerViewModel by viewModels()
     private lateinit var pageCallback: ViewPager2.OnPageChangeCallback
     private var isRestoring = false
     private var mediator: TabLayoutMediator? = null
@@ -63,7 +64,6 @@ class StatisticViewPagerFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private var filterOptionTemp: FilterOption =
         FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-    private var currentStatType = CategoryType.EXPENSE
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -105,37 +105,36 @@ class StatisticViewPagerFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     sharedViewModel.statisticListTransactionFilter.collect { list ->
-                        listTransactionFilter = list
+                        viewModel.updateFilteredTransactions(list)
                     }
                 }
-
                 launch {
                     sharedViewModel.statisticCategoryType.collect { type ->
-                        currentStatType = type
-                        toggleGroupButton.check(
-                            if (currentStatType == CategoryType.INCOME) incomeBtn.id else expenseBtn.id
-                        )
+                        viewModel.updateCategoryType(type)
                     }
                 }
-
                 launch {
                     sharedViewModel.filterOption.collect { filterOption ->
                         filterOptionTemp = filterOption
-                        filterDropdown.text = getString(filterOption.type.stringRes)
-                        selectedOption = filterOption.type
-                        monthText.text = Helper.getUpdateMonthText(filterOption)
+                        viewModel.updateFilterOption(filterOption)
                     }
                 }
-
-                launch {
-                    sharedViewModel.statisticListTransactionFilter.collect { listFilter ->
-                        updateTextButton(listFilter)
-                    }
-                }
-
                 launch {
                     sharedViewModel.currentStatisticTabPosition.collect { position ->
-                        viewPager.currentItem = position
+                        viewModel.updateTabPosition(position)
+                    }
+                }
+                launch {
+                    viewModel.uiState.collect { state ->
+                        filterDropdown.text = getString(state.filterOption.type.stringRes)
+                        selectedOption = state.filterOption.type
+                        monthText.text = Helper.getUpdateMonthText(state.filterOption)
+                        toggleGroupButton.check(
+                            if (state.categoryType == CategoryType.INCOME) incomeBtn.id else expenseBtn.id
+                        )
+                        incomeBtn.text = getString(R.string.Income) + " " + Helper.formatCurrency(state.totalIncome)
+                        expenseBtn.text = getString(R.string.exp) + " " + Helper.formatCurrency(state.totalExpense)
+                        viewPager.currentItem = state.currentTabPosition
                     }
                 }
             }
@@ -146,11 +145,11 @@ class StatisticViewPagerFragment : Fragment() {
         }
         toggleGroupButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
-                currentStatType = when (checkedId) {
+                val type = when (checkedId) {
                     incomeBtn.id -> CategoryType.INCOME
                     else -> CategoryType.EXPENSE
                 }
-                sharedViewModel.setStatisticCategoryType(currentStatType)
+                sharedViewModel.setStatisticCategoryType(type)
             }
         }
 
@@ -253,7 +252,7 @@ class StatisticViewPagerFragment : Fragment() {
                         updateCheckMarks(selectedOption)
                         val intent = Intent(requireContext(), StatisticListActivity::class.java)
                         intent.putExtra("filterOption", filterOptionTemp)
-                        intent.putExtra("categoryType", currentStatType)
+                        intent.putExtra("categoryType", viewModel.uiState.value.categoryType)
                         intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
                         startActivity(intent)
                         requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
@@ -264,7 +263,7 @@ class StatisticViewPagerFragment : Fragment() {
                         updateCheckMarks(selectedOption)
                         val intent = Intent(requireContext(), StatisticTrendActivity::class.java)
                         intent.putExtra("filterOption", filterOptionTemp)
-                        intent.putExtra("categoryType", currentStatType)
+                        intent.putExtra("categoryType", viewModel.uiState.value.categoryType)
                         intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
                         startActivity(intent)
                         requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
@@ -284,15 +283,6 @@ class StatisticViewPagerFragment : Fragment() {
         }
 
         bottomSheetDialog.show()
-    }
-
-    private fun updateTextButton(filteredList: List<Transaction>) {
-        val incomeList = filteredList.filter { it.isIncome }
-        val expenseList = filteredList.filter { !it.isIncome }
-        val totalIncome = incomeList.sumOf { it.amount }
-        val totalExpense = expenseList.sumOf { it.amount }
-        incomeBtn.text = requireContext().getString(R.string.Income) + " " + Helper.formatCurrency(totalIncome)
-        expenseBtn.text = requireContext().getString(R.string.exp) + " " + Helper.formatCurrency(totalExpense)
     }
 
     override fun onDestroyView() {

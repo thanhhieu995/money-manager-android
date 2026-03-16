@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.util.component1
 import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -27,9 +28,8 @@ import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getAppLocale
 import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
-import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.model.TransactionGroup
+import com.henrystudio.moneymanager.presentation.viewmodel.DailyNavigateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
@@ -38,11 +38,10 @@ import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Month
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 
 @AndroidEntryPoint
@@ -65,10 +64,8 @@ class DailyNavigateFragment : Fragment() {
     private lateinit var layoutFunctionControl: LinearLayout
     private lateinit var layoutEdit: LinearLayout
 
-    private var month: LocalDate? = null
-    private var listTransactionGroup: List<TransactionGroup> = listOf()
-    private var selectedTransactionList: List<Transaction> = emptyList()
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val viewModel: DailyNavigateViewModel by viewModels()
 
     private lateinit var viewPagerAdapter: ViewPagerAdapter
     private lateinit var viewPager: ViewPager2
@@ -90,14 +87,6 @@ class DailyNavigateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init()
-
-        fun formatterMonth(): DateTimeFormatter {
-            return DateTimeFormatter.ofPattern("MMM yyyy", getAppLocale())
-        }
-
-        fun formatterYear(): DateTimeFormatter {
-            return DateTimeFormatter.ofPattern("yyyy", getAppLocale())
-        }
 
         tabLayout = view.findViewById(R.id.fragment_daily_navigate_tabLayout)
 
@@ -126,28 +115,34 @@ class DailyNavigateFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.currentDailyNavigateTabPosition.collectLatest { position ->
-                    val filteredMonth = month?.let {
-                        FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, it)
-                    }
-                    val filteredYear =
-                        month?.let { FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, it) }
-                    when (position) {
-                        0, 1 -> {
-                            if (month != null) {
-                                monthText.text = month!!.format(formatterMonth())
-                                handleSummarySection(filteredMonth ?: emptyList())
-                            }
-                        }
-                        2 -> {
-                            if (month != null) {
-                                monthText.text = month!!.format(formatterYear())
-                                if (filteredYear != null) {
-                                    handleSummarySection(filteredYear)
-                                }
-                            }
-                        }
-                    }
+                combine(
+                    sharedViewModel.combineGroupAndDate,
+                    sharedViewModel.currentDailyNavigateTabPosition,
+                    sharedViewModel.selectionMode,
+                    sharedViewModel.selectedTransactions
+                ) { groupsAndDate, tabPosition, selectionMode, selected ->
+                    viewModel.updateFrom(
+                        groupsAndDate.first,
+                        groupsAndDate.second,
+                        tabPosition,
+                        selectionMode,
+                        selected
+                    )
+                }.collect { }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    monthText.text = state.monthLabel
+                    incomeCountAll.text = Helper.formatCurrency(state.incomeSum)
+                    expenseCountAll.text = Helper.formatCurrency(state.expenseSum)
+                    totalCount.text = Helper.formatCurrency(state.totalSum)
+                    layoutEdit.visibility = if (state.selectionMode) View.VISIBLE else View.GONE
+                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
+                        "${state.selectedCount} ${requireContext().getString(R.string.selected)}"
+                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
+                        "${requireContext().getString(R.string.Total)} : ${Helper.formatCurrency(state.selectedTotal)}"
                 }
             }
         }
@@ -195,57 +190,14 @@ class DailyNavigateFragment : Fragment() {
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.combineGroupAndDate.collect { (groups, date) ->
-                    month = date
-                    listTransactionGroup = groups
-                    val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
-                    val isMonthly = fragment is MonthlyFragment
-
-                    monthText.text = date.format(if (isMonthly) formatterYear() else formatterMonth())
-
-                    val filtered = if (isMonthly) {
-                        FilterTransactions.filterTransactionGroupByYear(listTransactionGroup, date)
-                    } else {
-                        FilterTransactions.filterTransactionGroupByMonth(listTransactionGroup, date)
-                    }
-
-                    handleSummarySection(filtered)
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.selectionMode.collect { enabled ->
-                    layoutEdit.visibility = if (enabled) View.VISIBLE else View.GONE
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.selectedTransactions.collect { selectedTransactions ->
-                    selectedTransactionList = selectedTransactions
-                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
-                        "${selectedTransactions.size} ${requireContext().getString(R.string.selected)}"
-                    val totalAmount = selectedTransactions.sumOf {
-                        if (it.isIncome) it.amount else -it.amount
-                    }
-                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
-                        "${requireContext().getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
-                }
-            }
-        }
-
         btnEditClose.setOnClickListener {
             sharedViewModel.exitSelectionMode()
         }
 
         btnEditDelete.setOnClickListener {
-            if (selectedTransactionList.isNotEmpty()) {
-                sharedViewModel.deleteAll(selectedTransactionList)
+            val selected = sharedViewModel.selectedTransactions.value
+            if (selected.isNotEmpty()) {
+                sharedViewModel.deleteAll(selected)
                 sharedViewModel.exitSelectionMode()
             }
         }
@@ -293,12 +245,6 @@ class DailyNavigateFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun handleSummarySection(filtered: List<TransactionGroup>) {
-        incomeCountAll.text = Helper.formatCurrency(filtered.sumOf { it.income })
-        expenseCountAll.text = Helper.formatCurrency(filtered.sumOf { it.expense })
-        totalCount.text = Helper.formatCurrency(filtered.sumOf { it.income - it.expense })
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

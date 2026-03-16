@@ -2,6 +2,8 @@ package com.henrystudio.moneymanager.presentation.views.search
 
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.*
@@ -19,6 +21,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.viewmodel.SearchViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -26,11 +29,9 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class SearchActivity : AppCompatActivity() {
     private val sharedViewModel: SharedTransactionViewModel by viewModels()
+    private val viewModel: SearchViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
-    private var selectedOption: FilterPeriodSearch = FilterPeriodSearch.All
-    private var keySearch = ""
     private var allSelectedTransactions: List<Transaction> = emptyList()
-    private var transactions : List<Transaction> = emptyList()
     private lateinit var searchTitle: TextView
     private lateinit var searchArrange: ImageView
     private lateinit var btnBack: ImageView
@@ -76,7 +77,7 @@ class SearchActivity : AppCompatActivity() {
         }
 
         searchArrange.setOnClickListener {
-            searchArrange(keySearch)
+            searchArrange()
         }
 
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
@@ -113,12 +114,16 @@ class SearchActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.selectedTransactions.collect { selectedTransactionList ->
                     allSelectedTransactions = selectedTransactionList
-                    tvSelectedEdit.text = "${selectedTransactionList.size} selected"
-                    val selectedTransactions = transactions.filter { selectedTransactionList.contains(it) }
-                    val totalAmount = selectedTransactions.sumOf {
-                        if (it.isIncome) it.amount else -it.amount
-                    }
-                    tvTotalAmountEdit.text = "Total: ${Helper.formatCurrency(totalAmount)}"
+                    viewModel.updateSelected(selectedTransactionList)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    tvSelectedEdit.text = "${state.selectedCount} selected"
+                    tvTotalAmountEdit.text = state.selectedTotal
                 }
             }
         }
@@ -140,52 +145,47 @@ class SearchActivity : AppCompatActivity() {
             }
         }
 
+        searchInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.updateQuery(s?.toString() ?: "")
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.allTransactions.collect { transactionList ->
-                    transactions = transactionList
-                    transactionAdapter.transactions = transactionList
-                    transactionAdapter.filter.filter(keySearch)
-
-                    val contents = transactionList.map { it.note }.distinct()
-                    val arrayAdapter = ArrayAdapter(
-                        this@SearchActivity,
-                        android.R.layout.simple_dropdown_item_1line,
-                        contents
-                    )
-                    searchInput.setAdapter(arrayAdapter)
-                    searchInput.setOnItemClickListener { _, _, position, _ ->
-                        val selected = arrayAdapter.getItem(position)
-                        keySearch = selected.toString()
-                        searchInput.setText(selected)
-                        searchInput.setSelection(selected?.length ?: 0)
-                        transactionAdapter.transactions = transactionList
-                        transactionAdapter.filter.filter(selected)
-                    }
-
-                    tvNoData.visibility = if(transactionList.isEmpty()) View.VISIBLE else View.GONE
+                    viewModel.updateTransactions(transactionList)
                 }
             }
         }
 
-        transactionAdapter.setOnFilterResultListener(object :
-            TransactionAdapter.OnFilterResultListener {
-            override fun onFilterResult(filteredList: List<Transaction>) {
-                var totalIncome = 0.0
-                var totalExpense = 0.0
-                for (tx in filteredList) {
-                    if (tx.isIncome) {
-                        totalIncome += tx.amount
-                    } else {
-                        totalExpense += tx.amount
-                    }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    transactionAdapter.updateList(state.filteredTransactions)
+                    incomeCount.text = state.incomeTotal
+                    expenseCount.text = state.expenseTotal
+                    tvNoData.visibility = if (state.isEmpty) View.VISIBLE else View.GONE
+                    val arrayAdapter = ArrayAdapter(
+                        this@SearchActivity,
+                        android.R.layout.simple_dropdown_item_1line,
+                        state.distinctNotes
+                    )
+                    searchInput.setAdapter(arrayAdapter)
+                    searchTitle.text = getString(state.filterPeriod.stringRes)
                 }
-                incomeCount.text = Helper.formatCurrency(totalIncome)
-                expenseCount.text = Helper.formatCurrency(totalExpense)
-                tvNoData.visibility = if(filteredList.isEmpty()) View.VISIBLE else View.GONE
-                transactionAdapter.updateList(filteredList)
             }
-        })
+        }
+
+        searchInput.setOnItemClickListener { _, _, position, _ ->
+            val adapter = searchInput.adapter as? ArrayAdapter<*>
+            val selected = adapter?.getItem(position)?.toString() ?: ""
+            searchInput.setText(selected)
+            searchInput.setSelection(selected.length)
+            viewModel.updateQuery(selected)
+        }
 
         layoutControl.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener{
             override fun onGlobalLayout() {
@@ -224,7 +224,7 @@ class SearchActivity : AppCompatActivity() {
         tvNoData = findViewById(R.id.search_no_data)
     }
 
-    private fun searchArrange(query: String) {
+    private fun searchArrange() {
         val bottomSheetDialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.item_search_arrange, null)
         bottomSheetDialog.setContentView(view)
@@ -244,22 +244,22 @@ class SearchActivity : AppCompatActivity() {
         )
 
         fun updateCheckMarks(selected: FilterPeriodSearch) {
-            searchTitle.text = getString(selected.stringRes)
+            viewModel.updateFilterPeriod(selected)
             checkViews.forEach { (option, imageView) ->
                 imageView.visibility = if (option == selected) View.VISIBLE else View.GONE
             }
             bottomSheetDialog.dismiss()
         }
 
-        updateCheckMarks(selectedOption)
+        viewModel.uiState.value.filterPeriod.let { current ->
+            checkViews.forEach { (option, imageView) ->
+                imageView.visibility = if (option == current) View.VISIBLE else View.GONE
+            }
+        }
 
         optionLayouts.forEach { (filterPeriod, layoutId) ->
             view.findViewById<LinearLayout>(layoutId).setOnClickListener {
-                selectedOption = filterPeriod
                 updateCheckMarks(filterPeriod)
-                transactionAdapter.filterPeriod = filterPeriod
-                transactionAdapter.filter.filter(query)
-                transactionAdapter.updateList(transactions)
             }
         }
 

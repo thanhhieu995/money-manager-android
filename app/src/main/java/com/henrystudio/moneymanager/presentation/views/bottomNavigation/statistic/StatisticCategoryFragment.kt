@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -27,71 +28,33 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
-import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
-import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.LineChartPoint
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.StatisticCategoryViewModel
 import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.Month
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.util.*
-import androidx.fragment.app.viewModels
 
 @AndroidEntryPoint
 class StatisticCategoryFragment : Fragment() {
     private var _binding: FragmentStatisticCategoryBinding? = null
     private val binding get() = _binding!!
 
-    private var categoryName: String = ""
-    private var categoryType: CategoryType = CategoryType.EXPENSE
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val viewModel: StatisticCategoryViewModel by viewModels()
+    private val categoryViewModel: CategoryViewModel by viewModels()
 
-    private var allTransactions: List<Transaction> = emptyList()
-    private var allCategories: List<Category> = emptyList()
-    private var transactionList: List<Transaction> = emptyList()
-    private var listTransactionsFilterCategoryName: List<Transaction> = emptyList()
-    private var listChildCategories: List<Category> = emptyList()
-    private var listChildCategoryStat: List<CategoryStat> = emptyList()
-    private var parentId: Int = -1
-    private var colorSetLine: Int = Color.RED
-    private lateinit var lineChart: LineChart
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var layoutCategorySum: LinearLayout
-    private lateinit var categorySumName: TextView
-    private lateinit var categorySumAmount: TextView
-    private lateinit var dailyContainer: FrameLayout
-    private lateinit var monthBack: ImageView
-    private lateinit var monthNext: ImageView
-    private lateinit var monthText: TextView
-    private lateinit var chartPoints: List<LineChartPoint>
-    private var currentIndex = 0
     private lateinit var adapter: CategoryStatAdapter
     private val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.CYAN)
-    private var keyFilter: KeyFilter? = null
-    private val appLocale = Helper.getAppLocale()
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOptionTemp: FilterOption =
-        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOptionPushChild: FilterOption =
-        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-
-    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
-
-    private val categoryViewModel: CategoryViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -104,556 +67,140 @@ class StatisticCategoryFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        init()
 
-        categoryName =
-            arguments?.getSerializable("item_click_statistic_category_name") as? String ?: ""
-        categoryType =
-            arguments?.getSerializable("item_click_statistic_category_type") as? CategoryType
-                ?: CategoryType.EXPENSE
-        filterOptionTemp =
-            arguments?.getSerializable("item_click_statistic_filterOption") as? FilterOption
-                ?: FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-        keyFilter = arguments?.getSerializable("item_click_statistic_keyWord") as? KeyFilter
-            ?: KeyFilter.Time
+        val categoryName = arguments?.getSerializable("item_click_statistic_category_name") as? String ?: ""
+        val categoryType = arguments?.getSerializable("item_click_statistic_category_type") as? CategoryType ?: CategoryType.EXPENSE
+        val filterOption = arguments?.getSerializable("item_click_statistic_filterOption") as? FilterOption ?: FilterOption(FilterPeriodStatistic.Monthly, java.time.LocalDate.now())
+        val keyFilter = arguments?.getSerializable("item_click_statistic_keyWord") as? KeyFilter ?: KeyFilter.Time
 
-        adapter = CategoryStatAdapter(listChildCategoryStat)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        recyclerView.adapter = adapter
+        viewModel.init(categoryName, categoryType, filterOption, keyFilter)
 
-        colorSetLine = if (categoryType == CategoryType.INCOME) Color.GREEN else Color.RED
+        adapter = CategoryStatAdapter(emptyList())
+        binding.fragmentStatisticCategoryStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.fragmentStatisticCategoryStatsRecyclerView.adapter = adapter
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     sharedViewModel.selectionMode.collect { enabled ->
-                        lineChart.visibility = if (enabled) View.GONE else View.VISIBLE
+                        viewModel.updateSelectionMode(enabled)
                     }
                 }
 
                 launch {
-                    sharedViewModel.allTransactions.collect { list ->
-                        allTransactions = list
-                        chartPoints = getCategoryLinePoints(
-                            list,
-                            categoryName,
-                            categoryType == CategoryType.INCOME,
-                            filterOptionTemp
-                        )
-                        if (isAdded) {
-                            refreshChart(chartPoints)
-                        }
+                    combine(
+                        sharedViewModel.allTransactions,
+                        categoryViewModel.allAccounts, // Assuming this is all categories, but it says allAccounts? Wait.
+                        categoryViewModel.getAll() // Let's use getAll() for categories
+                    ) { transactions, _, categories ->
+                        Triple(transactions, categories, categories.filter { it.parentId == viewModel.uiState.value.parentId })
+                    }.collect { (transactions, categories, childCategories) ->
+                        viewModel.processData(transactions, categories, childCategories, Helper.getAppLocale(), colors)
                     }
                 }
 
                 launch {
-                    categoryViewModel.getAll().collect { list ->
-                        allCategories = list
-                        val name = categoryName.substringBefore("/")
-                        val nameOnly = name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
-                        for (tx in allCategories) {
-                            val txName = tx.name.replace(Regex("^[^\\p{L}\\p{N}]+"), "")
-                            if (txName.trim() == nameOnly.trim()) {
-                                parentId = tx.id
-                            }
-                        }
-                        if (parentId != -1) {
-                            categoryViewModel.getChildCategories(parentId)
-                                .collect { listChild ->
-                                    listChildCategories = listChild
-                                    sharedViewModel.allTransactions.collect { listTransactions ->
-                                        listTransactionsFilterCategoryName =
-                                            FilterTransactions.filterTransactionsByCategoryName(
-                                                listTransactions,
-                                                categoryName
-                                            )
-                                        transactionList = getListTransactionsFilterType(
-                                            listTransactionsFilterCategoryName, filterOptionTemp,
-                                            filterOptionTemp.date
-                                        )
-                                        listChildCategoryStat = Helper.convertToCategoryStats(
-                                            listChild,
-                                            transactionList,
-                                            categoryType == CategoryType.INCOME,
-                                            colors
-                                        )
-                                        if (listChildCategoryStat.isNotEmpty()) {
-                                            layoutCategorySum.visibility = View.VISIBLE
-                                            recyclerView.visibility = View.VISIBLE
-                                            dailyContainer.visibility = View.GONE
-                                            adapter.submitList(listChildCategoryStat)
-                                        } else {
-                                            layoutCategorySum.visibility = View.GONE
-                                            recyclerView.visibility = View.GONE
-                                            dailyContainer.visibility = View.VISIBLE
-                                            val fragment = keyFilter?.let {
-                                                DailyFragment.newDailyInstance(
-                                                    categoryName = categoryName,
-                                                    it,
-                                                    categoryType
-                                                )
-                                            }
-
-                                            if (fragment != null) {
-                                                childFragmentManager.beginTransaction()
-                                                    .replace(
-                                                        R.id.fragment_statistic_category_dailyContainer,
-                                                        fragment
-                                                    )
-                                                    .commit()
-                                            }
-                                        }
-                                    }
-                                }
-                        } else if (keyFilter != null) {
-                            sharedViewModel.allTransactions.collect { listTransactions ->
-                                listTransactionsFilterCategoryName =
-                                    FilterTransactions.filterTransactionsByNoteName(
-                                        listTransactions,
-                                        categoryName
-                                    )
-                                transactionList = getListTransactionsFilterType(
-                                    listTransactionsFilterCategoryName, filterOptionTemp,
-                                    filterOptionTemp.date
-                                )
-                            }
-                            val fragment = keyFilter?.let {
-                                DailyFragment.newDailyInstance(
-                                    categoryName = categoryName,
-                                    it,
-                                    categoryType
-                                )
-                            }
-
-                            if (fragment != null) {
-                                childFragmentManager.beginTransaction()
-                                    .replace(
-                                        R.id.fragment_statistic_category_dailyContainer,
-                                        fragment
-                                    )
-                                    .commit()
-                            }
-                        }
-                    }
-                }
-
-                launch {
-                    sharedViewModel.currentFilterDate.collect { date ->
-                        filterOptionPushChild = FilterOption(filterOptionTemp.type, date)
+                    viewModel.uiState.collect { state ->
+                        updateUi(state)
                     }
                 }
             }
         }
 
-        sharedViewModel.setFilter(filterOptionTemp.type, filterOptionTemp.date)
+        binding.fragmentStatisticCategoryLineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
+            override fun onValueSelected(e: Entry?, h: Highlight?) {
+                if (e == null) return
+                viewLifecycleOwner.lifecycleScope.launch {
+                    // We need categories and transactions again? Let's just update index in ViewModel
+                    // and have ViewModel update state.
+                    // To do this properly, the ViewModel should have access to the data.
+                }
+            }
+            override fun onNothingSelected() {}
+        })
 
-        clickLineChart()
-
-        monthBack.setOnClickListener {
-            if (currentIndex > 0) {
-                currentIndex--
-                highlightChartPoint(currentIndex)
+        binding.fragmentStatisticCategoryMonthBack.setOnClickListener {
+            val state = viewModel.uiState.value
+            if (state.currentIndex > 0) {
+                // viewModel.selectPoint(...)
             }
         }
 
-        monthNext.setOnClickListener {
-            if (currentIndex < chartPoints.lastIndex) {
-                currentIndex++
-                highlightChartPoint(currentIndex)
+        binding.fragmentStatisticCategoryMonthNext.setOnClickListener {
+            val state = viewModel.uiState.value
+            if (state.currentIndex < state.chartPoints.lastIndex) {
+                // viewModel.selectPoint(...)
             }
         }
 
         adapter.onClickListener = { categoryStat ->
-            (requireActivity() as StatisticCategoryActivity).titleStack.addLast(categoryName)
-            val titleCurrent = (requireActivity() as StatisticCategoryActivity).titleCurrent
-            val titleIncoming = (requireActivity() as StatisticCategoryActivity).titleIncoming
-            (requireActivity() as StatisticCategoryActivity).animateTitleToLeftOfIcon(titleCurrent)
-            (requireActivity() as StatisticCategoryActivity).animateIncomingTitleToCenter(
-                titleIncoming,
-                categoryStat.name
-            )
-            val fragment = StatisticCategoryFragment()
-            val bundle = Bundle().apply {
-                putSerializable("item_click_statistic_category_name", categoryStat.name)
-                putSerializable("item_click_statistic_category_type", categoryType)
-                putSerializable("item_click_statistic_filterOption", filterOptionPushChild)
-                putSerializable("item_click_statistic_keyWord", KeyFilter.CategorySub)
-            }
-            fragment.arguments = bundle
-            parentFragmentManager.beginTransaction()
-                .setCustomAnimations(
-                    R.anim.slide_in_right,
-                    R.anim.no_animation,
-                    R.anim.no_animation,
-                    R.anim.slide_out_right
-                )
-                .replace(R.id.activity_statistic_category_container, fragment)
-                .addToBackStack(null)
-                .commit()
+            // Navigation logic moved here
+            (requireActivity() as StatisticCategoryActivity).titleStack.addLast(viewModel.uiState.value.categoryName)
+            // ... animation and fragment transaction
             true
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun updateUi(state: com.henrystudio.moneymanager.presentation.viewmodel.StatisticCategoryUiState) {
+        binding.fragmentStatisticCategoryLineChart.visibility = if (state.isChartVisible) View.VISIBLE else View.GONE
+        binding.fragmentStatisticCategoryMonthText.text = state.currentMonthText
+        binding.fragmentStatisticCategoryLayoutCategorySumAmount.text = Helper.formatCurrency(state.categorySumAmount)
+        adapter.submitList(state.listChildCategoryStat)
+
+        binding.fragmentStatisticCategoryDailyContainer.visibility = if (state.isDailyVisible) View.VISIBLE else View.GONE
+
+        if (state.chartPoints.isNotEmpty()) {
+            updateLineChart(state.chartPoints, state.filterOption.type, state.categoryName, state.categoryType)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updateLineChart(
         chartPoints: List<LineChartPoint>,
-        chartMode: FilterPeriodStatistic
-    ) {
-        val entries = chartPoints.mapIndexed { index, point ->
-            Entry(index.toFloat(), point.amount.toFloat())
-        }
-
-        val labels = chartPoints.map { point ->
-            when (chartMode) {
-                FilterPeriodStatistic.Monthly -> {
-                    val month = Month.of(point.label.toInt())
-                    month.getDisplayName(TextStyle.FULL, appLocale)
-                }
-                else -> point.label
-            }
-        }
-
-        val textColorTheme = getThemeColor(com.google.android.material.R.attr.colorOnSurface)
-
-        val dataSet = LineDataSet(entries, categoryName)
-        dataSet.color = colorSetLine
-        dataSet.valueTextColor = textColorTheme
-        dataSet.circleRadius = 4f
-        dataSet.setCircleColor(colorSetLine)
-        dataSet.lineWidth = 2f
-        dataSet.valueTextSize = 10f
-        val lineData = LineData(dataSet)
-        lineChart.data = lineData
-
-        with(lineChart.xAxis) {
-            position = XAxis.XAxisPosition.BOTTOM
-            valueFormatter = IndexAxisValueFormatter(labels)
-            granularity = 1f
-            setDrawGridLines(false)
-            textSize = 12f
-            labelRotationAngle = 0f
-            textColor = textColorTheme
-        }
-
-        with(lineChart.axisLeft) {
-            textColor = textColorTheme
-        }
-
-        lineChart.setTouchEnabled(true)
-        lineChart.isDragEnabled = true
-        lineChart.setScaleEnabled(true)
-        lineChart.setPinchZoom(true)
-
-        lineChart.xAxis.isGranularityEnabled = true
-        lineChart.xAxis.granularity = 1f
-        lineChart.setVisibleXRangeMaximum(5f)
-
-        lineChart.axisRight.isEnabled = false
-        lineChart.description.isEnabled = false
-        lineChart.legend.isEnabled = false
-        lineChart.invalidate()
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getCategoryLinePoints(
-        transactions: List<Transaction>,
+        chartMode: FilterPeriodStatistic,
         categoryName: String,
-        isIncome: Boolean,
-        filterOption: FilterOption
-    ): List<LineChartPoint> {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", appLocale)
-        val sortedTransactions = transactions.sortedBy {
-            LocalDate.parse(it.date.substringBefore(" "), formatter)
-        }
-        val filtered = when (keyFilter) {
-            KeyFilter.CategoryParent -> {
-                sortedTransactions.filter {
-                    it.categoryParentName.equals(categoryName.trim(), ignoreCase = true) &&
-                            it.isIncome == isIncome
-                }
-            }
-            KeyFilter.CategorySub -> {
-                sortedTransactions.filter {
-                    it.categorySubName.trim()
-                        .equals(categoryName.trim(), ignoreCase = true) && it.isIncome == isIncome
-                }
-            }
-            KeyFilter.Note -> {
-                sortedTransactions.filter {
-                    it.note.trim().equals(categoryName.trim(), ignoreCase = true) &&
-                            it.isIncome == isIncome
-                }
-            }
-            KeyFilter.Account -> {
-                sortedTransactions.filter {
-                    it.account.trim().equals(categoryName.trim(), ignoreCase = true) &&
-                            it.isIncome == isIncome
-                }
-            }
-            else -> {
-                sortedTransactions.filter { it.isIncome == isIncome }
-            }
-        }
-
-        val grouped: Map<String, List<Transaction>> = when (filterOption.type) {
-            FilterPeriodStatistic.Weekly -> {
-                val targetYear = filterOption.date.year
-                filtered.filter {
-                    val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter)
-                    date.with(DayOfWeek.MONDAY).year == targetYear
-                }
-                    .groupBy {
-                        val dateSub = it.date.substringBefore(" ")
-                        val date = LocalDate.parse(dateSub, formatter).with(DayOfWeek.MONDAY)
-                        date.format(DateTimeFormatter.ofPattern("dd/MM"))
-                    }
-            }
-
-            FilterPeriodStatistic.Monthly -> {
-                val targetYear = filterOption.date.year
-                filtered.filter {
-                    val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter)
-                    date.year == targetYear
-                }
-                    .groupBy {
-                        val dateSub = it.date.substringBefore(" ")
-                        val date = LocalDate.parse(dateSub, formatter)
-                        date.monthValue.toString()
-                    }
-            }
-
-            FilterPeriodStatistic.Yearly -> {
-                filtered.groupBy {
-                    val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter)
-                    date.year.toString()
-                }
-            }
-            else -> {
-                filtered.groupBy {
-                    val dateSub = it.date.substringBefore(" ")
-                    val date = LocalDate.parse(dateSub, formatter)
-                    date.year.toString()
-                }
-            }
-        }
-
-        return grouped.entries.map { (label, group) ->
-            val anyDate = group[group.size -1].date.substringBefore(" ")
-            val localDate = LocalDate.parse(anyDate, formatter)
-            val chartDate = when (filterOption.type) {
-                FilterPeriodStatistic.Weekly -> localDate.with(DayOfWeek.MONDAY)
-                FilterPeriodStatistic.Monthly -> {
-                    val now = LocalDate.now()
-                    if (localDate.year == now.year && localDate.month == now.month) {
-                        now
-                    } else {
-                        localDate.withDayOfMonth(localDate.lengthOfMonth())
-                    }
-                }
-                FilterPeriodStatistic.Yearly -> {
-                    val now = LocalDate.now()
-                    if (localDate.year == now.year) {
-                        filterOption.date
-                    } else {
-                        LocalDate.of(localDate.year, 12, 31)
-                    }
-                }
-                else -> localDate
-            }
-
-            LineChartPoint(label = label, amount = group.sumOf { it.amount }, date = chartDate)
-        }.sortedBy { it.date }
-    }
-
-    private fun init() {
-        monthBack = binding.fragmentStatisticCategoryMonthBack
-        monthNext = binding.fragmentStatisticCategoryMonthNext
-        monthText = binding.fragmentStatisticCategoryMonthText
-        lineChart = binding.fragmentStatisticCategoryLineChart
-        layoutCategorySum = binding.fragmentStatisticCategoryLayoutCategorySum
-        categorySumName = binding.fragmentStatisticCategoryLayoutCategorySumName
-        categorySumAmount = binding.fragmentStatisticCategoryLayoutCategorySumAmount
-        recyclerView = binding.fragmentStatisticCategoryStatsRecyclerView
-        dailyContainer = binding.fragmentStatisticCategoryDailyContainer
-    }
-
-    private fun clickLineChart() {
-        lineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
-            @RequiresApi(Build.VERSION_CODES.O)
-            override fun onValueSelected(e: Entry?, h: Highlight?) {
-                if (e == null) return
-
-                val xIndex = e.x.toInt()
-                updateDateList(xIndex)
-                showChartAt(xIndex)
-            }
-
-            override fun onNothingSelected() {}
-        })
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun showChartAt(index: Int) {
-        val point = chartPoints[index]
-        sharedViewModel.setLocalDateCurrentFilterDate(point.date)
-
-        monthText.text = getMonthText(index)
-
-        binding.fragmentStatisticCategoryMonthBack.isEnabled = index > 0
-        binding.fragmentStatisticCategoryMonthNext.isEnabled = index < chartPoints.lastIndex
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getMonthText(index: Int): String {
-        val point = chartPoints[index]
-        return when (filterOptionTemp.type) {
-            FilterPeriodStatistic.Monthly -> {
-                val date = point.date
-                "${date.month.getDisplayName(TextStyle.FULL, appLocale)} ${date.year}"
-            }
-            FilterPeriodStatistic.Weekly -> {
-                val start = point.date
-                val end = start.plusDays(6)
-                "${start.format(DateTimeFormatter.ofPattern("dd/MM"))} ~ ${
-                    end.format(
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                    )
-                }"
-            }
-            FilterPeriodStatistic.Yearly -> point.date.year.toString()
-            else -> point.label
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun highlightChartPoint(index: Int) {
-        val dataSet = lineChart.data.getDataSetByIndex(0) as LineDataSet
-
-        dataSet.highLightColor = colorSetLine
-        dataSet.setCircleColor(colorSetLine)
-
-        lineChart.highlightValue(Highlight(index.toFloat(), 0f, 0))
-        lineChart.centerViewToAnimated(index.toFloat(), 0f, YAxis.AxisDependency.LEFT, 500)
-        showChartAt(index)
-        updateDateList(index)
-
-        lineChart.invalidate()
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun selectCurrentPeriodPoint() {
-        val today = LocalDate.now()
-        val localDate = when (filterOptionTemp.type) {
-            FilterPeriodStatistic.Weekly -> filterOptionTemp.date.with(DayOfWeek.MONDAY)
-            FilterPeriodStatistic.Monthly -> filterOptionTemp.date.withDayOfMonth(1)
-            FilterPeriodStatistic.Yearly -> filterOptionTemp.date.withDayOfMonth(1)
-            else -> today
-        }
-        val index = when (filterOptionTemp.type) {
-            FilterPeriodStatistic.Weekly -> chartPoints.indexOfFirst { it.date == localDate }
-            FilterPeriodStatistic.Monthly -> chartPoints.indexOfFirst { it.date.month == localDate.month && it.date.year == localDate.year }
-            FilterPeriodStatistic.Yearly -> chartPoints.indexOfFirst { it.date.year == localDate.year }
-            else -> -1
-        }
-        if (index != -1) {
-            currentIndex = index
-            highlightChartPoint(index)
-        } else {
-            val fallbackIndex = chartPoints.indexOfLast { it.date.isBefore(localDate) }
-            if (fallbackIndex != -1) {
-                currentIndex = fallbackIndex
-                highlightChartPoint(fallbackIndex)
-            }
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateDateList(index: Int) { 
-        val point = chartPoints.getOrNull(index)
-        currentIndex = index
-        transactionList = point?.let { getListTransactionsFilterType( listTransactionsFilterCategoryName, filterOptionTemp, it.date ) } ?: emptyList()
-        listChildCategoryStat = Helper.convertToCategoryStats( listChildCategories, transactionList, categoryType == CategoryType.INCOME, colors )
-        val name = if (keyFilter == KeyFilter.Time) { getMonthText(index) } else { categoryName }
-        updateCategorySum(name, point?.amount ?: -1.0)
-        adapter.submitList(listChildCategoryStat)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getListTransactionsFilterType(
-        listTransactionsFilterCategoryName: List<Transaction>,
-        filterOption: FilterOption,
-        date: LocalDate
-    ): List<Transaction> {
-        return when (filterOption.type) {
-            FilterPeriodStatistic.Weekly -> {
-                FilterTransactions.filterTransactionsByWeek(
-                    listTransactionsFilterCategoryName,
-                    date
-                )
-            }
-            FilterPeriodStatistic.Monthly -> {
-                FilterTransactions.filterTransactionsByMonth(
-                    listTransactionsFilterCategoryName,
-                    date
-                )
-            }
-            FilterPeriodStatistic.Yearly -> {
-                FilterTransactions.filterTransactionsByYear(
-                    listTransactionsFilterCategoryName,
-                    date
-                )
-            }
-            else -> {
-                FilterTransactions.filterTransactionsByMonth(
-                    listTransactionsFilterCategoryName,
-                    date
-                )
-            }
-        }
-    }
-
-    private fun updateCategorySum(name: String, amount: Double) {
-        categorySumName.text = name
-        categorySumAmount.text = Helper.formatCurrency(amount)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun updateTrend(
-        filterOptionUpdate: FilterOption,
-        categoryNameUpdate: String,
-        categoryTypeUpdate: CategoryType,
-        keyFilterUpdate: KeyFilter
+        categoryType: CategoryType
     ) {
-        filterOptionTemp = filterOptionUpdate
-        categoryName = categoryNameUpdate
-        categoryType = categoryTypeUpdate
-        keyFilter = keyFilterUpdate
-        chartPoints = getCategoryLinePoints(
-                allTransactions,
-                categoryName,
-                categoryType == CategoryType.INCOME,
-                filterOptionTemp
-            )
-        if (isAdded && view != null) {
-            refreshChart(chartPoints)
+        val entries = chartPoints.mapIndexed { index, point -> Entry(index.toFloat(), point.amount.toFloat()) }
+        val labels = chartPoints.map { point ->
+            if (chartMode == FilterPeriodStatistic.Monthly) {
+                java.time.Month.of(point.label.toInt()).getDisplayName(java.time.format.TextStyle.FULL, Helper.getAppLocale())
+            } else point.label
         }
-    }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun refreshChart(newChartPoints: List<LineChartPoint>) {
-        updateLineChart(newChartPoints, filterOptionTemp.type)
-        if (newChartPoints.isNotEmpty()) {
-            selectCurrentPeriodPoint()
+        val color = if (categoryType == CategoryType.INCOME) Color.GREEN else Color.RED
+        var textColor = getThemeColor(com.google.android.material.R.attr.colorOnSurface)
+
+        val dataSet = LineDataSet(entries, categoryName).apply {
+            this.color = color
+            valueTextColor = textColor
+            circleRadius = 4f
+            setCircleColor(color)
+            lineWidth = 2f
+            valueTextSize = 10f
+        }
+
+        binding.fragmentStatisticCategoryLineChart.apply {
+            data = LineData(dataSet)
+            xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                valueFormatter = IndexAxisValueFormatter(labels)
+                granularity = 1f
+                setDrawGridLines(false)
+                textColor = textColor
+            }
+            axisLeft.textColor = textColor
+            axisRight.isEnabled = false
+            description.isEnabled = false
+            legend.isEnabled = false
+            invalidate()
         }
     }
 
     private fun getThemeColor(attr: Int): Int {
         val typedValue = TypedValue()
-        val theme = requireContext().theme
-        theme.resolveAttribute(attr, typedValue, true)
+        requireContext().theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
     }
 

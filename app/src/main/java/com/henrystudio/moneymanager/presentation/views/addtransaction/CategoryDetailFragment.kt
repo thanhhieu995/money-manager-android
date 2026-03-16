@@ -7,19 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentCategoryDetailBinding
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.presentation.model.ItemType
-import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFactory
-import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
+import com.henrystudio.moneymanager.presentation.viewmodel.CategoryDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -29,8 +24,7 @@ class CategoryDetailFragment : Fragment() {
     private var _binding : FragmentCategoryDetailBinding? = null
     private val binding  get() = _binding!!
     private lateinit var adapter : DetailCategoryAdapter
-    private val categoryViewModel: CategoryViewModel by viewModels()
-    private val accountViewModel : AccountViewModel by viewModels()
+    private val viewModel: CategoryDetailViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,21 +47,11 @@ class CategoryDetailFragment : Fragment() {
         recyclerView.adapter = adapter
         when(item) {
             is EditItem.Category -> {
+                viewModel.loadChildCategories(item.id, item.item.parentName, item.item.parentEmoji)
                 viewLifecycleOwner.lifecycleScope.launch {
                     viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        categoryViewModel.getChildCategories(item.id).collect { list ->
-                            val categoryItemList = list.map { category ->
-                                CategoryItem(
-                                    id = category.id,
-                                    name = category.name,
-                                    emoji = category.emoji,
-                                    parentId = category.parentId ?: -1,
-                                    isParent = false,
-                                    parentName = item.item.parentName,
-                                    parentEmoji = item.item.parentEmoji
-                                )
-                            }
-                            adapter.submitList(categoryItemList)
+                        viewModel.uiState.collect { state ->
+                            adapter.submitList(state.categoryItems)
                         }
                     }
                 }
@@ -80,8 +64,8 @@ class CategoryDetailFragment : Fragment() {
         }
     }
 
-    private fun deleteChildrenCategory(id : Int){
-        categoryViewModel.deleteId(id)
+    private fun deleteChildrenCategory(id: Int) {
+        viewModel.deleteCategory(id)
     }
 
     private fun childrenCategoryClick(categoryItem: CategoryItem) {

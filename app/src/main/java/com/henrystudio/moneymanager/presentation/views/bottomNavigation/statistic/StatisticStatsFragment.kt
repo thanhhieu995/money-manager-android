@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
@@ -27,33 +26,22 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.color.MaterialColors
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticStatsBinding
-import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.data.model.CategoryType
-import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
-import com.henrystudio.moneymanager.presentation.model.CategoryTotal
-import com.henrystudio.moneymanager.presentation.model.FilterOption
-import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.StatisticStatsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 @AndroidEntryPoint
 class StatisticStatsFragment : Fragment() {
     private var _binding: FragmentStatisticStatsBinding? = null
     private val binding get() = _binding!!
-    private lateinit var noDataText: TextView
-    private var allTransactions: List<Transaction> = emptyList()
-    private var filteredListTransaction : List<Transaction> = emptyList()
-    private var currentStatType = CategoryType.EXPENSE
-    @RequiresApi(Build.VERSION_CODES.O)
-    private var filterOptionTemp : FilterOption =
-        FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now())
-
-    private val sharedViewModel : SharedTransactionViewModel by activityViewModels()
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val viewModel: StatisticStatsViewModel by viewModels()
+    private lateinit var adapter: CategoryStatAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -66,109 +54,86 @@ class StatisticStatsFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        init()
+        adapter = CategoryStatAdapter(emptyList())
+        binding.fragmentStatisticStatsRecyclerView.adapter = adapter
+        binding.fragmentStatisticStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        adapter.onClickListener = { categoryStat ->
+            val state = viewModel.uiState.value
+            val intent = Intent(requireContext(), StatisticCategoryActivity::class.java).apply {
+                putExtra("item_click_statistic_category_name", categoryStat.name)
+                putExtra("item_click_statistic_category_type", state.categoryType)
+                putExtra("item_click_statistic_filterOption", state.filterOption)
+                putExtra("item_click_statistic_keyWord", KeyFilter.CategoryParent)
+            }
+            startActivity(intent)
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
+            true
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-
                 launch {
                     sharedViewModel.statisticCategoryType.collect { type ->
-                        updateCircleChart(type, filteredListTransaction)
+                        viewModel.updateCategoryType(type)
                     }
                 }
-                launch { 
-                    sharedViewModel.allTransactions.collect { transactionList ->
-                        allTransactions = transactionList
-                    }
-                }
-
-                launch { 
-                    sharedViewModel.filterOption.collectLatest { filterOption ->
-                        filterOptionTemp = filterOption
-                        getListUpdateChart(filterOption)
-                    }
-                }
-
                 launch {
-                    sharedViewModel.currentFilterDate.collect { filterDate ->
-                        sharedViewModel.setFilter(filterOptionTemp.type, filterDate)
+                    sharedViewModel.allTransactions.collect { transactionList ->
+                        viewModel.updateAllTransactions(transactionList)
+                    }
+                }
+                launch {
+                    sharedViewModel.filterOption.collectLatest { filterOption ->
+                        viewModel.updateFilterOption(filterOption)
+                    }
+                }
+                launch {
+                    viewModel.uiState.collect { state ->
+                        updateUi(state)
                     }
                 }
             }
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun updateLineChart(categoryType: CategoryType, list: List<Transaction>) {}
-
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateCircleChart(statType: CategoryType, list: List<Transaction>) {
-        val filtered = when (statType) {
-            CategoryType.EXPENSE -> list.filter { !it.isIncome }
-            CategoryType.INCOME -> list.filter { it.isIncome }
-        }
-
-        val categoryTotals = filtered
-            .groupBy { it.categoryParentName }
-            .map { (category, transactions) ->
-                CategoryTotal(
-                    categoryName = category,
-                    totalAmount = transactions.sumOf { it.amount }
-                )
-            }
-
-        val totalAmount = categoryTotals.sumOf { it.totalAmount }.takeIf { it > 0 } ?: 1f
-
-        val pieEntries = categoryTotals.map {
-            PieEntry(((it.totalAmount.toFloat() / totalAmount.toFloat()) * 100f), it.categoryName)
-        }
-
-        drawPieChart(pieEntries, categoryTotals, statType)
+    private fun updateUi(state: com.henrystudio.moneymanager.presentation.viewmodel.StatisticStatsUiState) {
+        adapter.submitList(state.stats)
+        updateCircleChart(state.categoryType, state.stats)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun drawPieChart(entries: List<PieEntry>, categoryTotals: List<CategoryTotal>, categoryType: CategoryType) {
+    private fun updateCircleChart(statType: CategoryType, stats: List<CategoryStat>) {
+        val pieEntries = stats.map { PieEntry(it.percent, it.name) }
+        drawPieChart(pieEntries, stats, statType)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun drawPieChart(entries: List<PieEntry>, stats: List<CategoryStat>, categoryType: CategoryType) {
         val dataSet = PieDataSet(entries, "")
-        val colors = listOf(
-            Color.parseColor("#FF6F61"),
-            Color.parseColor("#6A1B9A"),
-            Color.parseColor("#039BE5"),
-            Color.parseColor("#43A047"),
-            Color.parseColor("#FFB74D"),
-            Color.parseColor("#26A69A")
-        )
-        dataSet.colors = colors
+        dataSet.colors = stats.map { it.color }
         dataSet.valueTextColor = Color.WHITE
         dataSet.valueTextSize = 14f
 
         val pieData = PieData(dataSet)
         pieData.setValueFormatter(object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                return "${Math.round(value)}%"
-            }
+            override fun getFormattedValue(value: Float): String = "${Math.round(value)}%"
         })
 
         val centerTextValue = if (categoryType == CategoryType.EXPENSE) requireContext().getString(R.string.Expense) else requireContext().getString(R.string.Income)
         val color = if (categoryType == CategoryType.EXPENSE) Color.RED else ContextCompat.getColor(requireContext(), R.color.income)
 
         val spannable = SpannableString(centerTextValue).apply {
-            setSpan(
-                ForegroundColorSpan(color),
-                0, centerTextValue.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
+            setSpan(ForegroundColorSpan(color), 0, centerTextValue.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         val holeColor = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorSurface, Color.WHITE)
 
         binding.fragmentStatisticPieChart.apply {
             setUsePercentValues(true)
             isDrawHoleEnabled = true
-            setCenterTextSize(16f)
             setHoleColor(holeColor)
+            setCenterTextSize(16f)
             setEntryLabelColor(Color.WHITE)
             setEntryLabelTextSize(12f)
             description.isEnabled = false
@@ -188,52 +153,10 @@ class StatisticStatsFragment : Fragment() {
                 visibility = View.INVISIBLE
             }
         }
-
-        val total = categoryTotals.sumOf { it.totalAmount }
-
-        val statList = categoryTotals.mapIndexed { index, cat ->
-            CategoryStat(
-                name = cat.categoryName ?: "Unknown",
-                percent = (cat.totalAmount / total * 100f).toFloat(),
-                amount = cat.totalAmount.toFloat(),
-                color = colors[index % colors.size]
-            )
-        }
-
-        val adapter = CategoryStatAdapter(statList)
-        adapter.onClickListener = { categoryStat ->
-            val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
-            intent.putExtra("item_click_statistic_category_name", categoryStat.name)
-            intent.putExtra("item_click_statistic_category_type", categoryType)
-            intent.putExtra("item_click_statistic_filterOption", filterOptionTemp)
-            intent.putExtra("item_click_statistic_keyWord", KeyFilter.CategoryParent)
-            startActivity(intent)
-            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
-            true
-        }
-        binding.fragmentStatisticStatsRecyclerView.adapter = adapter
-        binding.fragmentStatisticStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
     }
 
-    fun init() {
-        noDataText = binding.fragmentStatisticNoDataText
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getListUpdateChart(filterOption: FilterOption) {
-        val list = when (filterOption.type) {
-            FilterPeriodStatistic.Monthly -> FilterTransactions.filterTransactionsByMonth(allTransactions, filterOption.date)
-            FilterPeriodStatistic.Weekly -> FilterTransactions.filterTransactionsByWeek(allTransactions, filterOption.date)
-            FilterPeriodStatistic.Yearly -> FilterTransactions.filterTransactionsByYear(allTransactions, filterOption.date)
-            else -> emptyList()
-        }
-        sharedViewModel.setStatisticTransactionFilter(list)
-        filteredListTransaction = list
-        currentStatType = sharedViewModel.statisticCategoryType.value
-        if (filterOption.type == FilterPeriodStatistic.Trend) {
-            updateLineChart(currentStatType, list)
-        } else {
-            updateCircleChart(currentStatType, list)
-        }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

@@ -8,25 +8,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.databinding.FragmentYearlyBinding
-import com.henrystudio.moneymanager.presentation.model.FilterOption
-import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
-import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.YearlyViewModel
 import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 @AndroidEntryPoint
 class YearlyFragment : Fragment() {
@@ -35,8 +28,8 @@ class YearlyFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var noData: TextView
     private lateinit var adapter: YearlyAdapter
-    
-    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+
+    private val viewModel: YearlyViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,8 +44,9 @@ class YearlyFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         init()
         adapter = YearlyAdapter(emptyList(), onClickYear = { data ->
-            SharedTransactionHolder.currentFilterDate = Helper.formatDateFromFilterOptionToDateDaily(data.date.toString())
-            SharedTransactionHolder.filterOption = FilterOption(FilterPeriodStatistic.Yearly, data.date)
+            val (filterDateStr, filterOption) = viewModel.getFilterForYearSelection(data)
+            SharedTransactionHolder.currentFilterDate = filterDateStr
+            SharedTransactionHolder.filterOption = filterOption
             (requireActivity() as StatisticListActivity).onBackAnimation()
         })
         recyclerView.layoutManager = LinearLayoutManager(context)
@@ -60,9 +54,9 @@ class YearlyFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.allTransactions.collect { transactions ->
-                    adapter.updateData(mapTransactionsToYearlyData(transactions))
-                    noData.visibility = if (transactions.isEmpty()) View.VISIBLE else View.GONE
+                viewModel.uiState.collect { uiState ->
+                    adapter.updateData(uiState.years)
+                    noData.visibility = if (uiState.isEmpty) View.VISIBLE else View.GONE
                 }
             }
         }
@@ -71,32 +65,6 @@ class YearlyFragment : Fragment() {
     private fun init() {
         recyclerView = binding.fragmentYearlyRecyclerView
         noData = binding.fragmentYearlyNoDataText
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun mapTransactionsToYearlyData(transactions: List<Transaction>): List<YearlyData> {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
-        val outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-        return transactions
-            .groupBy { LocalDate.parse(it.date, formatter).year }
-            .map { (year, yearTransactions) ->
-                val income = yearTransactions.filter { it.isIncome }.sumOf { it.amount }
-                val expense = yearTransactions.filter { !it.isIncome }.sumOf { it.amount }
-
-                val startDate = LocalDate.of(year, 1, 1).format(outputFormatter)
-                val endDate = LocalDate.of(year, 12, 31).format(outputFormatter)
-
-                YearlyData(
-                    name = year,
-                    date = LocalDate.of(year, 1, 1),
-                    arrange = "$startDate ~ $endDate",
-                    income = income,
-                    expense = expense,
-                    total = income - expense
-                )
-            }
-            .sortedByDescending { it.name }
     }
 
     override fun onDestroyView() {

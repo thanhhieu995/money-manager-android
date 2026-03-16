@@ -35,6 +35,7 @@ import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import com.henrystudio.moneymanager.presentation.views.main.StickyHeaderItemDecoration
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -101,18 +102,21 @@ class DailyFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.filterOption.collect { option ->
-                        sharedViewModel.combineGroupAndDate.collect { (transactions, selectedMonth) ->
-                            viewModel.updateData(
-                                transactions = transactions,
-                                filterOption = option,
-                                selectedMonth = selectedMonth,
-                                categoryName = categoryName,
-                                categoryType = categoryType,
-                                keyFilter = keyFilter,
-                                isFromMainActivity = requireActivity() is MainActivity
-                            )
-                        }
+                    combine(
+                        sharedViewModel.combineGroupAndDate,
+                        sharedViewModel.filterOption
+                    ) { (transactions, selectedMonth), option ->
+                        Triple(transactions, selectedMonth, option)
+                    }.collect { (transactions, selectedMonth, option) ->
+                        viewModel.updateData(
+                            transactions = transactions,
+                            filterOption = option,
+                            selectedMonth = selectedMonth,
+                            categoryName = categoryName,
+                            categoryType = categoryType,
+                            keyFilter = keyFilter,
+                            isFromMainActivity = requireActivity() is MainActivity
+                        )
                     }
                 }
 

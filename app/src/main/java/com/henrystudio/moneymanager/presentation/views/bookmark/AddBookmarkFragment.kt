@@ -10,15 +10,13 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
+import com.henrystudio.moneymanager.presentation.viewmodel.AddBookmarkViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,7 +24,8 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AddBookmarkFragment : Fragment() {
-    private val transactionViewModel: SharedTransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by viewModels()
+    private val viewModel: AddBookmarkViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvNoData: TextView
@@ -52,9 +51,16 @@ class AddBookmarkFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.allTransactions.collect { list ->
-                    tvNoData.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
-                    transactionAdapter.updateList(list)
+                sharedViewModel.allTransactions.collect { list ->
+                    viewModel.updateTransactions(list)
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    tvNoData.visibility = if (state.isEmpty) View.VISIBLE else View.GONE
+                    transactionAdapter.updateList(state.transactions)
                 }
             }
         }
@@ -62,7 +68,7 @@ class AddBookmarkFragment : Fragment() {
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             override fun onTransactionClick(transaction: Transaction): Boolean {
                 val updated = transaction.copy(isBookmarked = true)
-                transactionViewModel.update(updated)
+                sharedViewModel.update(updated)
                 requireActivity().supportFragmentManager.popBackStack()
                 return true
             }

@@ -1,0 +1,123 @@
+package com.henrystudio.moneymanager.presentation.viewmodel
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
+import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.model.CategoryStat
+import com.henrystudio.moneymanager.presentation.model.FilterOption
+import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
+import java.util.Locale
+import javax.inject.Inject
+
+data class StatisticStatsUiState(
+    val stats: List<CategoryStat> = emptyList(),
+    val categoryType: CategoryType = CategoryType.EXPENSE,
+    val filterOption: FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now()),
+    val allTransactions: List<Transaction> = emptyList()
+)
+
+@HiltViewModel
+class StatisticStatsViewModel @Inject constructor() : ViewModel() {
+    private val _uiState = MutableStateFlow(StatisticStatsUiState())
+    val uiState: StateFlow<StatisticStatsUiState> = _uiState.asStateFlow()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateCategoryType(type: CategoryType) {
+        _uiState.update { it.copy(categoryType = type) }
+        calculateStats()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateFilterOption(option: FilterOption) {
+        _uiState.update { it.copy(filterOption = option) }
+        calculateStats()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateAllTransactions(transactions: List<Transaction>) {
+        _uiState.update { it.copy(allTransactions = transactions) }
+        calculateStats()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateStats() {
+        val state = _uiState.value
+        val filtered = filterTransactions(state.allTransactions, state.filterOption, state.categoryType)
+        val stats = convertToCategoryStats(filtered, state.categoryType == CategoryType.INCOME)
+        _uiState.update { it.copy(stats = stats) }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun filterTransactions(
+        transactions: List<Transaction>,
+        option: FilterOption,
+        type: CategoryType
+    ): List<Transaction> {
+        val isIncome = type == CategoryType.INCOME
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
+        
+        return transactions.filter { tx ->
+            if (tx.isIncome != isIncome) return@filter false
+            
+            val txDate = try {
+                LocalDate.parse(tx.date, formatter)
+            } catch (e: Exception) {
+                return@filter false
+            }
+
+            when (option.type) {
+                FilterPeriodStatistic.Monthly -> {
+                    txDate.month == option.date.month && txDate.year == option.date.year
+                }
+                FilterPeriodStatistic.Weekly -> {
+                    val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
+                    val start = option.date.with(weekFields.dayOfWeek(), 1)
+                    val end = option.date.with(weekFields.dayOfWeek(), 7)
+                    !txDate.isBefore(start) && !txDate.isAfter(end)
+                }
+                FilterPeriodStatistic.Yearly -> {
+                    txDate.year == option.date.year
+                }
+                else -> true
+            }
+        }
+    }
+
+    private fun convertToCategoryStats(transactions: List<Transaction>, isIncome: Boolean): List<CategoryStat> {
+        val totalAmount = transactions.sumOf { it.amount }
+        if (totalAmount <= 0) return emptyList()
+
+        val colors = listOf(
+            android.graphics.Color.parseColor("#FF6F61"),
+            android.graphics.Color.parseColor("#6A1B9A"),
+            android.graphics.Color.parseColor("#039BE5"),
+            android.graphics.Color.parseColor("#43A047"),
+            android.graphics.Color.parseColor("#FFB74D"),
+            android.graphics.Color.parseColor("#26A69A")
+        )
+
+        val grouped = transactions.groupBy { it.categoryParentName }
+        return grouped.entries.mapIndexed { index, entry ->
+            val name = entry.key
+            val list = entry.value
+            val amount = list.sumOf { it.amount }
+            CategoryStat(
+                name = name,
+                amount = amount.toFloat(),
+                percent = (amount / totalAmount * 100).toFloat(),
+                color = colors[index % colors.size]
+            )
+        }.sortedByDescending { it.amount }
+    }
+}

@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -21,14 +20,13 @@ import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
+import com.henrystudio.moneymanager.presentation.viewmodel.MainViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.DailyNavigateFragment
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.presentation.views.setting.SettingFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 import androidx.core.content.edit
 
@@ -36,6 +34,7 @@ import androidx.core.content.edit
 class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
     private val sharedViewModel: SharedTransactionViewModel by viewModels()
+    private val mainViewModel: MainViewModel by viewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel: AccountViewModel by viewModels()
 
@@ -62,16 +61,16 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.currentFilterDate.collect { month ->
-                    val currentLocales = AppCompatDelegate.getApplicationLocales()
-                    val currentLocale: Locale = if (!currentLocales.isEmpty) {
-                        currentLocales[0]!!
-                    } else {
-                        Locale.getDefault()
-                    }
+                sharedViewModel.currentFilterDate.collect { date ->
+                    mainViewModel.updateFilterDate(date)
+                }
+            }
+        }
 
-                    val formatterMonth = DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale)
-                    bottomNav.menu.findItem(R.id.nav_daily).title = month.format(formatterMonth)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.uiState.collect { state ->
+                    bottomNav.menu.findItem(R.id.nav_daily).title = state.bottomNavTitle
                 }
             }
         }
