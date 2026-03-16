@@ -27,6 +27,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
@@ -52,8 +53,8 @@ class AddTransactionFragment : Fragment() {
 
     private var isIncome = false
     private lateinit var dateTextView: TextView
-    private lateinit var incomeButton: Button
-    private lateinit var expenseButton: Button
+    private lateinit var incomeButton: com.google.android.material.button.MaterialButton
+    private lateinit var expenseButton: com.google.android.material.button.MaterialButton
     private lateinit var edtAmount: EditText
     private lateinit var edtCategory: EditText
     private lateinit var edtAccount: EditText
@@ -320,17 +321,9 @@ class AddTransactionFragment : Fragment() {
 
     private fun setTransactionType(isIncomeType: Boolean, isEdit: Boolean) {
         isIncome = isIncomeType
-        if (isIncome) {
-            incomeButton.setBackgroundResource(R.drawable.bg_month_selected)
-            expenseButton.setBackgroundResource(R.drawable.bg_month_normal)
-            incomeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-            expenseButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.red))
-        } else {
-            incomeButton.setBackgroundResource(R.drawable.bg_month_normal)
-            expenseButton.setBackgroundResource(R.drawable.bg_month_selected)
-            incomeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.income))
-            expenseButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-        }
+
+        incomeButton.isChecked = isIncomeType
+        expenseButton.isChecked = !isIncomeType
     }
 
     private fun handleToAddTransaction() {
