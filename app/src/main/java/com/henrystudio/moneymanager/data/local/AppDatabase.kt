@@ -1,6 +1,5 @@
 package com.henrystudio.moneymanager.data.local
 
-import android.app.Application
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
@@ -23,7 +22,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "transactions"
-                ).build().also { instance = it }
+                )
+                    .addCallback(DatabaseCallback(context))
+                    .build().also { instance = it }
             }
         }
     }

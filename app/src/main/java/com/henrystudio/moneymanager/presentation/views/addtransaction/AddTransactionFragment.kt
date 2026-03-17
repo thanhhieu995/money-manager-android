@@ -45,6 +45,7 @@ import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
@@ -76,6 +77,9 @@ class AddTransactionFragment : Fragment() {
     private val viewModel: AddTransactionViewModel by viewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel: AccountViewModel by viewModels()
+
+    private var categoryJob: Job? = null
+    private var accountJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -161,8 +165,9 @@ class AddTransactionFragment : Fragment() {
             if (edtAccount.text.isEmpty()) {
                 edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
-            viewLifecycleOwner.lifecycleScope.launch {
-                val accountList = accountViewModel.allAccounts.first()
+            accountJob?.cancel()
+            accountJob = viewLifecycleOwner.lifecycleScope.launch {
+                val accountList = accountViewModel.allAccounts.first{it.isNotEmpty()}
 
                 showAccountBottomDialog(
                     requireContext().getString(R.string.account),
@@ -399,17 +404,17 @@ class AddTransactionFragment : Fragment() {
 
     private fun categoryClick() {
         edtCategory.setOnClickListener {
-
             val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
             val tintColor = if (isIncome) R.color.income else R.color.red
             if (edtCategory.text.isEmpty()) {
                 edtCategory.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
 
-            viewLifecycleOwner.lifecycleScope.launch {
+            categoryJob?.cancel()
+            categoryJob =  viewLifecycleOwner.lifecycleScope.launch {
                 val list = categoryViewModel
                     .getCategoriesByType(selectedType)
-                    .first()
+                    .first{it.isNotEmpty()}
 
                 val treeItems = Helper.buildCategoryTree(list)
 
