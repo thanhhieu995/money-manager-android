@@ -109,7 +109,7 @@
                 app:strokeColor="@color/income"
                 app:strokeWidth="2dp"
                 android:textColor="@color/toggle_button_income_text_selector"
-                android:backgroundTint="@drawable/toggle_button_income_background_selector"/>
+                android:backgroundTint="@color/income_bg_selector"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/fragment_statistic_view_pager_btnExpense"
@@ -122,7 +122,7 @@
                 app:strokeColor="@color/red"
                 app:strokeWidth="2dp"
                 android:textColor="@color/toggle_button_expense_text_selector"
-                android:backgroundTint="@drawable/toggle_button_expense_background_selector"/>
+                android:backgroundTint="@color/expense_bg_selector"/>
         </com.google.android.material.button.MaterialButtonToggleGroup>
     </LinearLayout>
         <androidx.viewpager2.widget.ViewPager2

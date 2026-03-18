@@ -8,18 +8,20 @@
     android:orientation="vertical"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- Tabs: Income, Expense, Transfer -->
-    <LinearLayout
-        android:orientation="horizontal"
-        android:gravity="center"
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggleGroup"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:singleSelection="true"
+        app:selectionRequired="true">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/fragment_add_transaction_btn_income"
             android:text="@string/Income"
             android:textColor="@color/toggle_button_income_text_selector"
-            android:background="@drawable/toggle_button_income_background_selector"
+            android:backgroundTint="@color/income_bg_selector"
+            android:strokeColor="@color/income_stroke_selector"
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_marginEnd="8dp"
@@ -30,14 +32,15 @@
             android:id="@+id/fragment_add_transaction_btn_expense"
             android:text="@string/Expense"
             android:textColor="@color/toggle_button_expense_text_selector"
-            android:background="@drawable/toggle_button_expense_background_selector"
+            android:backgroundTint="@color/expense_bg_selector"
+            android:strokeColor="@color/expense_stroke_selector"
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_marginStart="8dp"
             android:layout_height="wrap_content"
             android:checkable="true"/>
 
-    </LinearLayout>
+    </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <!-- Date + Fields -->
     <TextView
