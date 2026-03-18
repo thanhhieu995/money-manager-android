@@ -209,11 +209,13 @@ class AddTransactionFragment : Fragment() {
                                     ?.let { saveLastDate(requireContext(), it) }
                                 if (result.closeAfterSave) {
                                     SharedTransactionHolder.scrollToAddedTransaction = true
-                                    (saveButton.context as? AddTransactionActivity)?.onTransactionSaved()
                                 } else {
                                     isEditMode = false
                                     transactionFromIntent = null
-                                    showToastWithIcon(requireContext(), requireContext().getString(R.string.saved))
+                                    showToastWithIcon(
+                                        requireContext(),
+                                        requireContext().getString(R.string.saved)
+                                    )
                                     edtAmount.setText("")
                                     edtCategory.setText("")
                                     edtAccount.setText("")
@@ -236,6 +238,20 @@ class AddTransactionFragment : Fragment() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            viewModel.event.collect { event ->
+                when(event) {
+                    AddTransactionEvent.NavigateBackToDaily -> {
+                        navigateBackToDaily()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun navigateBackToDaily() {
+        requireActivity().finish()
     }
 
     private fun init() {

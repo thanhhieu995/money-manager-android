@@ -22,6 +22,7 @@ import com.henrystudio.moneymanager.presentation.views.setting.SettingFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -36,16 +37,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        MobileAds.initialize(this) {}
-
-        adView = findViewById(R.id.adView)
-        val adRequest = AdRequest.Builder().build()
-        adView.loadAd(adRequest)
-
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val lastTab = prefs.getInt("last_selected_tab", R.id.nav_daily)
 
         init()
+        lifecycleScope.launch {
+            delay(1500)
+            initAds()
+        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -92,5 +91,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun init() {
         bottomNav = findViewById(R.id.main_bottomBar)
+    }
+
+    private fun initAds() {
+        MobileAds.initialize(this) {}
+        adView = findViewById(R.id.adView)
+        val adRequest = AdRequest.Builder().build()
+        adView.loadAd(adRequest)
     }
 }

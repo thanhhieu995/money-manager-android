@@ -31,6 +31,9 @@ class AddTransactionViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AddTransactionUiState())
     val uiState: StateFlow<AddTransactionUiState> = _uiState.asStateFlow()
 
+    private val _event = MutableSharedFlow<AddTransactionEvent>()
+    val event = _event.asSharedFlow()
+
     init {
         viewModelScope.launch {
             transactionUseCases.getTransactionsUseCase()
@@ -82,6 +85,9 @@ class AddTransactionViewModel @Inject constructor(
                         date = dateForDb
                     )
                     transactionUseCases.addTransactionUseCase(newTransaction)
+                }
+                if (params.closeAfterSave) {
+                    _event.emit(AddTransactionEvent.NavigateBackToDaily)
                 }
                 _uiState.update { it.copy(saveResult = SaveResult.Success(params.closeAfterSave)) }
             } catch (e: Exception) {
