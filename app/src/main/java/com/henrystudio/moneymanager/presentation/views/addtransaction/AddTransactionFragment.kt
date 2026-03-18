@@ -2,14 +2,14 @@ package com.henrystudio.moneymanager.presentation.views.addtransaction
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
@@ -49,6 +49,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
+import java.util.logging.Handler
 
 @AndroidEntryPoint
 class AddTransactionFragment : Fragment() {
@@ -139,25 +140,27 @@ class AddTransactionFragment : Fragment() {
         }
 
         incomeButton.setOnClickListener {
-            setTransactionType(true, false)
-            Handler(Looper.getMainLooper()).postDelayed({
-                edtCategory.setText("")
-                edtCategory.performClick()
-            }, 200)
+           onTransactionTypeChanged(true)
         }
 
         expenseButton.setOnClickListener {
-            setTransactionType(false, false)
-            Handler(Looper.getMainLooper()).postDelayed({
-                edtCategory.setText("")
-                edtCategory.performClick()
-            }, 200)
+          onTransactionTypeChanged(false)
         }
 
         categoryClick()
         amountTextChangeListener()
         categoryTextChangeListener()
         accountTextChangeListener()
+
+        edtAmount.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_NEXT ||
+                actionId == EditorInfo.IME_ACTION_DONE ||
+                event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER
+            ) {
+                navigateNextEmptyField()
+                true
+            } else false
+        }
 
         edtAccount.setOnClickListener {
             val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
@@ -288,12 +291,10 @@ class AddTransactionFragment : Fragment() {
         titleBottom.text = title
         val adapter = AccountAdapter(accountList) { selectedItem ->
             targetEditText.setText(selectedItem.name)
-            if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
-                edtNote.postDelayed({
-                    focusNextField()
-                }, 100)
-            }
             bottomSheetDialog.dismiss()
+            if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
+                navigateNextEmptyField()
+            }
         }
         recyclerView.layoutManager = GridLayoutManager(context, 3)
         recyclerView.adapter = adapter
@@ -343,12 +344,15 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun showAddMode() {
-        Handler(Looper.getMainLooper()).postDelayed({
-            setTransactionType(isIncome, false)
-            if (!isEditMode) {
-                edtAmount.requestFocus()
+        setTransactionType(isIncome, false)
+        if (!isEditMode) {
+            edtAmount.post {
+                edtAmount.requestFocusFromTouch()
+                edtAmount.postDelayed({
+                    focusWithKeyboard(edtAmount)
+                }, 100)
             }
-        }, 200)
+        }
         layoutSave.visibility = View.VISIBLE
         layoutEdit.visibility = View.GONE
         continueButton.visibility = View.VISIBLE
@@ -448,25 +452,6 @@ class AddTransactionFragment : Fragment() {
     private fun amountTextChangeListener() {}
     private fun categoryTextChangeListener() {}
     private fun accountTextChangeListener() {}
-
-    private fun focusNextField() {
-        when {
-            edtAmount.text.isNullOrBlank() -> {
-                edtAmount.requestFocus()
-            }
-            edtCategory.text.isNullOrBlank() -> {
-                edtCategory.requestFocus()
-                edtCategory.performClick()
-            }
-            edtAccount.text.isNullOrBlank() -> {
-                edtAccount.requestFocus()
-                edtAccount.performClick()
-            }
-            edtNote.text.isNullOrBlank() -> {
-                edtNote.requestFocus()
-            }
-        }
-    }
 
     private fun openAddItemFragment(type: ItemType, categoryType: CategoryType) {
         val activity = requireActivity() as AddTransactionActivity
@@ -576,14 +561,11 @@ class AddTransactionFragment : Fragment() {
             val parentName =
                 if (selectedItem.parentName == null) "" else selectedItem.parentName + "/"
             targetEditText.setText("$parentEmoji $parentName ${selectedItem.emoji} ${selectedItem.name}")
-
+            bottomSheetDialog.dismiss()
             // Finish choose category and show account, finish account and show note auto
             if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    focusNextField()
-                }, 100)
+                navigateNextEmptyField()
             }
-            bottomSheetDialog.dismiss()
         }
 
         val layoutManager = GridLayoutManager(context, 3)
@@ -615,5 +597,66 @@ class AddTransactionFragment : Fragment() {
 
         bottomSheetDialog.setContentView(view)
         bottomSheetDialog.show()
+    }
+
+    private fun onTransactionTypeChanged(newType: Boolean) {
+        if (isIncome == newType) return
+
+        setTransactionType(newType, false)
+
+        edtCategory.setText("")
+        edtAccount.setText("")
+
+        navigateNextEmptyField()
+    }
+
+    private fun navigateNextEmptyField() {
+        when {
+            edtAmount.text.isNullOrBlank() -> {
+                focusWithKeyboard(edtAmount)
+            }
+
+            edtCategory.text.isNullOrBlank() -> {
+                hideKeyboard()
+               edtCategory.postDelayed({
+                   edtCategory.performClick()
+               }, 100)
+            }
+
+            edtAccount.text.isNullOrBlank() -> {
+                hideKeyboard()
+                edtAccount.postDelayed({
+                    edtAccount.performClick()
+                }, 100)
+            }
+
+            edtNote.text.isNullOrBlank() -> {
+                focusWithKeyboard(edtNote)
+            }
+
+            else -> {
+                // 👉 tất cả đã có data → không làm gì
+            }
+        }
+    }
+
+    private fun focusWithKeyboard(view: View) {
+        view.post {
+            view.requestFocusFromTouch()
+
+            view.postDelayed({
+                val imm = requireContext()
+                    .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            }, 100)
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm = requireContext()
+            .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+        imm.hideSoftInputFromWindow(view?.windowToken, 0)
     }
 }
