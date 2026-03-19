@@ -5,6 +5,8 @@ import android.app.DatePickerDialog
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -55,7 +57,6 @@ import java.util.logging.Handler
 class AddTransactionFragment : Fragment() {
     private var _binding: FragmentAddTransactionBinding? = null
     private val binding get() = _binding!!
-
     private var isIncome = false
     private lateinit var dateTextView: TextView
     private lateinit var incomeButton: com.google.android.material.button.MaterialButton
@@ -73,12 +74,10 @@ class AddTransactionFragment : Fragment() {
     private lateinit var bookMarkButton: Button
     private lateinit var formattedDate: String
     private var transactionFromIntent: Transaction? = null
-
     private var isEditMode = false
     private val viewModel: AddTransactionViewModel by viewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel: AccountViewModel by viewModels()
-
     private var categoryJob: Job? = null
     private var accountJob: Job? = null
 
@@ -448,8 +447,35 @@ class AddTransactionFragment : Fragment() {
             }
         }
     }
-    
-    private fun amountTextChangeListener() {}
+
+    private fun amountTextChangeListener() {
+        edtAmount.addTextChangedListener(object : TextWatcher {
+            private var isFormatting = false
+
+            override fun afterTextChanged(s: Editable?) {
+                if (isFormatting) return
+
+                isFormatting = true
+
+                val cleanString = s.toString().replace("[^\\d]".toRegex(), "")
+
+                if (cleanString.isNotEmpty()) {
+                    val number = cleanString.toLongOrNull() ?: 0L
+                    val formatted = Helper.formatCurrency(number.toDouble())
+
+                    edtAmount.setText(formatted)
+                    edtAmount.setSelection(formatted.length - 1) // giữ cursor trước "đ"
+                } else {
+                    edtAmount.setText("")
+                }
+
+                isFormatting = false
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+    }
     private fun categoryTextChangeListener() {}
     private fun accountTextChangeListener() {}
 
@@ -530,7 +556,10 @@ class AddTransactionFragment : Fragment() {
 
     private fun buildSaveParams(closeAfterSave: Boolean): SaveTransactionParams {
         return SaveTransactionParams(
-            amount = edtAmount.text.toString(),
+            amount = edtAmount.text.toString()
+                .replace("[^\\d]".toRegex(), "")
+                .toLongOrNull()
+                ?.toString() ?: "0",
             category = edtCategory.text.toString(),
             account = edtAccount.text.toString(),
             note = edtNote.text.toString(),
