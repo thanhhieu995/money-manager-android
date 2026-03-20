@@ -47,7 +47,7 @@ class AddItemFragment : Fragment() {
     private lateinit var itemType: ItemType
     private lateinit var categoryType: CategoryType
     private lateinit var source: AddItemSource
-    private var categoryUpdate: com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem?= null
+    private var categoryUpdate: CategoryItem?= null
     private var accountUpdate: EditItem.AccountItem?= null
 
     override fun onCreateView(
@@ -153,8 +153,6 @@ class AddItemFragment : Fragment() {
                         } else {
                             viewModel.insert(category)
                         }
-                        (requireActivity() as AddTransactionActivity).popTitleStackAndAnimateBack()
-                        (requireActivity() as AddTransactionActivity).addIcon.visibility = View.VISIBLE
                         parentFragmentManager.popBackStack()
                     }
                     ItemType.ACCOUNT -> {
@@ -177,8 +175,6 @@ class AddItemFragment : Fragment() {
                         } else {
                             viewModel.insert(account)
                         }
-                        (requireActivity() as AddTransactionActivity).popTitleStackAndAnimateBack()
-                        (requireActivity() as AddTransactionActivity).addIcon.visibility = View.VISIBLE
                         parentFragmentManager.popBackStack()
                     }
                 }
@@ -189,5 +185,14 @@ class AddItemFragment : Fragment() {
     private fun init(){
         nameText = biding.fragmentAddItemName
         btnSave = biding.fragmentAddItemBtnSave
+    }
+    companion object {
+        fun newInstance(itemType: ItemType): AddItemFragment {
+            return AddItemFragment().apply {
+                arguments = Bundle().apply {
+                    putSerializable("item_type", itemType)
+                }
+            }
+        }
     }
 }

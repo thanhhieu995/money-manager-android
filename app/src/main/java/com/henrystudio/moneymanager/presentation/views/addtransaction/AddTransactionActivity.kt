@@ -12,21 +12,18 @@ import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.local.AppDatabase
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.repository.TransactionRepositoryImpl
-import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
-import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.internal.DoubleCheck.lazy
-import java.util.*
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AddTransactionActivity : AppCompatActivity() {
@@ -36,20 +33,12 @@ class AddTransactionActivity : AppCompatActivity() {
     lateinit var addIcon: ImageView
     lateinit var iconBack: ImageView
     private var shouldAnimateExit = false
-
-    private lateinit var toolbar: com.google.android.material.appbar.MaterialToolbar
+    private lateinit var toolbar: MaterialToolbar
     private var isIncome: Boolean = false
-
-    var currentItemType: ItemType? = null
-    var currentCategoryType: CategoryType? = null
     var selectedCategoryItemForAdd: CategoryItem? = null
     var selectedAccountItemForAdd: Account? = null
-
-    private var currentFragment: Fragment?= null
-
-    val titleStack = ArrayDeque<String>()
-
-    private val viewModel: SharedTransactionViewModel by viewModels()
+    private val addTransactionActivityViewModel: AddTransactionActivityViewModel by viewModels()
+    private val titleStack = ArrayDeque<String>()
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
@@ -71,93 +60,14 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         addIcon.setOnClickListener {
-            titleStack.addLast(titleCurrent.text.toString()) // Thêm vào đầu stack
-
-            animateTitleToLeftOfIcon(titleCurrent)
-            currentFragment =
-                supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
-            // source truoc khi chuyen
-            val source = currentFragment?.arguments?.getSerializable("source") as? AddItemSource
-            val fragment = AddItemFragment()
-            when (currentFragment) {
-                is EditItemDialogFragment -> {
-                    fragment.apply {
-                        arguments = Bundle().apply {
-                            putSerializable("item_type", currentItemType)
-                            putSerializable("category_type", currentCategoryType)
-                            putSerializable("source", AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG)
-                        }
-                    }
-                }
-                is CategoryDetailFragment -> {
-                    fragment.apply {
-                        arguments = Bundle().apply {
-                            putSerializable("item_type", currentItemType)
-                            putSerializable("category_type", currentCategoryType)
-                            putSerializable("source", AddItemSource.FROM_DETAIL_CATEGORY)
-                        }
-                    }
-                }
-            }
-
-            when(currentItemType) {
-                ItemType.CATEGORY -> {
-                    when(source) {
-                        AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG -> {
-                            updateTransactionTitle(selectedCategoryItemForAdd?.name ?: getString(R.string.category))
-                        }
-                        else -> {}
-                    }
-                }
-                ItemType.ACCOUNT -> {
-                    updateTransactionTitle(selectedAccountItemForAdd?.name ?: getString(R.string.account))
-                }
-                else -> {}
-            }
-            addIcon.visibility = View.GONE
-            animateIncomingTitleToCenter(titleIncoming, getString(R.string.add))
-
-            supportFragmentManager.beginTransaction()
-                .setCustomAnimations(
-                    R.anim.slide_in_right,  // enter
-                    R.anim.no_animation,    // exit
-                    R.anim.no_animation,    // popEnter (khi quay lại)
-                    R.anim.slide_out_right  // popExit (khi quay lại)
-                ).replace(R.id.fragment_container_add_transaction, fragment)
-                .addToBackStack(null)
-                .commit()
+            addTransactionActivityViewModel.onAddIconClicked()
         }
 
         iconBack.setOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
 
-                currentFragment =
-                    supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
-
-                // Lấy title từ titleStack (có thể là title trước đó, hoặc mặc định là "Transaction")
-                val previousTitle = if (titleStack.isNotEmpty()) titleStack.removeLast() else "Transaction"
-
-                // Áp dụng animation cho title khi quay lại
-                animateBackTitleTransition(previousTitle)
-
-                // Xử lý các thay đổi UI khác khi quay lại
-                when (currentFragment?.arguments?.getSerializable("source") as? AddItemSource) {
-                    AddItemSource.FROM_ADD_TRANSACTION -> {
-                        switchToBookmarkIconWithFade()
-                    }
-                    AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG -> {
-                        switchToAddIconWithFade()
-                    }
-                    AddItemSource.FROM_DETAIL_CATEGORY -> {
-                        // Optional logic if necessary
-                        switchToAddIconWithFade()
-                    }
-                    AddItemSource.FROM_EDIT_ITEM_ACCOUNT_DIALOG -> {
-                        addIcon.visibility = View.VISIBLE
-                    }
-                    else -> {}
-                }
+                addTransactionActivityViewModel.onBackToRoot(isIncome)
             } else {
                 finish()
             }
@@ -167,7 +77,8 @@ class AddTransactionActivity : AppCompatActivity() {
         val transaction = intent.getSerializableExtra("transaction") as? Transaction
 
         if (transaction != null) {
-            titleCurrent.text = if (transaction.isIncome) getString(R.string.Income) else getString(R.string.Expense)
+            titleCurrent.text =
+                if (transaction.isIncome) getString(R.string.Income) else getString(R.string.Expense)
         }
 
         if (savedInstanceState == null) {
@@ -181,6 +92,22 @@ class AddTransactionActivity : AppCompatActivity() {
                 .replace(R.id.fragment_container_add_transaction, fragment)
                 .commit()
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                addTransactionActivityViewModel.toolbarState.collect { state ->
+                    renderToolbar(state)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                addTransactionActivityViewModel.event.collect { action ->
+                    handleNavigation(action)
+                }
+            }
+        }
     }
 
     override fun onPause() {
@@ -193,8 +120,6 @@ class AddTransactionActivity : AppCompatActivity() {
 
     private fun init() {
         toolbar = findViewById(R.id.add_transaction_toolbar)
-        currentFragment =
-            supportFragmentManager.findFragmentById(R.id.fragment_container_add_transaction)
         bookmarkIcon = findViewById(R.id.add_transaction_starButton)
         addIcon = findViewById(R.id.add_transaction_addButton)
         iconBack = findViewById(R.id.add_transaction_backButton)
@@ -324,13 +249,52 @@ class AddTransactionActivity : AppCompatActivity() {
             .start()
     }
 
-    fun popTitleStackAndAnimateBack() {
-        val previousTitle = if (titleStack.isNotEmpty()) titleStack.removeLast() else "Transaction"
-        animateBackTitleTransition(previousTitle)
-    }
-
     fun onTransactionSaved() {
         finish()
         overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
+    }
+
+    private fun renderToolbar(state: AddTransactionToolbarState) {
+        when(state.animation) {
+            TitleAnimation.SlideFromRight -> animateIncomingTitleToCenter(titleIncoming, state.title)
+            TitleAnimation.SlideFromLeft -> animateBackTitleTransition(state.title)
+            TitleAnimation.None -> titleCurrent.text = state.title
+            else -> {}
+        }
+
+        addIcon.visibility = if (state.showAddIcon) View.VISIBLE else View.GONE
+        bookmarkIcon.visibility = if (state.showBookmarkIcon) View.VISIBLE else View.GONE
+    }
+
+    private fun handleNavigation(action: AddItemAction) {
+        val fragment = when (action) {
+
+            is AddItemAction.FromAddTransaction -> {
+                AddItemFragment.newInstance(action.itemType)
+            }
+
+            is AddItemAction.FromEditCategory -> {
+                AddItemFragment.newInstance(ItemType.CATEGORY)
+            }
+
+            is AddItemAction.FromEditAccount -> {
+                AddItemFragment.newInstance(ItemType.ACCOUNT)
+            }
+
+            is AddItemAction.FromCategoryDetail -> {
+                AddItemFragment.newInstance(ItemType.CATEGORY)
+            }
+        }
+
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,
+                R.anim.no_animation,
+                R.anim.no_animation,
+                R.anim.slide_out_right
+            )
+            .replace(R.id.fragment_container_add_transaction, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

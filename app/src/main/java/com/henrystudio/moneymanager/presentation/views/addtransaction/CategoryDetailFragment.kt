@@ -69,11 +69,6 @@ class CategoryDetailFragment : Fragment() {
     }
 
     private fun childrenCategoryClick(categoryItem: CategoryItem) {
-        val title = (requireActivity() as AddTransactionActivity).titleCurrent
-        (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(title)
-        val titleIncoming = (requireActivity() as AddTransactionActivity).titleIncoming
-        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(titleIncoming, "Edit")
-        (requireActivity() as AddTransactionActivity).titleStack.addLast(title.text.toString())
         val fragment = AddItemFragment().apply {
             arguments = Bundle().apply {
                 putSerializable("item_type", ItemType.CATEGORY)

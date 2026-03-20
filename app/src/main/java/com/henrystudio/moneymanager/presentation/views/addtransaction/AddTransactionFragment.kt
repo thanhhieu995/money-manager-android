@@ -23,6 +23,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -51,7 +52,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
-import java.util.logging.Handler
 
 @AndroidEntryPoint
 class AddTransactionFragment : Fragment() {
@@ -75,7 +75,8 @@ class AddTransactionFragment : Fragment() {
     private lateinit var formattedDate: String
     private var transactionFromIntent: Transaction? = null
     private var isEditMode = false
-    private val viewModel: AddTransactionViewModel by viewModels()
+    private val viewModel: AddTransactionFragmentViewModel by viewModels()
+    private val toolbarViewModel: AddTransactionActivityViewModel by activityViewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel: AccountViewModel by viewModels()
     private var categoryJob: Job? = null
@@ -299,11 +300,19 @@ class AddTransactionFragment : Fragment() {
         recyclerView.adapter = adapter
 
         addButton.setOnClickListener {
+            toolbarViewModel.onAddItemClicked(
+                AddItemAction.FromAddTransaction(ItemType.ACCOUNT)
+            )
+
             onAddClick()
             bottomSheetDialog.dismiss()
         }
 
         editButton.setOnClickListener {
+            toolbarViewModel.onAddItemClicked(
+                AddItemAction.FromEditAccount(targetEditText.text.toString())
+            )
+
             onEditClick()
             bottomSheetDialog.dismiss()
         }
@@ -480,18 +489,6 @@ class AddTransactionFragment : Fragment() {
     private fun accountTextChangeListener() {}
 
     private fun openAddItemFragment(type: ItemType, categoryType: CategoryType) {
-        val activity = requireActivity() as AddTransactionActivity
-        val titleView = activity.titleCurrent
-        activity.animateTitleToLeftOfIcon(titleView)
-        activity.bookmarkIcon.visibility = View.GONE
-        activity.addIcon.visibility = View.GONE
-        activity.titleStack.addLast(titleView.text.toString())
-        val titleIncoming = activity.titleIncoming
-        activity.animateIncomingTitleToCenter(
-            titleIncoming,
-            requireContext().getString(R.string.add)
-        )
-
         val fragment = AddItemFragment().apply {
             arguments = Bundle().apply {
                 putSerializable("item_type", type)
@@ -513,24 +510,6 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun openEditAccountFragment(type: ItemType, categoryType: CategoryType) {
-        val activity = requireActivity() as AddTransactionActivity
-        val titleView = activity.titleCurrent
-        activity.animateTitleToLeftOfIcon(titleView)
-        activity.updateTitleIncoming(
-            if (type == ItemType.CATEGORY)
-                requireContext().getString(R.string.category)
-            else
-                requireContext().getString(R.string.account)
-        )
-        val extraEditText = activity.titleIncoming
-        activity.animateIncomingTitleToCenter(extraEditText, extraEditText.text.toString())
-        activity.switchToAddIconWithFade()
-        activity.titleStack.addLast(titleView.text.toString())
-        activity.apply {
-            currentItemType = type
-            currentCategoryType = categoryType
-        }
-
         val fragment = EditItemDialogFragment().apply {
             arguments = Bundle().apply {
                 putSerializable("source", AddItemSource.FROM_ADD_TRANSACTION)
@@ -611,11 +590,18 @@ class AddTransactionFragment : Fragment() {
         recyclerView.adapter = adapter
 
         addButton.setOnClickListener {
+            toolbarViewModel.onAddItemClicked(
+                AddItemAction.FromAddTransaction(ItemType.CATEGORY)
+            )
             onAddClick()
             bottomSheetDialog.dismiss()
         }
 
         editButton.setOnClickListener {
+            toolbarViewModel.onAddItemClicked(
+                AddItemAction.FromEditCategory(targetEditText.text.toString())
+            )
+
             onEditClick()
             bottomSheetDialog.dismiss()
         }

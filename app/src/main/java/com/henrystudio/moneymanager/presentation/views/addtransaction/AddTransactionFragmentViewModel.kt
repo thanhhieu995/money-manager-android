@@ -12,7 +12,6 @@ import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -24,7 +23,7 @@ data class AddTransactionUiState(
 )
 
 @HiltViewModel
-class AddTransactionViewModel @Inject constructor(
+class AddTransactionFragmentViewModel @Inject constructor(
     private val transactionUseCases: TransactionUseCases
 ) : ViewModel() {
 

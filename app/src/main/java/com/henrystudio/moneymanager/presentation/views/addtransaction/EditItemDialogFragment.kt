@@ -60,12 +60,6 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
     }
 
     override fun onEditItemClick(item: EditItem) {
-        val title = (requireActivity() as AddTransactionActivity).titleCurrent
-        (requireActivity() as AddTransactionActivity).animateTitleToLeftOfIcon(title)
-        (requireActivity() as AddTransactionActivity).updateTitleIncoming(item.name)
-        val titleIncoming = (requireActivity() as AddTransactionActivity).titleIncoming
-        (requireActivity() as AddTransactionActivity).animateIncomingTitleToCenter(titleIncoming, item.name)
-        (requireActivity() as AddTransactionActivity).titleStack.addLast(title.text.toString())
         when(item) {
             is EditItem.Category -> {
                 val fragment = CategoryDetailFragment()
