@@ -17,6 +17,7 @@ import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.io.Serializable
 
 @AndroidEntryPoint
 class CategoryDetailFragment : Fragment() {
@@ -85,5 +86,16 @@ class CategoryDetailFragment : Fragment() {
             ).replace(R.id.fragment_container_add_transaction, fragment)
             .addToBackStack(null)
             .commit()
+    }
+
+    companion object {
+        fun newInstance(item: EditItem, action: AddItemAction): CategoryDetailFragment{
+            return CategoryDetailFragment().apply {
+                arguments = Bundle().apply {
+                    putSerializable("edit_child_item", item)
+                    putSerializable("action", action as Serializable?)
+                }
+            }
+        }
     }
 }

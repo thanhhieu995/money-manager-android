@@ -37,6 +37,7 @@ import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModelFactory
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModelFactory
+import java.io.Serializable
 
 class AddItemFragment : Fragment() {
 
@@ -187,10 +188,17 @@ class AddItemFragment : Fragment() {
         btnSave = biding.fragmentAddItemBtnSave
     }
     companion object {
-        fun newInstance(itemType: ItemType): AddItemFragment {
+        private const val KEY_ITEM_TYPE = "item_type"
+        private const val KEY_ACTION = "action"
+
+        fun newInstance(
+            itemType: ItemType,
+            action: AddItemAction
+        ): AddItemFragment {
             return AddItemFragment().apply {
                 arguments = Bundle().apply {
-                    putSerializable("item_type", itemType)
+                    putSerializable(KEY_ITEM_TYPE, itemType) // giữ nguyên nếu ItemType chưa parcelable
+                    putParcelable(KEY_ACTION, action)
                 }
             }
         }

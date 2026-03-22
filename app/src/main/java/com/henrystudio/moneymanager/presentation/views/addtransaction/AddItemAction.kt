@@ -1,9 +1,11 @@
 package com.henrystudio.moneymanager.presentation.views.addtransaction
 
-import com.henrystudio.moneymanager.presentation.model.ItemType
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-sealed class AddItemAction {
-    data class FromAddTransaction(val itemType: ItemType) : AddItemAction()
+@Parcelize
+sealed class AddItemAction: Parcelable {
+    object FromAddTransaction : AddItemAction()
 
     data class FromEditCategory(
         val categoryName: String
@@ -13,5 +15,7 @@ sealed class AddItemAction {
         val accountName: String
     ) : AddItemAction()
 
-    object FromCategoryDetail : AddItemAction()
+    object FromCategoryDetail : AddItemAction() {
+        private fun readResolve(): Any = FromCategoryDetail
+    }
 }

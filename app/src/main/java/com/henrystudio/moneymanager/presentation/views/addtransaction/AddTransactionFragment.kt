@@ -176,8 +176,6 @@ class AddTransactionFragment : Fragment() {
                     requireContext().getString(R.string.account),
                     accountList,
                     edtAccount,
-                    onAddClick = { openAddItemFragment(ItemType.ACCOUNT, selectedType) },
-                    onEditClick = { openEditAccountFragment(ItemType.ACCOUNT, selectedType) }
                 )
             }
         }
@@ -248,6 +246,8 @@ class AddTransactionFragment : Fragment() {
                     AddTransactionEvent.NavigateBackToDaily -> {
                         navigateBackToDaily()
                     }
+
+                    else -> {}
                 }
             }
         }
@@ -278,8 +278,6 @@ class AddTransactionFragment : Fragment() {
         title: String,
         accountList: List<Account>,
         targetEditText: EditText,
-        onAddClick: () -> Unit,
-        onEditClick: () -> Unit
     ) {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
@@ -301,19 +299,19 @@ class AddTransactionFragment : Fragment() {
 
         addButton.setOnClickListener {
             toolbarViewModel.onAddItemClicked(
-                AddItemAction.FromAddTransaction(ItemType.ACCOUNT)
+                AddItemAction.FromAddTransaction,
+                itemType = ItemType.ACCOUNT
             )
 
-            onAddClick()
             bottomSheetDialog.dismiss()
         }
 
         editButton.setOnClickListener {
             toolbarViewModel.onAddItemClicked(
-                AddItemAction.FromEditAccount(targetEditText.text.toString())
+                AddItemAction.FromEditAccount(targetEditText.text.toString()),
+                itemType = ItemType.ACCOUNT
             )
 
-            onEditClick()
             bottomSheetDialog.dismiss()
         }
 
@@ -450,8 +448,6 @@ class AddTransactionFragment : Fragment() {
                     requireContext().getString(R.string.category),
                     treeItems,
                     edtCategory,
-                    onAddClick = { openAddItemFragment(ItemType.CATEGORY, selectedType) },
-                    onEditClick = { openEditAccountFragment(ItemType.CATEGORY, selectedType) }
                 )
             }
         }
@@ -553,8 +549,6 @@ class AddTransactionFragment : Fragment() {
         title: String,
         categoryItems: List<CategoryItem>,
         targetEditText: EditText,
-        onEditClick: () -> Unit,
-        onAddClick: () -> Unit
     ) {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
@@ -591,18 +585,18 @@ class AddTransactionFragment : Fragment() {
 
         addButton.setOnClickListener {
             toolbarViewModel.onAddItemClicked(
-                AddItemAction.FromAddTransaction(ItemType.CATEGORY)
+                AddItemAction.FromAddTransaction,
+                ItemType.CATEGORY
             )
-            onAddClick()
             bottomSheetDialog.dismiss()
         }
 
         editButton.setOnClickListener {
-            toolbarViewModel.onAddItemClicked(
-                AddItemAction.FromEditCategory(targetEditText.text.toString())
+            toolbarViewModel.onEditItemClicked(
+                AddItemAction.FromEditCategory(targetEditText.text.toString()),
+                ItemType.CATEGORY
             )
 
-            onEditClick()
             bottomSheetDialog.dismiss()
         }
 

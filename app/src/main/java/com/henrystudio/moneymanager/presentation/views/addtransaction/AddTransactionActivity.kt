@@ -12,6 +12,7 @@ import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -66,8 +67,6 @@ class AddTransactionActivity : AppCompatActivity() {
         iconBack.setOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 supportFragmentManager.popBackStack()
-
-                addTransactionActivityViewModel.onBackToRoot(isIncome)
             } else {
                 finish()
             }
@@ -103,8 +102,8 @@ class AddTransactionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                addTransactionActivityViewModel.event.collect { action ->
-                    handleNavigation(action)
+                addTransactionActivityViewModel.event.collect { event ->
+                    handleNavigation(event)
                 }
             }
         }
@@ -266,26 +265,53 @@ class AddTransactionActivity : AppCompatActivity() {
         bookmarkIcon.visibility = if (state.showBookmarkIcon) View.VISIBLE else View.GONE
     }
 
-    private fun handleNavigation(action: AddItemAction) {
-        val fragment = when (action) {
+    private fun handleNavigation(event: AddTransactionEvent) {
+        when (event) {
 
-            is AddItemAction.FromAddTransaction -> {
-                AddItemFragment.newInstance(action.itemType)
+            is AddTransactionEvent.NavigateToAddItem -> {
+                navigateTo(
+                    AddItemFragment.newInstance(
+                        itemType = event.itemType,
+                        action = event.action
+                    )
+                )
             }
 
-            is AddItemAction.FromEditCategory -> {
-                AddItemFragment.newInstance(ItemType.CATEGORY)
+            is AddTransactionEvent.NavigateToEditItem -> {
+                navigateTo(
+                    EditItemDialogFragment.newInstance(
+                        itemType = ItemType.CATEGORY,
+                        action = event.action
+                    )
+                )
             }
 
-            is AddItemAction.FromEditAccount -> {
-                AddItemFragment.newInstance(ItemType.ACCOUNT)
+            is AddTransactionEvent.NavigateToEditAccount -> {
+                navigateTo(
+                    AddItemFragment.newInstance(
+                        itemType = ItemType.ACCOUNT,
+                        action = event.action
+                    )
+                )
             }
 
-            is AddItemAction.FromCategoryDetail -> {
-                AddItemFragment.newInstance(ItemType.CATEGORY)
+            is AddTransactionEvent.NavigateToCategoryDetail -> {
+                navigateTo(
+                    CategoryDetailFragment.newInstance(event.item, event.action)
+                )
+            }
+
+            AddTransactionEvent.PopBack -> {
+                supportFragmentManager.popBackStack()
+            }
+
+            AddTransactionEvent.NavigateBackToDaily -> {
+                finish()
             }
         }
+    }
 
+    private fun navigateTo(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.slide_in_right,

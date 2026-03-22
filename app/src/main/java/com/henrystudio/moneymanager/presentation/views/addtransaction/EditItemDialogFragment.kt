@@ -102,4 +102,21 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
             }
         }
     }
+
+    companion object {
+        private const val KEY_ITEM_TYPE = "item_type"
+        private const val KEY_ACTION = "action"
+
+        fun newInstance(
+            itemType: ItemType,
+            action: AddItemAction
+        ): EditItemDialogFragment {
+            return EditItemDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putSerializable(KEY_ITEM_TYPE, itemType) // giữ nguyên nếu ItemType chưa parcelable
+                    putParcelable(KEY_ACTION, action)
+                }
+            }
+        }
+    }
 }
