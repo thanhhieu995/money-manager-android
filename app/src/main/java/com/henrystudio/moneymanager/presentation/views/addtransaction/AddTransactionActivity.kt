@@ -39,7 +39,7 @@ class AddTransactionActivity : AppCompatActivity() {
     var selectedCategoryItemForAdd: CategoryItem? = null
     var selectedAccountItemForAdd: Account? = null
     private val addTransactionActivityViewModel: AddTransactionActivityViewModel by viewModels()
-    private val titleStack = ArrayDeque<String>()
+    private var lastTitle: String? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
@@ -66,6 +66,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
         iconBack.setOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
+                addTransactionActivityViewModel.onBackClicked()
                 supportFragmentManager.popBackStack()
             } else {
                 finish()
@@ -74,11 +75,7 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         val transaction = intent.getSerializableExtra("transaction") as? Transaction
-
-        if (transaction != null) {
-            titleCurrent.text =
-                if (transaction.isIncome) getString(R.string.Income) else getString(R.string.Expense)
-        }
+        addTransactionActivityViewModel.init(transaction)
 
         if (savedInstanceState == null) {
             val fragment = AddTransactionFragment().apply {
@@ -254,15 +251,23 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     private fun renderToolbar(state: AddTransactionToolbarState) {
+        val current = mapTitle(state.title)
+
+        if (current == lastTitle && state.animation == TitleAnimation.None) return
+
         when(state.animation) {
-            TitleAnimation.SlideFromRight -> animateIncomingTitleToCenter(titleIncoming, state.title)
-            TitleAnimation.SlideFromLeft -> animateBackTitleTransition(state.title)
-            TitleAnimation.None -> titleCurrent.text = state.title
-            else -> {}
+            TitleAnimation.SlideFromRight -> { animateForward( current)}
+            TitleAnimation.SlideFromLeft -> { animateBack(current)}
+            TitleAnimation.None -> {
+                titleCurrent.text = current
+                titleCurrent.translationX = 0f
+            }
         }
 
-        addIcon.visibility = if (state.showAddIcon) View.VISIBLE else View.GONE
-        bookmarkIcon.visibility = if (state.showBookmarkIcon) View.VISIBLE else View.GONE
+        lastTitle = current
+
+        addIcon.visibility = if (state.config.showAdd) View.VISIBLE else View.GONE
+        bookmarkIcon.visibility = if (state.config.showBookmark) View.VISIBLE else View.GONE
     }
 
     private fun handleNavigation(event: AddTransactionEvent) {
@@ -322,5 +327,72 @@ class AddTransactionActivity : AppCompatActivity() {
             .replace(R.id.fragment_container_add_transaction, fragment)
             .addToBackStack(null)
             .commit()
+    }
+
+    private fun mapTitle(title: ToolbarTitle): String {
+        return when (title) {
+            ToolbarTitle.INCOME -> getString(R.string.Income)
+            ToolbarTitle.EXPENSE -> getString(R.string.Expense)
+            ToolbarTitle.ADD -> getString(R.string.add)
+            ToolbarTitle.EDIT -> getString(R.string.edit)
+            ToolbarTitle.CATEGORY -> getString(R.string.category)
+        }
+    }
+
+    private fun animateForward(newText: String) {
+        val width = toolbar.width.toFloat()
+
+        // reset trạng thái
+        titleCurrent.animate().cancel()
+        titleIncoming.animate().cancel()
+
+        titleIncoming.text = newText
+        titleIncoming.translationX = width
+        titleIncoming.visibility = View.VISIBLE
+
+        titleCurrent.translationX = 0f
+
+        titleCurrent.animate()
+            .translationX(-width)
+            .setDuration(250)
+            .start()
+
+        titleIncoming.animate()
+            .translationX(0f)
+            .setDuration(250)
+            .withEndAction {
+                titleCurrent.text = newText
+                titleCurrent.translationX = 0f
+                titleIncoming.visibility = View.GONE
+            }
+            .start()
+    }
+
+    private fun animateBack(newText: String) {
+        val width = toolbar.width.toFloat()
+
+        titleCurrent.animate().cancel()
+        titleIncoming.animate().cancel()
+
+        titleIncoming.text = newText
+        titleIncoming.translationX = -width
+        titleIncoming.visibility = View.VISIBLE
+
+        titleCurrent.translationX = 0f
+
+        titleCurrent.animate()
+            .translationX(width)
+            .setDuration(250)
+            .start()
+
+        titleIncoming.animate()
+            .translationX(0f)
+            .setDuration(250)
+            .withEndAction {
+                titleCurrent.text = newText
+                titleCurrent.translationX = 0f
+                titleIncoming.visibility = View.GONE
+            }
+            .start()
     }
 }

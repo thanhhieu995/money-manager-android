@@ -3,11 +3,15 @@ package com.henrystudio.moneymanager.presentation.views.addtransaction
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 
 data class AddTransactionToolbarState(
-    val title: String = "Transaction",
-    val showAddIcon: Boolean = false,
-    val showBookmarkIcon: Boolean = true,
-    val animation: TitleAnimation? = null,
-    val action: AddItemAction? = null
+    val title: ToolbarTitle,
+    val animation: TitleAnimation,
+    val config: ToolbarConfig
+)
+
+data class ToolbarConfig(
+    val showAdd: Boolean,
+    val showBookmark: Boolean,
+    val alignTitleToBack: Boolean = false
 )
 
 sealed class TitleAnimation {

@@ -21,6 +21,7 @@ import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.views.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem
 import java.text.NumberFormat
@@ -80,7 +81,7 @@ class Helper {
             return parentItems
         }
 
-        fun com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem.toCategory(type: CategoryType): Category {
+        fun CategoryItem.toCategory(type: TransactionType): Category {
             return Category(
                 id = this.id,
                 name = this.name,

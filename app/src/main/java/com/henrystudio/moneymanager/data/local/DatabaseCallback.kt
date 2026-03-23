@@ -6,6 +6,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,8 +27,8 @@ class DatabaseCallback(
     }
 
     private suspend fun seed(db: AppDatabase) {
-        val typeIncome = CategoryType.INCOME
-        val typeExpense = CategoryType.EXPENSE
+        val typeIncome = TransactionType.INCOME
+        val typeExpense = TransactionType.EXPENSE
         val defaultCategories = listOf(
             Category(emoji = "🥗", name = "Food", type = typeExpense),
             Category(emoji = "🎉", name = "Social Life", type = typeExpense),

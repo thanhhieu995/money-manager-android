@@ -44,11 +44,13 @@ import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
@@ -76,7 +78,7 @@ class AddTransactionFragment : Fragment() {
     private var transactionFromIntent: Transaction? = null
     private var isEditMode = false
     private val viewModel: AddTransactionFragmentViewModel by viewModels()
-    private val toolbarViewModel: AddTransactionActivityViewModel by activityViewModels()
+    private val activityViewModel: AddTransactionActivityViewModel by activityViewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel: AccountViewModel by viewModels()
     private var categoryJob: Job? = null
@@ -140,11 +142,13 @@ class AddTransactionFragment : Fragment() {
         }
 
         incomeButton.setOnClickListener {
-           onTransactionTypeChanged(true)
+            onTransactionTypeChanged(true)
+            activityViewModel.transactionTypeChanged(TransactionType.INCOME)
         }
 
         expenseButton.setOnClickListener {
-          onTransactionTypeChanged(false)
+            onTransactionTypeChanged(false)
+            activityViewModel.transactionTypeChanged(TransactionType.EXPENSE)
         }
 
         categoryClick()
@@ -298,7 +302,7 @@ class AddTransactionFragment : Fragment() {
         recyclerView.adapter = adapter
 
         addButton.setOnClickListener {
-            toolbarViewModel.onAddItemClicked(
+            activityViewModel.onAddItemClicked(
                 AddItemAction.FromAddTransaction,
                 itemType = ItemType.ACCOUNT
             )
@@ -307,7 +311,7 @@ class AddTransactionFragment : Fragment() {
         }
 
         editButton.setOnClickListener {
-            toolbarViewModel.onAddItemClicked(
+            activityViewModel.onAddItemClicked(
                 AddItemAction.FromEditAccount(targetEditText.text.toString()),
                 itemType = ItemType.ACCOUNT
             )
@@ -584,7 +588,7 @@ class AddTransactionFragment : Fragment() {
         recyclerView.adapter = adapter
 
         addButton.setOnClickListener {
-            toolbarViewModel.onAddItemClicked(
+            activityViewModel.onAddItemClicked(
                 AddItemAction.FromAddTransaction,
                 ItemType.CATEGORY
             )
@@ -592,7 +596,7 @@ class AddTransactionFragment : Fragment() {
         }
 
         editButton.setOnClickListener {
-            toolbarViewModel.onEditItemClicked(
+            activityViewModel.onEditItemClicked(
                 AddItemAction.FromEditCategory(targetEditText.text.toString()),
                 ItemType.CATEGORY
             )
