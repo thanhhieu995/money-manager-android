@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -14,6 +14,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentEditCategoryBinding
 import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment.CategoryDetailFragment
+import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.EditItemDialogAdapter
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment.AddItemFragment
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.viewmodel.EditItemDialogViewModel
@@ -41,9 +47,11 @@ class EditItemDialogFragment : Fragment(), EditItemDialogAdapter.OnEditClickList
         super.onViewCreated(view, savedInstanceState)
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.fragment_edit_category_recycleView)
-        adapter = EditItemDialogAdapter(emptyList(),
+        adapter = EditItemDialogAdapter(
+            emptyList(),
             onDeleteClick = { item -> viewModel.deleteItem(item) },
-            clickItemListener = this)
+            clickItemListener = this
+        )
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter

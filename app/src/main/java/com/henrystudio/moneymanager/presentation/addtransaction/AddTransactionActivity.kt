@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
@@ -19,8 +19,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Account
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.ToolbarTitle
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment.AddItemFragment
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment.AddTransactionFragment
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment.CategoryDetailFragment
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment.EditItemDialogFragment
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import dagger.hilt.android.AndroidEntryPoint

@@ -28,10 +28,9 @@ import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getAppLocale
 import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
-import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.presentation.viewmodel.DailyNavigateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.views.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
 import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter

@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -12,6 +12,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentCategoryDetailBinding
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
+import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.DetailCategoryAdapter
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment.AddItemFragment
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryDetailViewModel
@@ -41,9 +47,10 @@ class CategoryDetailFragment : Fragment() {
 
         val item = arguments?.getSerializable("edit_child_item") as EditItem
         val recyclerView = binding.fragmentCategoryDetailRecyclerView
-        adapter = DetailCategoryAdapter(emptyList(),
-        onDeleteClick = {deleteChildrenCategory(it.id)},
-        onItemClick = {childrenCategoryClick(it)})
+        adapter = DetailCategoryAdapter(
+            emptyList(),
+            onDeleteClick = { deleteChildrenCategory(it.id) },
+            onItemClick = { childrenCategoryClick(it) })
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
         when(item) {

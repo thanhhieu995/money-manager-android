@@ -16,14 +16,13 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Category
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.TransactionType
-import com.henrystudio.moneymanager.presentation.views.addtransaction.AddTransactionActivity
-import com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
@@ -49,8 +48,8 @@ class Helper {
             return format.format(amount) + "đ"
         }
 
-        fun buildCategoryTree(categories: List<Category>): List<com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem> {
-            val parentItems = mutableListOf<com.henrystudio.moneymanager.presentation.views.addtransaction.CategoryItem>()
+        fun buildCategoryTree(categories: List<Category>): List<CategoryItem> {
+            val parentItems = mutableListOf<CategoryItem>()
 
             categories.filter { it.parentId == null }.forEach { parent ->
                 val children = categories.filter { it.parentId == parent.id }

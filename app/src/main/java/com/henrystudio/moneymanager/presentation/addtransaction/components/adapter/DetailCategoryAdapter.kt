@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.components.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 
 class DetailCategoryAdapter(
     private var categoryItems: List<CategoryItem>,

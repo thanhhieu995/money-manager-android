@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +32,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDate
@@ -38,9 +40,18 @@ import com.henrystudio.moneymanager.core.util.Helper.Companion.getFormattedDateT
 import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
-import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment.AddItemFragment
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment.EditItemDialogFragment
+import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.AccountAdapter
+import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.ExpandableCategoryAdapter
+import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
@@ -61,8 +72,8 @@ class AddTransactionFragment : Fragment() {
     private val binding get() = _binding!!
     private var isIncome = false
     private lateinit var dateTextView: TextView
-    private lateinit var incomeButton: com.google.android.material.button.MaterialButton
-    private lateinit var expenseButton: com.google.android.material.button.MaterialButton
+    private lateinit var incomeButton: MaterialButton
+    private lateinit var expenseButton: MaterialButton
     private lateinit var edtAmount: EditText
     private lateinit var edtCategory: EditText
     private lateinit var edtAccount: EditText
@@ -159,7 +170,7 @@ class AddTransactionFragment : Fragment() {
         edtAmount.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_NEXT ||
                 actionId == EditorInfo.IME_ACTION_DONE ||
-                event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER
+                event?.keyCode == KeyEvent.KEYCODE_ENTER
             ) {
                 navigateNextEmptyField()
                 true

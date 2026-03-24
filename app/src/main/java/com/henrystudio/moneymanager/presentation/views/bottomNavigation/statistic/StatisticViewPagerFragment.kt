@@ -28,12 +28,12 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticViewPagerBinding
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.stringRes
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticViewPagerViewModel
-import com.henrystudio.moneymanager.presentation.views.addtransaction.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -252,7 +252,6 @@ class StatisticViewPagerFragment : Fragment() {
                         updateCheckMarks(selectedOption)
                         val intent = Intent(requireContext(), StatisticListActivity::class.java)
                         intent.putExtra("filterOption", filterOptionTemp)
-                        intent.putExtra("categoryType", viewModel.uiState.value.categoryType)
                         intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
                         startActivity(intent)
                         requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
@@ -263,7 +262,6 @@ class StatisticViewPagerFragment : Fragment() {
                         updateCheckMarks(selectedOption)
                         val intent = Intent(requireContext(), StatisticTrendActivity::class.java)
                         intent.putExtra("filterOption", filterOptionTemp)
-                        intent.putExtra("categoryType", viewModel.uiState.value.categoryType)
                         intent.putExtra("currentFilterPeriodStatistic", filterPeriod)
                         startActivity(intent)
                         requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)

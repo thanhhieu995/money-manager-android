@@ -1,4 +1,6 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.model
+
+import java.io.Serializable
 
 data class CategoryItem(
     val id: Int = -1,
@@ -10,4 +12,4 @@ data class CategoryItem(
     val isParent: Boolean,
     val children: List<CategoryItem> = emptyList(),
     var isExpanded: Boolean = false
-): java.io.Serializable
+): Serializable

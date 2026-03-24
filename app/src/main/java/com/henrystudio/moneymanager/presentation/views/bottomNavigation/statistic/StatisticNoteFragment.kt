@@ -96,7 +96,6 @@ class StatisticNoteFragment : Fragment() {
             val state = viewModel.uiState.value
             val intent = Intent(requireContext(), StatisticCategoryActivity::class.java)
             intent.putExtra("item_click_statistic_category_name", note.note)
-            intent.putExtra("item_click_statistic_category_type", state.categoryType)
             intent.putExtra("item_click_statistic_filterOption", state.filterOption)
             intent.putExtra("item_click_statistic_keyWord", KeyFilter.Note)
             startActivity(intent)

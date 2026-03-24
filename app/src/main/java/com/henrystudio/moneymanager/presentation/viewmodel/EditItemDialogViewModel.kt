@@ -6,8 +6,8 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.domain.usecase.account.AccountUseCases
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
-import com.henrystudio.moneymanager.presentation.views.addtransaction.EditItem
-import com.henrystudio.moneymanager.presentation.views.addtransaction.EditItemDialogUiState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
+import com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment.EditItemDialogUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

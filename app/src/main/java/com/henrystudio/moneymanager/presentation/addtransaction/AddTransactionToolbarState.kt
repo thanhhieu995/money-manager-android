@@ -1,6 +1,6 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction
 
-import com.henrystudio.moneymanager.presentation.model.AddItemSource
+import com.henrystudio.moneymanager.presentation.addtransaction.model.ToolbarTitle
 
 data class AddTransactionToolbarState(
     val title: ToolbarTitle,

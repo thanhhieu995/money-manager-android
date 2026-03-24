@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -8,6 +8,8 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
+import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

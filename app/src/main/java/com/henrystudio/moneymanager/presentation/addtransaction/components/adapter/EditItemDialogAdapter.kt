@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.components.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +9,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Account
+import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItemDialogDiffCallback
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
+import java.lang.IllegalArgumentException
 
 class EditItemDialogAdapter(
     private var itemList: List<EditItem>,
@@ -71,7 +75,7 @@ class EditItemDialogAdapter(
         return when(viewType) {
             0 -> EditCategoryViewHolder(inflater.inflate(R.layout.item_category_edit, parent, false))
             1 -> EditAccountViewHolder(inflater.inflate(R.layout.item_account_edit, parent, false))
-            else -> throw java.lang.IllegalArgumentException("Invalid view type")
+            else -> throw IllegalArgumentException("Invalid view type")
         }
     }
 

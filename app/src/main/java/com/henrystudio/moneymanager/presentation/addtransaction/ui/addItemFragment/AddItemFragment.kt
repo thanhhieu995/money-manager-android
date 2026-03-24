@@ -1,19 +1,23 @@
-package com.henrystudio.moneymanager.presentation.views.addtransaction
+package com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment
 
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import com.henrystudio.moneymanager.databinding.FragmentAddItemBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.toCategory
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.Category
+import com.henrystudio.moneymanager.databinding.FragmentAddItemBinding
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel

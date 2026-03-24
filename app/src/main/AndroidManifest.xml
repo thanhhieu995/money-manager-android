@@ -67,7 +67,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".presentation.views.addtransaction.AddTransactionActivity"
+            android:name=".presentation.addtransaction.AddTransactionActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"

@@ -62,7 +62,6 @@ class StatisticStatsFragment : Fragment() {
             val state = viewModel.uiState.value
             val intent = Intent(requireContext(), StatisticCategoryActivity::class.java).apply {
                 putExtra("item_click_statistic_category_name", categoryStat.name)
-                putExtra("item_click_statistic_category_type", state.categoryType)
                 putExtra("item_click_statistic_filterOption", state.filterOption)
                 putExtra("item_click_statistic_keyWord", KeyFilter.CategoryParent)
             }
