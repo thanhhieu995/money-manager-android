@@ -7,6 +7,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
 import android.view.Gravity
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -259,6 +260,13 @@ class Helper {
                 LocalDate.parse(dateStr, inputFormatter)
             } catch (e: Exception) {
                 null
+            }
+        }
+
+        fun EditText.setTextIfDifferent(newText: String) {
+            if (text.toString() != newText) {
+                setText(newText)
+                setSelection(newText.length)
             }
         }
      }

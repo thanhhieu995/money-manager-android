@@ -19,11 +19,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.inject.Inject
 
-data class AddTransactionUiState(
-    val noteSuggestions: List<String> = emptyList(),
-    val saveResult: SaveResult? = null
-)
-
 @HiltViewModel
 class AddTransactionFragmentViewModel @Inject constructor(
     private val transactionUseCases: TransactionUseCases
@@ -111,5 +106,27 @@ class AddTransactionFragmentViewModel @Inject constructor(
 
     fun clearSaveResult() {
         _uiState.update { it.copy(saveResult = null) }
+    }
+
+    fun onAmountChanged(input: String) {
+        val clean = input.replace("[^\\d]".toRegex(), "")
+
+        val formatted = if (clean.isNotEmpty()) {
+            val number = clean.toLongOrNull() ?: 0L
+            Helper.formatCurrency(number.toDouble())
+        } else ""
+
+        _uiState.update {
+            it.copy(
+                amountRaw = clean,
+                amountFormatted = formatted
+            )
+        }
+    }
+
+    fun onTransactionTypeChanged(value: Boolean) {
+        _uiState.update {
+            it.copy(isIncome = value, category = "", account = "")
+        }
     }
 }

@@ -38,6 +38,7 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getFormattedDateToday
 import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.setTextIfDifferent
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.data.model.CategoryType
@@ -243,6 +244,9 @@ class AddTransactionFragment : Fragment() {
                                 }
                             }
                         }
+                    }
+                    state.amountFormatted.let {
+                        edtAmount.setTextIfDifferent(it)
                     }
                 }
             }
@@ -474,26 +478,8 @@ class AddTransactionFragment : Fragment() {
 
     private fun amountTextChangeListener() {
         edtAmount.addTextChangedListener(object : TextWatcher {
-            private var isFormatting = false
-
             override fun afterTextChanged(s: Editable?) {
-                if (isFormatting) return
-
-                isFormatting = true
-
-                val cleanString = s.toString().replace("[^\\d]".toRegex(), "")
-
-                if (cleanString.isNotEmpty()) {
-                    val number = cleanString.toLongOrNull() ?: 0L
-                    val formatted = Helper.formatCurrency(number.toDouble())
-
-                    edtAmount.setText(formatted)
-                    edtAmount.setSelection(formatted.length - 1) // giữ cursor trước "đ"
-                } else {
-                    edtAmount.setText("")
-                }
-
-                isFormatting = false
+                viewModel.onAmountChanged(s.toString())
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
