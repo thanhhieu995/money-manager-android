@@ -8,7 +8,7 @@ sealed class AddItemAction: Parcelable {
     object FromAddTransaction : AddItemAction()
 
     data class FromEditCategory(
-        val categoryName: String
+        val item: CategoryItem
     ) : AddItemAction()
 
     data class FromEditAccount(

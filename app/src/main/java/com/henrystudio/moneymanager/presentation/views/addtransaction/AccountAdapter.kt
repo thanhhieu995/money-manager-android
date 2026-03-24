@@ -9,7 +9,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Account
 
 class AccountAdapter(
-    private val accounts: List<Account>,
+    private var accounts: List<Account> = emptyList(),
     private val itemClick: (Account) -> Unit
 ) : RecyclerView.Adapter<AccountAdapter.AccountViewHolder>() {
 
@@ -23,7 +23,7 @@ class AccountAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AccountAdapter.AccountViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AccountViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_account_dialog, parent, false)
         return AccountViewHolder(view)
     }
@@ -33,4 +33,9 @@ class AccountAdapter(
     }
 
     override fun getItemCount(): Int = accounts.size
+
+    fun updateData(newList: List<Account>) {
+        this.accounts = newList
+        notifyDataSetChanged()
+    }
 }

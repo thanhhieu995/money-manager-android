@@ -112,7 +112,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         )
 
         viewModelScope.launch {
-            _event.emit(AddTransactionEvent.NavigateToEditItem(action))
+            _event.emit(AddTransactionEvent.NavigateToEditItem(itemType,action))
         }
     }
 

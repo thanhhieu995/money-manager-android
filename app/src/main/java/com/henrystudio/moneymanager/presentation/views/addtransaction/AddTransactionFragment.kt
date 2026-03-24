@@ -167,21 +167,14 @@ class AddTransactionFragment : Fragment() {
         }
 
         edtAccount.setOnClickListener {
-            val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
             val tintColor = if (isIncome) R.color.income else R.color.red
             if (edtAccount.text.isEmpty()) {
                 edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
             }
-            accountJob?.cancel()
-            accountJob = viewLifecycleOwner.lifecycleScope.launch {
-                val accountList = accountViewModel.allAccounts.first{it.isNotEmpty()}
-
-                showAccountBottomDialog(
-                    requireContext().getString(R.string.account),
-                    accountList,
-                    edtAccount,
-                )
-            }
+            showAccountBottomDialog(
+                requireContext().getString(R.string.account),
+                edtAccount,
+            )
         }
 
         saveButton.setOnClickListener {
@@ -280,7 +273,6 @@ class AddTransactionFragment : Fragment() {
 
     private fun showAccountBottomDialog(
         title: String,
-        accountList: List<Account>,
         targetEditText: EditText,
     ) {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
@@ -291,7 +283,8 @@ class AddTransactionFragment : Fragment() {
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
-        val adapter = AccountAdapter(accountList) { selectedItem ->
+        
+        val adapter = AccountAdapter { selectedItem ->
             targetEditText.setText(selectedItem.name)
             bottomSheetDialog.dismiss()
             if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
@@ -300,6 +293,17 @@ class AddTransactionFragment : Fragment() {
         }
         recyclerView.layoutManager = GridLayoutManager(context, 3)
         recyclerView.adapter = adapter
+
+        accountJob?.cancel()
+        accountJob = lifecycleScope.launch {
+                accountViewModel.allAccounts.collectLatest { accounts ->
+                    adapter.updateData(accounts)
+                }
+        }
+
+        bottomSheetDialog.setOnDismissListener {
+            accountJob?.cancel()
+        }
 
         addButton.setOnClickListener {
             activityViewModel.onAddItemClicked(
@@ -561,8 +565,10 @@ class AddTransactionFragment : Fragment() {
         val addButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_add)
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
+        var selectedCategory: CategoryItem? = null
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
+            selectedCategory = selectedItem
             val parentEmoji = selectedItem.parentEmoji ?: ""
             val parentName =
                 if (selectedItem.parentName == null) "" else selectedItem.parentName + "/"
@@ -596,10 +602,12 @@ class AddTransactionFragment : Fragment() {
         }
 
         editButton.setOnClickListener {
-            activityViewModel.onEditItemClicked(
-                AddItemAction.FromEditCategory(targetEditText.text.toString()),
-                ItemType.CATEGORY
-            )
+            selectedCategory?.let {
+                activityViewModel.onEditItemClicked(
+                    AddItemAction.FromEditCategory(it),
+                    ItemType.CATEGORY
+                )
+            }
 
             bottomSheetDialog.dismiss()
         }

@@ -285,7 +285,7 @@ class AddTransactionActivity : AppCompatActivity() {
             is AddTransactionEvent.NavigateToEditItem -> {
                 navigateTo(
                     EditItemDialogFragment.newInstance(
-                        itemType = ItemType.CATEGORY,
+                        itemType = event.itemType,
                         action = event.action
                     )
                 )

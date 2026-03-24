@@ -1,5 +1,24 @@
 package com.henrystudio.moneymanager.presentation.model
 
-enum class ItemType {
-    CATEGORY, ACCOUNT
+import android.os.Parcel
+import android.os.Parcelable
+
+enum class ItemType : Parcelable{
+    CATEGORY {
+        override fun describeContents(): Int {
+            TODO("Not yet implemented")
+        }
+
+        override fun writeToParcel(p0: Parcel, p1: Int) {
+            TODO("Not yet implemented")
+        }
+    }, ACCOUNT {
+        override fun describeContents(): Int {
+            TODO("Not yet implemented")
+        }
+
+        override fun writeToParcel(p0: Parcel, p1: Int) {
+            TODO("Not yet implemented")
+        }
+    }
 }
