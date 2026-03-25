@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -43,19 +44,16 @@ import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment.AddItemFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
-import com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment.EditItemDialogFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.AccountAdapter
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.ExpandableCategoryAdapter
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
 import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
-import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
-import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
@@ -71,7 +69,8 @@ import java.util.*
 class AddTransactionFragment : Fragment() {
     private var _binding: FragmentAddTransactionBinding? = null
     private val binding get() = _binding!!
-    private var isIncome = false
+
+    //    private var isIncome = false
     private lateinit var dateTextView: TextView
     private lateinit var incomeButton: MaterialButton
     private lateinit var expenseButton: MaterialButton
@@ -88,7 +87,6 @@ class AddTransactionFragment : Fragment() {
     private lateinit var bookMarkButton: Button
     private lateinit var formattedDate: String
     private var transactionFromIntent: Transaction? = null
-    private var isEditMode = false
     private val viewModel: AddTransactionFragmentViewModel by viewModels()
     private val activityViewModel: AddTransactionActivityViewModel by activityViewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
@@ -145,21 +143,23 @@ class AddTransactionFragment : Fragment() {
             val month = calendar.get(Calendar.MONTH)
             val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-            val datePicker = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
-                val newFormattedDate = formatPickedDate(selectedYear, selectedMonth, selectedDay)
-                dateTextView.text = newFormattedDate
-            }, year, month, day)
+            val datePicker =
+                DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+                    val newFormattedDate =
+                        formatPickedDate(selectedYear, selectedMonth, selectedDay)
+                    viewModel.onDateChanged(newFormattedDate)
+                }, year, month, day)
 
             datePicker.show()
         }
 
         incomeButton.setOnClickListener {
-            onTransactionTypeChanged(true)
+            viewModel.onTransactionTypeChanged(true)
             activityViewModel.transactionTypeChanged(TransactionType.INCOME)
         }
 
         expenseButton.setOnClickListener {
-            onTransactionTypeChanged(false)
+            viewModel.onTransactionTypeChanged(false)
             activityViewModel.transactionTypeChanged(TransactionType.EXPENSE)
         }
 
@@ -167,6 +167,7 @@ class AddTransactionFragment : Fragment() {
         amountTextChangeListener()
         categoryTextChangeListener()
         accountTextChangeListener()
+        noteTextChangeListener()
 
         edtAmount.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_NEXT ||
@@ -179,9 +180,10 @@ class AddTransactionFragment : Fragment() {
         }
 
         edtAccount.setOnClickListener {
-            val tintColor = if (isIncome) R.color.income else R.color.red
+            val tintColor = if (viewModel.uiState.value.isIncome) R.color.income else R.color.red
             if (edtAccount.text.isEmpty()) {
-                edtAccount.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+                edtAccount.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), tintColor)
             }
             showAccountBottomDialog(
                 requireContext().getString(R.string.account),
@@ -190,13 +192,23 @@ class AddTransactionFragment : Fragment() {
         }
 
         saveButton.setOnClickListener {
-            viewModel.saveTransaction(
-               buildSaveParams(true)
-            )
+            viewModel.onSaveClicked(true)
         }
 
         continueButton.setOnClickListener {
-            viewModel.saveTransaction(buildSaveParams(false))
+            viewModel.onSaveClicked(false)
+        }
+
+        copyButton.setOnClickListener {
+            viewModel.onCopyClicked()
+        }
+
+        deleteButton.setOnClickListener {
+            viewModel.onDeleteClicked()
+        }
+
+        bookMarkButton.setOnClickListener {
+            viewModel.onBookmarkClicked()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -214,25 +226,13 @@ class AddTransactionFragment : Fragment() {
                         when (result) {
                             is SaveResult.Success -> {
                                 viewModel.clearSaveResult()
-                                SharedTransactionHolder.currentFilterDate = dateTextView.text.toString()
+                                SharedTransactionHolder.currentFilterDate =
+                                    dateTextView.text.toString()
                                 parseDisplayDateToLocalDate(dateTextView.text.toString())
                                     ?.let { saveLastDate(requireContext(), it) }
-                                if (result.closeAfterSave) {
-                                    SharedTransactionHolder.scrollToAddedTransaction = true
-                                } else {
-                                    isEditMode = false
-                                    transactionFromIntent = null
-                                    showToastWithIcon(
-                                        requireContext(),
-                                        requireContext().getString(R.string.saved)
-                                    )
-                                    edtAmount.setText("")
-                                    edtCategory.setText("")
-                                    edtAccount.setText("")
-                                    edtNote.setText("")
-                                    edtAmount.requestFocus()
-                                }
+                                viewModel.saveFlow(result.closeAfterSave)
                             }
+
                             is SaveResult.Error -> {
                                 viewModel.clearSaveResult()
                                 when (result.message) {
@@ -240,6 +240,7 @@ class AddTransactionFragment : Fragment() {
                                         requireContext(),
                                         requireContext().getString(R.string.error_fill_category_account)
                                     )
+
                                     else -> showToastWithIcon(requireContext(), result.message)
                                 }
                             }
@@ -248,17 +249,85 @@ class AddTransactionFragment : Fragment() {
                     state.amountFormatted.let {
                         edtAmount.setTextIfDifferent(it)
                     }
+                    state.category.let { category ->
+                        edtCategory.setTextIfDifferent(category)
+                    }
+                    state.account.let { account ->
+                        edtAccount.setTextIfDifferent(account)
+                    }
+                    state.note.let { note ->
+                        edtNote.setTextIfDifferent(note)
+                    }
+                    state.isIncome.let { isIncome ->
+                        incomeButton.isChecked = isIncome
+                        expenseButton.isChecked = !isIncome
+                    }
+                    state.date.let { date ->
+                        dateTextView.text = date
+                    }
+                    state.isEditMode.let { isEdit ->
+                        layoutSave.visibility = if (isEdit) View.GONE else View.VISIBLE
+                        layoutEdit.visibility = if (isEdit) View.VISIBLE else View.GONE
+                    }
+                    state.isContinueVisible.let { isVisible ->
+                        continueButton.visibility = if (isVisible) View.VISIBLE else View.GONE
+                    }
                 }
             }
         }
 
         lifecycleScope.launch {
             viewModel.event.collect { event ->
-                when(event) {
-                    AddTransactionEvent.NavigateBackToDaily -> {
+                when (event) {
+                    is AddTransactionEvent.NavigateBackToDaily -> {
                         navigateBackToDaily()
                     }
 
+                    is AddTransactionEvent.FocusField -> {
+                        when (event.fieldType) {
+                            FieldType.AMOUNT -> {
+                                focusWithKeyboard(edtAmount)
+                            }
+                            FieldType.CATEGORY -> {
+                                hideKeyboard()
+                                edtCategory.postDelayed({
+                                    edtCategory.performClick()
+                                }, 100)
+                            }
+                            FieldType.ACCOUNT -> {
+                                hideKeyboard()
+                                edtAccount.postDelayed({
+                                    edtAccount.performClick()
+                                }, 100)
+                            }
+                            FieldType.NOTE -> {
+                                focusWithKeyboard(edtNote)
+                            }
+                            else -> {}
+                        }
+                    }
+                    is AddTransactionEvent.CloseScreen -> {
+                        SharedTransactionHolder.scrollToAddedTransaction = true
+                    }
+                    is AddTransactionEvent.ResetForm -> {
+                        viewModel.resetForm()
+                    }
+                    is AddTransactionEvent.ShowToast -> {
+                        val message = when (event.message) {
+                            "transaction_delete" -> getString(R.string.transaction_delete)
+                            "bookmarked" -> getString(R.string.bookmarked)
+                            else -> event.message
+                        }
+
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                    }
+                    is AddTransactionEvent.NavigateBack -> {
+                        requireActivity().finish()
+                        requireActivity().overridePendingTransition(
+                            R.anim.no_animation,
+                            R.anim.slide_out_right
+                        )
+                    }
                     else -> {}
                 }
             }
@@ -298,7 +367,7 @@ class AddTransactionFragment : Fragment() {
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
         titleBottom.text = title
-        
+
         val adapter = AccountAdapter { selectedItem ->
             targetEditText.setText(selectedItem.name)
             bottomSheetDialog.dismiss()
@@ -311,9 +380,9 @@ class AddTransactionFragment : Fragment() {
 
         accountJob?.cancel()
         accountJob = lifecycleScope.launch {
-                accountViewModel.allAccounts.collectLatest { accounts ->
-                    adapter.updateData(accounts)
-                }
+            accountViewModel.allAccounts.collectLatest { accounts ->
+                adapter.updateData(accounts)
+            }
         }
 
         bottomSheetDialog.setOnDismissListener {
@@ -347,123 +416,33 @@ class AddTransactionFragment : Fragment() {
     }
 
     private fun switchToAddModeIfEditing() {
-        if (isEditMode) {
-            isEditMode = false
-            transactionFromIntent = null
+        if (viewModel.uiState.value.isEditMode) {
+            viewModel.onUserStartEditing()
             layoutSave.visibility = View.VISIBLE
             layoutEdit.visibility = View.GONE
         }
-    }
-
-    private fun setTransactionType(isIncomeType: Boolean, isEdit: Boolean) {
-        isIncome = isIncomeType
-
-        incomeButton.isChecked = isIncomeType
-        expenseButton.isChecked = !isIncomeType
     }
 
     private fun handleToAddTransaction() {
         transactionFromIntent = arguments?.getSerializable("transaction") as? Transaction
-
-        if (transactionFromIntent == null) {
-            showAddMode()
-        } else {
-            showEditMode(transactionFromIntent!!)
-        }
-    }
-
-    private fun showAddMode() {
-        setTransactionType(isIncome, false)
-        if (!isEditMode) {
-            edtAmount.post {
-                edtAmount.requestFocusFromTouch()
-                edtAmount.postDelayed({
-                    focusWithKeyboard(edtAmount)
-                }, 100)
-            }
-        }
-        layoutSave.visibility = View.VISIBLE
-        layoutEdit.visibility = View.GONE
-        continueButton.visibility = View.VISIBLE
-        if (!isEditMode) {
-            dateTextView.text = formattedDate
-        }
-    }
-
-    private fun showEditMode(transaction: Transaction) {
-        isEditMode = true
-        continueButton.visibility = View.GONE
-        layoutSave.visibility = View.GONE
-        layoutEdit.visibility = View.VISIBLE
-
-        populateTransactionFields(transaction)
-        setTransactionType(transaction.isIncome, true)
-
-        copyButton.setOnClickListener {
-            isEditMode = false
-            layoutSave.visibility = View.VISIBLE
-            layoutEdit.visibility = View.GONE
-            populateTransactionFields(transaction)
-            dateTextView.text = formattedDate
-        }
-
-        deleteButton.setOnClickListener {
-            viewModel.deleteTransaction(transaction)
-            Toast.makeText(
-                context,
-                requireContext().getString(R.string.transaction_delete),
-                Toast.LENGTH_SHORT
-            ).show()
-            requireActivity().finish()
-            requireActivity().overridePendingTransition(
-                R.anim.no_animation,
-                R.anim.slide_out_right
-            )
-        }
-
-        bookMarkButton.setOnClickListener {
-            val updated = transaction.copy(isBookmarked = true)
-            viewModel.updateTransaction(updated)
-            Toast.makeText(
-                context,
-                requireContext().getString(R.string.bookmarked),
-                Toast.LENGTH_SHORT
-            ).show()
-            requireActivity().finish()
-            requireActivity().overridePendingTransition(
-                R.anim.no_animation,
-                R.anim.slide_out_right
-            )
-        }
-    }
-
-    private fun populateTransactionFields(transaction: Transaction) {
-        edtAmount.setText(transaction.amount.toString())
-        edtCategory.setText(
-            if (transaction.categorySubName.isNotEmpty()) {
-                "${transaction.categoryParentName}/${transaction.categorySubName}"
-            } else {
-                transaction.categoryParentName
-            }
-        )
-        edtAccount.setText(transaction.account)
-        edtNote.setText(transaction.note)
-        dateTextView.text = transaction.date
+        viewModel.setInitialTransaction(transactionFromIntent)
     }
 
     private fun categoryClick() {
         edtCategory.setOnClickListener {
+            val isIncome = viewModel.uiState.value.isIncome
             val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
             val tintColor = if (isIncome) R.color.income else R.color.red
             if (edtCategory.text.isEmpty()) {
-                edtCategory.backgroundTintList = ContextCompat.getColorStateList(requireContext(), tintColor)
+                edtCategory.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), tintColor)
             }
 
             categoryJob?.cancel()
-            categoryJob =  viewLifecycleOwner.lifecycleScope.launch {
+            categoryJob = viewLifecycleOwner.lifecycleScope.launch {
                 val list = categoryViewModel
                     .getCategoriesByType(selectedType)
-                    .first{it.isNotEmpty()}
+                    .first { it.isNotEmpty() }
 
                 val treeItems = Helper.buildCategoryTree(list)
 
@@ -486,68 +465,54 @@ class AddTransactionFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
     }
-    private fun categoryTextChangeListener() {}
-    private fun accountTextChangeListener() {}
 
-    private fun openAddItemFragment(type: ItemType, categoryType: CategoryType) {
-        val fragment = AddItemFragment().apply {
-            arguments = Bundle().apply {
-                putSerializable("item_type", type)
-                putSerializable("category_type", categoryType)
-                putSerializable("source", AddItemSource.FROM_ADD_TRANSACTION)
+    private fun categoryTextChangeListener() {
+        edtCategory.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.onCategoryChanged(s.toString())
             }
-        }
 
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.slide_in_right,
-                R.anim.no_animation,
-                R.anim.no_animation,
-                R.anim.slide_out_right
-            )
-            .replace(R.id.fragment_container_add_transaction, fragment)
-            .addToBackStack(null)
-            .commit()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
     }
 
-    private fun openEditAccountFragment(type: ItemType, categoryType: CategoryType) {
-        val fragment = EditItemDialogFragment().apply {
-            arguments = Bundle().apply {
-                putSerializable("source", AddItemSource.FROM_ADD_TRANSACTION)
+    private fun accountTextChangeListener() {
+        edtAccount.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.onAccountChanged(s.toString())
             }
-        }
 
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.slide_in_right,
-                R.anim.no_animation,
-                R.anim.no_animation,
-                R.anim.slide_out_right
-            )
-            .replace(R.id.fragment_container_add_transaction, fragment)
-            .addToBackStack(null)
-            .commit()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+    }
+
+    private fun noteTextChangeListener() {
+        edtNote.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(
+                p0: CharSequence?,
+                p1: Int,
+                p2: Int,
+                p3: Int
+            ) {}
+
+            override fun onTextChanged(
+                p0: CharSequence?,
+                p1: Int,
+                p2: Int,
+                p3: Int
+            ) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.onNoteChanged(s.toString())
+            }
+        })
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun buildSaveParams(closeAfterSave: Boolean): SaveTransactionParams {
-        return SaveTransactionParams(
-            amount = edtAmount.text.toString()
-                .replace("[^\\d]".toRegex(), "")
-                .toLongOrNull()
-                ?.toString() ?: "0",
-            category = edtCategory.text.toString(),
-            account = edtAccount.text.toString(),
-            note = edtNote.text.toString(),
-            date = dateTextView.text.toString(),
-            isIncome = isIncome,
-            existing = transactionFromIntent,
-            closeAfterSave = closeAfterSave
-        )
     }
 
     private fun showCategoryBottomDialog(
@@ -617,45 +582,8 @@ class AddTransactionFragment : Fragment() {
         bottomSheetDialog.show()
     }
 
-    private fun onTransactionTypeChanged(newType: Boolean) {
-        if (isIncome == newType) return
-
-        setTransactionType(newType, false)
-
-        edtCategory.setText("")
-        edtAccount.setText("")
-
-        navigateNextEmptyField()
-    }
-
     private fun navigateNextEmptyField() {
-        when {
-            edtAmount.text.isNullOrBlank() -> {
-                focusWithKeyboard(edtAmount)
-            }
-
-            edtCategory.text.isNullOrBlank() -> {
-                hideKeyboard()
-               edtCategory.postDelayed({
-                   edtCategory.performClick()
-               }, 100)
-            }
-
-            edtAccount.text.isNullOrBlank() -> {
-                hideKeyboard()
-                edtAccount.postDelayed({
-                    edtAccount.performClick()
-                }, 100)
-            }
-
-            edtNote.text.isNullOrBlank() -> {
-                focusWithKeyboard(edtNote)
-            }
-
-            else -> {
-                // 👉 tất cả đã có data → không làm gì
-            }
-        }
+        viewModel.onNextClicked()
     }
 
     private fun focusWithKeyboard(view: View) {

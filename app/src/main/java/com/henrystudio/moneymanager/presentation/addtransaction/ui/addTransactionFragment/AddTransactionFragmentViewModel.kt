@@ -9,6 +9,7 @@ import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateT
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
+import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
 import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -127,6 +128,197 @@ class AddTransactionFragmentViewModel @Inject constructor(
     fun onTransactionTypeChanged(value: Boolean) {
         _uiState.update {
             it.copy(isIncome = value, category = "", account = "")
+        }
+    }
+
+    fun onCategoryChanged(value: String) {
+        _uiState.update {
+            it.copy(category = value)
+        }
+    }
+
+    fun onAccountChanged(value: String) {
+        _uiState.update {
+            it.copy(account = value)
+        }
+    }
+
+    fun onNoteChanged(value: String) {
+        _uiState.update {
+            it.copy(note = value)
+        }
+    }
+
+    fun onDateChanged(date: String) {
+        _uiState.update {
+            it.copy(date = date)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun onSaveClicked(closeAfterSave: Boolean) {
+        val state = _uiState.value
+
+        val params = SaveTransactionParams(
+            amount = state.amountRaw,
+            category = state.category,
+            account = state.account,
+            note = state.note,
+            date = state.date,
+            isIncome = state.isIncome,
+            existing = state.existingTransaction,
+            closeAfterSave = closeAfterSave
+        )
+
+        saveTransaction(params)
+    }
+
+    fun setInitialTransaction(transaction: Transaction?) {
+        if (transaction != null) {
+            _uiState.update {
+                it.copy(
+                    amountRaw = transaction.amount.toLong().toString(),
+                    amountFormatted = Helper.formatCurrency(transaction.amount),
+                    category = transaction.categoryParentName + "/" + transaction.categorySubName,
+                    account = transaction.account,
+                    note = transaction.note,
+                    date = transaction.date,
+                    isIncome = transaction.isIncome,
+                    isEditMode = true,
+                    isContinueVisible = false,
+                    existingTransaction = transaction
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    isEditMode = false,
+                    isContinueVisible = true,
+                    date = Helper.getFormattedDateToday(),
+                    isIncome = false
+                )
+            }
+        }
+    }
+
+    fun resetForm() {
+        _uiState.update {
+            it.copy(
+                amountRaw = "",
+                amountFormatted = "",
+                category = "",
+                account = "",
+                note = "",
+                date = "",
+            )
+        }
+    }
+
+    fun getNextEmptyField(): FieldType? {
+        val state = _uiState.value
+        return when {
+            state.amountRaw.isEmpty() -> FieldType.AMOUNT
+            state.category.isEmpty() -> FieldType.CATEGORY
+            state.account.isEmpty() -> FieldType.ACCOUNT
+            state.note.isEmpty() -> FieldType.NOTE
+            else -> null
+        }
+    }
+
+    fun onNextClicked() {
+        val nextField = getNextEmptyField()
+        viewModelScope.launch {
+            _event.emit(AddTransactionEvent.FocusField(nextField))
+        }
+    }
+
+    fun loadTransaction(transaction: Transaction) {
+        _uiState.update {
+            it.copy(
+                amountRaw = transaction.amount.toString(),
+                amountFormatted = Helper.formatCurrency(transaction.amount),
+                category = transaction.categoryParentName + "/" + transaction.categorySubName,
+                account = transaction.account,
+                note = transaction.note,
+                date = transaction.date,
+                isIncome = transaction.isIncome,
+                isEditMode = true
+            )
+        }
+    }
+
+    fun switchToAddMode(isEditMode: Boolean) {
+        _uiState.update {
+            it.copy(isEditMode = isEditMode)
+        }
+    }
+
+    fun onUserStartEditing() {
+        if(_uiState.value.isEditMode) {
+            _uiState.update {
+                it.copy(isEditMode = false,
+                    existingTransaction = null
+                    )
+            }
+        }
+    }
+
+    fun saveFlow(closeAfterSave: Boolean) {
+        viewModelScope.launch {
+            if (closeAfterSave) {
+                _event.emit(AddTransactionEvent.CloseScreen)
+            } else {
+                _event.emit(AddTransactionEvent.ResetForm)
+            }
+        }
+    }
+
+    fun onCopyClicked() {
+        val current = _uiState.value.existingTransaction ?: return
+
+        _uiState.update {
+            it.copy(
+                // giữ data cũ
+                amountRaw = current.amount.toLong().toString(),
+                amountFormatted = Helper.formatCurrency(current.amount),
+                category = current.categoryParentName + "/" + current.categorySubName,
+                account = current.account,
+                note = current.note,
+                isIncome = current.isIncome,
+
+                // 🔥 QUAN TRỌNG
+                existingTransaction = null, // → chuyển sang mode tạo mới
+                isEditMode = false,
+
+                // chỉ đổi ngày
+                date = Helper.getFormattedDateToday()
+            )
+        }
+
+        // focus lại amount cho UX đẹp
+        viewModelScope.launch {
+            _event.emit(AddTransactionEvent.FocusField(FieldType.AMOUNT))
+        }
+    }
+
+    fun onDeleteClicked() {
+        val transaction = _uiState.value.existingTransaction ?: return
+
+        viewModelScope.launch {
+            deleteTransaction(transaction)
+            _event.emit(AddTransactionEvent.ShowToast("transaction_delete"))
+            _event.emit(AddTransactionEvent.NavigateBack)
+        }
+    }
+
+    fun onBookmarkClicked() {
+        val transaction = _uiState.value.existingTransaction ?: return
+
+        viewModelScope.launch {
+            val update = transaction.copy(isBookmarked = true)
+            updateTransaction(update)
+            _event.emit(AddTransactionEvent.ShowToast("transaction_bookmark"))
+            _event.emit(AddTransactionEvent.NavigateBack)
         }
     }
 }

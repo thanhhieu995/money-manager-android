@@ -319,6 +319,8 @@ class AddTransactionActivity : AppCompatActivity() {
             AddTransactionEvent.NavigateBackToDaily -> {
                 finish()
             }
+
+            else -> {}
         }
     }
 

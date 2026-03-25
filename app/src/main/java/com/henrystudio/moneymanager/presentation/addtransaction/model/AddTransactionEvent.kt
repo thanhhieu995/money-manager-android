@@ -9,4 +9,9 @@ sealed class AddTransactionEvent {
     data class NavigateToCategoryDetail(val item: EditItem, val action: AddItemAction): AddTransactionEvent()
     object NavigateBackToDaily: AddTransactionEvent()
     object PopBack: AddTransactionEvent()
+    data class FocusField(val fieldType: FieldType?): AddTransactionEvent()
+    object CloseScreen : AddTransactionEvent()
+    object ResetForm : AddTransactionEvent()
+    object NavigateBack: AddTransactionEvent()
+    data class ShowToast(val message: String): AddTransactionEvent()
 }
