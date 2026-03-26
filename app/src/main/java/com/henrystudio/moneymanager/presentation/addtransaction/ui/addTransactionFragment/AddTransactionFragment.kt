@@ -3,11 +3,11 @@ package com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransacti
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -42,7 +42,6 @@ import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateT
 import com.henrystudio.moneymanager.core.util.Helper.Companion.setTextIfDifferent
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.AccountAdapter
@@ -51,6 +50,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.components.viewh
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
 import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import com.henrystudio.moneymanager.presentation.model.ItemType
@@ -69,8 +69,6 @@ import java.util.*
 class AddTransactionFragment : Fragment() {
     private var _binding: FragmentAddTransactionBinding? = null
     private val binding get() = _binding!!
-
-    //    private var isIncome = false
     private lateinit var dateTextView: TextView
     private lateinit var incomeButton: MaterialButton
     private lateinit var expenseButton: MaterialButton
@@ -86,13 +84,13 @@ class AddTransactionFragment : Fragment() {
     private lateinit var copyButton: Button
     private lateinit var bookMarkButton: Button
     private lateinit var formattedDate: String
-    private var transactionFromIntent: Transaction? = null
     private val viewModel: AddTransactionFragmentViewModel by viewModels()
     private val activityViewModel: AddTransactionActivityViewModel by activityViewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
     private val accountViewModel: AccountViewModel by viewModels()
     private var categoryJob: Job? = null
     private var accountJob: Job? = null
+    private lateinit var defaultTintMap: Map<EditText, ColorStateList?>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -108,28 +106,35 @@ class AddTransactionFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         init()
+        initDefaultTints()
 
         listOf(
             edtAmount,
             edtNote,
             edtAccount,
-            edtCategory,
-            dateTextView
+            edtCategory
         ).forEach { v ->
-            v.setOnClickListener { switchToAddModeIfEditing() }
-            if (v is EditText) {
-                v.setOnFocusChangeListener { _, hasFocus ->
-                    if (hasFocus) switchToAddModeIfEditing()
+            v.setOnClickListener {
+                viewModel.onUserStartEditing()
+            }
+
+            v.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    viewModel.onUserStartEditing()
                 }
             }
         }
+        edtAmount.setOnClickListener {
+            viewModel.onAmountTouched()
+        }
+
         edtCategory.setOnTouchListener { _, _ ->
-            switchToAddModeIfEditing()
+            viewModel.onUserStartEditing()
             false
         }
 
         edtAccount.setOnTouchListener { _, _ ->
-            switchToAddModeIfEditing()
+            viewModel.onUserStartEditing()
             false
         }
 
@@ -179,12 +184,13 @@ class AddTransactionFragment : Fragment() {
             } else false
         }
 
-        edtAccount.setOnClickListener {
-            val tintColor = if (viewModel.uiState.value.isIncome) R.color.income else R.color.red
-            if (edtAccount.text.isEmpty()) {
-                edtAccount.backgroundTintList =
-                    ContextCompat.getColorStateList(requireContext(), tintColor)
+        edtAmount.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                viewModel.onAmountTouched() // 🔥 thêm dòng này
             }
+        }
+
+        edtAccount.setOnClickListener {
             showAccountBottomDialog(
                 requireContext().getString(R.string.account),
                 edtAccount,
@@ -222,32 +228,13 @@ class AddTransactionFragment : Fragment() {
                         )
                         edtNote.setAdapter(adapterNote)
                     }
-                    state.saveResult?.let { result ->
-                        when (result) {
-                            is SaveResult.Success -> {
-                                viewModel.clearSaveResult()
-                                SharedTransactionHolder.currentFilterDate =
-                                    dateTextView.text.toString()
-                                parseDisplayDateToLocalDate(dateTextView.text.toString())
-                                    ?.let { saveLastDate(requireContext(), it) }
-                                viewModel.saveFlow(result.closeAfterSave)
-                            }
-
-                            is SaveResult.Error -> {
-                                viewModel.clearSaveResult()
-                                when (result.message) {
-                                    "fill_required" -> showToastWithIcon(
-                                        requireContext(),
-                                        requireContext().getString(R.string.error_fill_category_account)
-                                    )
-
-                                    else -> showToastWithIcon(requireContext(), result.message)
-                                }
-                            }
-                        }
-                    }
                     state.amountFormatted.let {
                         edtAmount.setTextIfDifferent(it)
+                        edtAmount.backgroundTintList = when (state.amountRaw.state) {
+                            FieldState.IDLE -> defaultTintMap[edtAmount]
+                            FieldState.ERROR -> ContextCompat.getColorStateList(requireContext(), R.color.red)
+                            FieldState.VALID -> ContextCompat.getColorStateList(requireContext(), R.color.income)
+                        }
                     }
                     state.category.let { category ->
                         edtCategory.setTextIfDifferent(category)
@@ -327,6 +314,18 @@ class AddTransactionFragment : Fragment() {
                             R.anim.no_animation,
                             R.anim.slide_out_right
                         )
+                    }
+                    is AddTransactionEvent.SaveCompleted -> {
+                        SharedTransactionHolder.currentFilterDate = event.date
+                        event.localDate?.let {
+                            saveLastDate(requireContext(), it)
+                        }
+                        if (event.closeAfterSave) {
+                            SharedTransactionHolder.scrollToAddedTransaction = true
+                            requireActivity().finish()
+                        } else {
+                            viewModel.resetForm()
+                        }
                     }
                     else -> {}
                 }
@@ -415,28 +414,14 @@ class AddTransactionFragment : Fragment() {
         bottomSheetDialog.show()
     }
 
-    private fun switchToAddModeIfEditing() {
-        if (viewModel.uiState.value.isEditMode) {
-            viewModel.onUserStartEditing()
-            layoutSave.visibility = View.VISIBLE
-            layoutEdit.visibility = View.GONE
-        }
-    }
-
     private fun handleToAddTransaction() {
-        transactionFromIntent = arguments?.getSerializable("transaction") as? Transaction
-        viewModel.setInitialTransaction(transactionFromIntent)
+        val transaction = arguments?.getSerializable("transaction") as? Transaction
+        viewModel.initTransaction(transaction)
     }
 
     private fun categoryClick() {
         edtCategory.setOnClickListener {
-            val isIncome = viewModel.uiState.value.isIncome
-            val selectedType = if (isIncome) CategoryType.INCOME else CategoryType.EXPENSE
-            val tintColor = if (isIncome) R.color.income else R.color.red
-            if (edtCategory.text.isEmpty()) {
-                edtCategory.backgroundTintList =
-                    ContextCompat.getColorStateList(requireContext(), tintColor)
-            }
+            val selectedType = viewModel.getSelectedCategoryType()
 
             categoryJob?.cancel()
             categoryJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -531,10 +516,7 @@ class AddTransactionFragment : Fragment() {
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
             selectedCategory = selectedItem
-            val parentEmoji = selectedItem.parentEmoji ?: ""
-            val parentName =
-                if (selectedItem.parentName == null) "" else selectedItem.parentName + "/"
-            targetEditText.setText("$parentEmoji $parentName ${selectedItem.emoji} ${selectedItem.name}")
+            targetEditText.setText(viewModel.formatCategoryDisplay(selectedItem))
             bottomSheetDialog.dismiss()
             // Finish choose category and show account, finish account and show note auto
             if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
@@ -604,5 +586,14 @@ class AddTransactionFragment : Fragment() {
             .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
         imm.hideSoftInputFromWindow(view?.windowToken, 0)
+    }
+
+    private fun initDefaultTints() {
+        defaultTintMap = mapOf(
+            edtAmount to edtAmount.backgroundTintList,
+            edtCategory to edtCategory.backgroundTintList,
+            edtAccount to edtAccount.backgroundTintList,
+            edtNote to edtNote.backgroundTintList
+        )
     }
 }

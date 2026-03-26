@@ -4,12 +4,17 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
+import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
+import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldUiState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,12 +46,15 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
+    private var isInitialized = false
     @RequiresApi(Build.VERSION_CODES.O)
     fun saveTransaction(
         params: SaveTransactionParams
     ) {
         if (params.category.isEmpty() || params.account.isEmpty()) {
-            _uiState.update { it.copy(saveResult = SaveResult.Error("fill_required")) }
+            viewModelScope.launch {
+                _event.emit(AddTransactionEvent.ShowToast("fill_required"))
+            }
             return
         }
 
@@ -83,12 +91,18 @@ class AddTransactionFragmentViewModel @Inject constructor(
                     )
                     transactionUseCases.addTransactionUseCase(newTransaction)
                 }
-                if (params.closeAfterSave) {
-                    _event.emit(AddTransactionEvent.NavigateBackToDaily)
-                }
-                _uiState.update { it.copy(saveResult = SaveResult.Success(params.closeAfterSave)) }
+                // ✅ emit 1 event duy nhất
+                _event.emit(
+                    AddTransactionEvent.SaveCompleted(
+                        date = params.date,
+                        localDate = localDate,
+                        closeAfterSave = params.closeAfterSave
+                    )
+                )
             } catch (e: Exception) {
-                _uiState.update { it.copy(saveResult = SaveResult.Error(e.message ?: "Unknown Error")) }
+                _event.emit(
+                    AddTransactionEvent.ShowToast(e.message ?: "Unknown error")
+                )
             }
         }
     }
@@ -105,10 +119,6 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
-    fun clearSaveResult() {
-        _uiState.update { it.copy(saveResult = null) }
-    }
-
     fun onAmountChanged(input: String) {
         val clean = input.replace("[^\\d]".toRegex(), "")
 
@@ -117,9 +127,17 @@ class AddTransactionFragmentViewModel @Inject constructor(
             Helper.formatCurrency(number.toDouble())
         } else ""
 
+        val current = uiState.value.amountRaw
+        val isTouched = current.state != FieldState.IDLE
+        val newState = if (!isTouched) {
+            FieldState.IDLE
+        } else {
+            validateAmount(clean)
+        }
+
         _uiState.update {
             it.copy(
-                amountRaw = clean,
+                amountRaw = FieldUiState(clean, newState),
                 amountFormatted = formatted
             )
         }
@@ -160,7 +178,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         val state = _uiState.value
 
         val params = SaveTransactionParams(
-            amount = state.amountRaw,
+            amount = state.amountRaw.text,
             category = state.category,
             account = state.account,
             note = state.note,
@@ -173,11 +191,13 @@ class AddTransactionFragmentViewModel @Inject constructor(
         saveTransaction(params)
     }
 
-    fun setInitialTransaction(transaction: Transaction?) {
+    fun initTransaction(transaction: Transaction?) {
+        if (isInitialized) return
+        isInitialized = true
         if (transaction != null) {
             _uiState.update {
                 it.copy(
-                    amountRaw = transaction.amount.toLong().toString(),
+                    amountRaw = FieldUiState(transaction.amount.toLong().toString(), FieldState.VALID),
                     amountFormatted = Helper.formatCurrency(transaction.amount),
                     category = transaction.categoryParentName + "/" + transaction.categorySubName,
                     account = transaction.account,
@@ -204,7 +224,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
     fun resetForm() {
         _uiState.update {
             it.copy(
-                amountRaw = "",
+                amountRaw = FieldUiState("", FieldState.IDLE),
                 amountFormatted = "",
                 category = "",
                 account = "",
@@ -217,7 +237,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
     fun getNextEmptyField(): FieldType? {
         val state = _uiState.value
         return when {
-            state.amountRaw.isEmpty() -> FieldType.AMOUNT
+            state.amountRaw.text.isEmpty() -> FieldType.AMOUNT
             state.category.isEmpty() -> FieldType.CATEGORY
             state.account.isEmpty() -> FieldType.ACCOUNT
             state.note.isEmpty() -> FieldType.NOTE
@@ -232,43 +252,10 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
-    fun loadTransaction(transaction: Transaction) {
-        _uiState.update {
-            it.copy(
-                amountRaw = transaction.amount.toString(),
-                amountFormatted = Helper.formatCurrency(transaction.amount),
-                category = transaction.categoryParentName + "/" + transaction.categorySubName,
-                account = transaction.account,
-                note = transaction.note,
-                date = transaction.date,
-                isIncome = transaction.isIncome,
-                isEditMode = true
-            )
-        }
-    }
-
-    fun switchToAddMode(isEditMode: Boolean) {
-        _uiState.update {
-            it.copy(isEditMode = isEditMode)
-        }
-    }
-
     fun onUserStartEditing() {
         if(_uiState.value.isEditMode) {
             _uiState.update {
-                it.copy(isEditMode = false,
-                    existingTransaction = null
-                    )
-            }
-        }
-    }
-
-    fun saveFlow(closeAfterSave: Boolean) {
-        viewModelScope.launch {
-            if (closeAfterSave) {
-                _event.emit(AddTransactionEvent.CloseScreen)
-            } else {
-                _event.emit(AddTransactionEvent.ResetForm)
+                it.copy(isEditMode = false)
             }
         }
     }
@@ -279,7 +266,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 // giữ data cũ
-                amountRaw = current.amount.toLong().toString(),
+                amountRaw = FieldUiState(current.amount.toLong().toString(), FieldState.VALID),
                 amountFormatted = Helper.formatCurrency(current.amount),
                 category = current.categoryParentName + "/" + current.categorySubName,
                 account = current.account,
@@ -320,5 +307,55 @@ class AddTransactionFragmentViewModel @Inject constructor(
             _event.emit(AddTransactionEvent.ShowToast("transaction_bookmark"))
             _event.emit(AddTransactionEvent.NavigateBack)
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun handleSaveSuccess(date: String, closeAfterSave: Boolean) {
+        viewModelScope.launch {
+            val localDate = parseDisplayDateToLocalDate(date)
+            // 🔥 emit event thay vì xử lý trực tiếp
+            _event.emit(AddTransactionEvent.SaveCompleted(
+                date = date,
+                localDate = localDate,
+                closeAfterSave = closeAfterSave
+            ))
+        }
+    }
+
+    fun getSelectedCategoryType() : CategoryType {
+        return if (_uiState.value.isIncome) CategoryType.INCOME else CategoryType.EXPENSE
+    }
+
+    fun getTransactionColor(): Int {
+        return if (_uiState.value.isIncome) R.color.income else R.color.red
+    }
+
+    fun formatCategoryDisplay(item: CategoryItem): String {
+        val parentEmoji = item.parentEmoji ?: ""
+        val parentName = item.parentName?.let { "$it/" } ?: ""
+        return "$parentEmoji $parentName ${item.emoji} ${item.name}"
+    }
+
+    private fun validateAmount(text: String): FieldState {
+        if (text.isEmpty()) return FieldState.ERROR
+        return try {
+            val value = text.replace(",", "").toDouble()
+            if (value > 0) FieldState.VALID else FieldState.ERROR
+        } catch (e: Exception) {
+            FieldState.ERROR
+        }
+    }
+
+    private fun validateRequired(text: String): FieldState {
+        return if (text.isEmpty()) FieldState.ERROR else FieldState.VALID
+    }
+
+    fun onAmountTouched() {
+        val current = uiState.value.amountRaw
+        val newState = validateAmount(current.text)
+
+        _uiState.value = uiState.value.copy(
+            amountRaw = current.copy(state = newState)
+        )
     }
 }
