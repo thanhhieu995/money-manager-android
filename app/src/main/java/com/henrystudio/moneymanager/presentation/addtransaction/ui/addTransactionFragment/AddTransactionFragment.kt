@@ -38,10 +38,8 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getFormattedDateToday
-import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.setTextIfDifferent
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
-import com.henrystudio.moneymanager.core.util.Helper.Companion.showToastWithIcon
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.AccountAdapter
@@ -52,7 +50,6 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransac
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
-import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
@@ -124,9 +121,6 @@ class AddTransactionFragment : Fragment() {
                 }
             }
         }
-        edtAmount.setOnClickListener {
-            viewModel.onAmountTouched()
-        }
 
         edtCategory.setOnTouchListener { _, _ ->
             viewModel.onUserStartEditing()
@@ -168,10 +162,7 @@ class AddTransactionFragment : Fragment() {
             activityViewModel.transactionTypeChanged(TransactionType.EXPENSE)
         }
 
-        categoryClick()
         amountTextChangeListener()
-        categoryTextChangeListener()
-        accountTextChangeListener()
         noteTextChangeListener()
 
         edtAmount.setOnEditorActionListener { _, actionId, event ->
@@ -185,16 +176,31 @@ class AddTransactionFragment : Fragment() {
         }
 
         edtAmount.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                viewModel.onAmountTouched() // 🔥 thêm dòng này
+           viewModel.onAmountFocusChanged(hasFocus)
+        }
+
+        edtCategory.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                viewModel.onCategoryFocusChanged(true)
             }
         }
 
+        edtAccount.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                viewModel.onAccountFocusChanged(true)
+            }
+        }
+
+        edtCategory.setOnClickListener {
+            binding.root.clearFocus()
+            edtCategory.requestFocus()
+            viewModel.onCategoryClicked()
+        }
+
         edtAccount.setOnClickListener {
-            showAccountBottomDialog(
-                requireContext().getString(R.string.account),
-                edtAccount,
-            )
+            binding.root.clearFocus()
+            edtAccount.requestFocus()
+            viewModel.onAccountClicked()
         }
 
         saveButton.setOnClickListener {
@@ -237,13 +243,23 @@ class AddTransactionFragment : Fragment() {
                         }
                     }
                     state.category.let { category ->
-                        edtCategory.setTextIfDifferent(category)
+                        edtCategory.setTextIfDifferent(category.text)
+                        edtCategory.backgroundTintList = when (category.state) {
+                            FieldState.IDLE -> defaultTintMap[edtCategory]
+                            FieldState.ERROR -> ContextCompat.getColorStateList(requireContext(), R.color.red)
+                            FieldState.VALID -> ContextCompat.getColorStateList(requireContext(), R.color.income)
+                        }
                     }
                     state.account.let { account ->
-                        edtAccount.setTextIfDifferent(account)
+                        edtAccount.setTextIfDifferent(account.text)
+                        edtAccount.backgroundTintList = when (account.state) {
+                            FieldState.IDLE -> defaultTintMap[edtAccount]
+                            FieldState.ERROR -> ContextCompat.getColorStateList(requireContext(), R.color.red)
+                            FieldState.VALID -> ContextCompat.getColorStateList(requireContext(), R.color.income)
+                        }
                     }
                     state.note.let { note ->
-                        edtNote.setTextIfDifferent(note)
+                        edtNote.setTextIfDifferent(note.text)
                     }
                     state.isIncome.let { isIncome ->
                         incomeButton.isChecked = isIncome
@@ -327,6 +343,33 @@ class AddTransactionFragment : Fragment() {
                             viewModel.resetForm()
                         }
                     }
+                    is AddTransactionEvent.OpenCategoryPicker -> {
+                        val selectedType = viewModel.getSelectedCategoryType()
+
+                        categoryJob?.cancel()
+                        categoryJob = viewLifecycleOwner.lifecycleScope.launch {
+                            val list = categoryViewModel
+                                .getCategoriesByType(selectedType)
+                                .first { it.isNotEmpty() }
+
+                            val treeItems = Helper.buildCategoryTree(list)
+
+                            showCategoryBottomDialog(
+                                requireContext().getString(R.string.category),
+                                treeItems,
+                                edtCategory,
+                            )
+                        }
+                    }
+                    is AddTransactionEvent.OpenAccountPicker -> {
+                        accountJob?.cancel()
+                        accountJob = viewLifecycleOwner.lifecycleScope.launch {
+                            showAccountBottomDialog(
+                                requireContext().getString(R.string.account),
+                                edtAccount,
+                            )
+                        }
+                    }
                     else -> {}
                 }
             }
@@ -368,7 +411,7 @@ class AddTransactionFragment : Fragment() {
         titleBottom.text = title
 
         val adapter = AccountAdapter { selectedItem ->
-            targetEditText.setText(selectedItem.name)
+            viewModel.onAccountSelected(selectedItem.name)
             bottomSheetDialog.dismiss()
             if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
                 navigateNextEmptyField()
@@ -386,6 +429,7 @@ class AddTransactionFragment : Fragment() {
 
         bottomSheetDialog.setOnDismissListener {
             accountJob?.cancel()
+            viewModel.onAccountDismissed()
         }
 
         addButton.setOnClickListener {
@@ -419,53 +463,10 @@ class AddTransactionFragment : Fragment() {
         viewModel.initTransaction(transaction)
     }
 
-    private fun categoryClick() {
-        edtCategory.setOnClickListener {
-            val selectedType = viewModel.getSelectedCategoryType()
-
-            categoryJob?.cancel()
-            categoryJob = viewLifecycleOwner.lifecycleScope.launch {
-                val list = categoryViewModel
-                    .getCategoriesByType(selectedType)
-                    .first { it.isNotEmpty() }
-
-                val treeItems = Helper.buildCategoryTree(list)
-
-                showCategoryBottomDialog(
-                    requireContext().getString(R.string.category),
-                    treeItems,
-                    edtCategory,
-                )
-            }
-        }
-    }
-
     private fun amountTextChangeListener() {
         edtAmount.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 viewModel.onAmountChanged(s.toString())
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
-    }
-
-    private fun categoryTextChangeListener() {
-        edtCategory.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                viewModel.onCategoryChanged(s.toString())
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
-    }
-
-    private fun accountTextChangeListener() {
-        edtAccount.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                viewModel.onAccountChanged(s.toString())
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -516,7 +517,7 @@ class AddTransactionFragment : Fragment() {
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
             selectedCategory = selectedItem
-            targetEditText.setText(viewModel.formatCategoryDisplay(selectedItem))
+            viewModel.onCategorySelected("${selectedItem.emoji} ${selectedItem.name}")
             bottomSheetDialog.dismiss()
             // Finish choose category and show account, finish account and show note auto
             if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
@@ -558,6 +559,9 @@ class AddTransactionFragment : Fragment() {
 
         closeButton.setOnClickListener {
             bottomSheetDialog.dismiss()
+        }
+        bottomSheetDialog.setOnDismissListener {
+            viewModel.onCategoryDismissed()
         }
 
         bottomSheetDialog.setContentView(view)

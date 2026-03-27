@@ -16,4 +16,6 @@ sealed class AddTransactionEvent {
     object NavigateBack: AddTransactionEvent()
     data class ShowToast(val message: String): AddTransactionEvent()
     data class SaveCompleted(val date: String, val localDate: LocalDate?, val closeAfterSave: Boolean): AddTransactionEvent()
+    object OpenCategoryPicker: AddTransactionEvent()
+    object OpenAccountPicker: AddTransactionEvent()
 }

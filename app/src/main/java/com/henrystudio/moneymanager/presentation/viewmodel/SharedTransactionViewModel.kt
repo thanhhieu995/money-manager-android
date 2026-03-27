@@ -12,6 +12,7 @@ import com.henrystudio.moneymanager.presentation.model.Event
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -90,7 +92,7 @@ class SharedTransactionViewModel @Inject constructor(
     val combineGroupAndDate: Flow<Pair<List<TransactionGroup>, LocalDate>> =
         combine(groupedTransactions, currentFilterDate) { transactions, date ->
             transactions to date
-        }
+        }.flowOn(Dispatchers.Default)
 
     private val _currentStatisticTabPosition = MutableStateFlow(0)
     val currentStatisticTabPosition: StateFlow<Int> = _currentStatisticTabPosition

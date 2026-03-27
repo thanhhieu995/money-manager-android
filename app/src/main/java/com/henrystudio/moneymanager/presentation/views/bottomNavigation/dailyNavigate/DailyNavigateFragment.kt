@@ -37,7 +37,10 @@ import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Month
@@ -99,7 +102,7 @@ class DailyNavigateFragment : Fragment() {
                 2 -> tab.text = requireContext().getString(R.string.monthly)
             }
         }.also { it.attach() }
-        viewPager.offscreenPageLimit = 3
+        viewPager.offscreenPageLimit = 1
 
         val savedPos = PrefsManager.getTabPosition(requireContext())
         viewPager.setCurrentItem(savedPos, false)
@@ -114,6 +117,7 @@ class DailyNavigateFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                delay(100)
                 combine(
                     sharedViewModel.combineGroupAndDate,
                     sharedViewModel.currentDailyNavigateTabPosition,
@@ -127,7 +131,7 @@ class DailyNavigateFragment : Fragment() {
                         selectionMode,
                         selected
                     )
-                }.collect { }
+                }.flowOn(Dispatchers.Default).collect { }
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {

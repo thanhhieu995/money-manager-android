@@ -20,6 +20,7 @@ import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.lang.reflect.Field
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -47,14 +48,21 @@ class AddTransactionFragmentViewModel @Inject constructor(
     }
 
     private var isInitialized = false
+    private var categoryJustSelected = false
+    private var accountJustSelected = false
+
+    private fun emitEvent(event: AddTransactionEvent) {
+        viewModelScope.launch {
+            _event.emit(event)
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun saveTransaction(
         params: SaveTransactionParams
     ) {
         if (params.category.isEmpty() || params.account.isEmpty()) {
-            viewModelScope.launch {
-                _event.emit(AddTransactionEvent.ShowToast("fill_required"))
-            }
+            emitEvent(AddTransactionEvent.ShowToast("fill_required"))
             return
         }
 
@@ -119,51 +127,41 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
-    fun onAmountChanged(input: String) {
-        val clean = input.replace("[^\\d]".toRegex(), "")
-
-        val formatted = if (clean.isNotEmpty()) {
-            val number = clean.toLongOrNull() ?: 0L
-            Helper.formatCurrency(number.toDouble())
-        } else ""
-
-        val current = uiState.value.amountRaw
-        val isTouched = current.state != FieldState.IDLE
-        val newState = if (!isTouched) {
-            FieldState.IDLE
-        } else {
-            validateAmount(clean)
-        }
+    fun onTransactionTypeChanged(isIncome: Boolean) {
+        val current = _uiState.value
+        val amountState = validateAmount(current.amountRaw.text)
 
         _uiState.update {
             it.copy(
-                amountRaw = FieldUiState(clean, newState),
-                amountFormatted = formatted
+                isIncome = isIncome,
+
+                amountRaw = current.amountRaw.copy(
+                    state = amountState
+                ),
+                category = FieldUiState("", FieldState.IDLE),
+                account = FieldUiState("", FieldState.IDLE),
+                note = current.note.copy(
+                    state = FieldState.IDLE
+                )
             )
         }
-    }
 
-    fun onTransactionTypeChanged(value: Boolean) {
-        _uiState.update {
-            it.copy(isIncome = value, category = "", account = "")
-        }
-    }
-
-    fun onCategoryChanged(value: String) {
-        _uiState.update {
-            it.copy(category = value)
-        }
-    }
-
-    fun onAccountChanged(value: String) {
-        _uiState.update {
-            it.copy(account = value)
+        // lấy field trống đầu tiên
+        val nextField = getNextEmptyField()
+        // emit when field need focus
+        nextField?.let {
+            emitEvent(AddTransactionEvent.FocusField(it))
         }
     }
 
     fun onNoteChanged(value: String) {
         _uiState.update {
-            it.copy(note = value)
+            it.copy(
+                note = it.note.copy(
+                text = value,
+                state = FieldState.IDLE
+                )
+            )
         }
     }
 
@@ -176,12 +174,48 @@ class AddTransactionFragmentViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSaveClicked(closeAfterSave: Boolean) {
         val state = _uiState.value
+        val amountState = validateRequired(state.amountRaw.text)
+        val categoryState = validateRequired(state.category.text)
+        val accountState = validateRequired(state.account.text)
+
+        _uiState.update {
+            it.copy(
+                amountRaw = it.amountRaw.copy(
+                    state = amountState,
+                    isTouched = true
+                ),
+                category = it.category.copy(
+                    state = categoryState,
+                    isTouched = true
+                ),
+                account = it.account.copy(
+                    state = accountState,
+                    isTouched = true
+                )
+            )
+        }
+
+        when {
+            amountState == FieldState.ERROR -> {
+                emitEvent(AddTransactionEvent.FocusField(FieldType.AMOUNT))
+                return
+            }
+            categoryState == FieldState.ERROR -> {
+                emitEvent(AddTransactionEvent.FocusField(FieldType.CATEGORY))
+                return
+            }
+            accountState == FieldState.ERROR -> {
+                emitEvent(AddTransactionEvent.FocusField(FieldType.ACCOUNT))
+                return
+            }
+            else -> {}
+        }
 
         val params = SaveTransactionParams(
             amount = state.amountRaw.text,
-            category = state.category,
-            account = state.account,
-            note = state.note,
+            category = state.category.text,
+            account = state.account.text,
+            note = state.note.text,
             date = state.date,
             isIncome = state.isIncome,
             existing = state.existingTransaction,
@@ -199,9 +233,9 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 it.copy(
                     amountRaw = FieldUiState(transaction.amount.toLong().toString(), FieldState.VALID),
                     amountFormatted = Helper.formatCurrency(transaction.amount),
-                    category = transaction.categoryParentName + "/" + transaction.categorySubName,
-                    account = transaction.account,
-                    note = transaction.note,
+                    category = FieldUiState(transaction.categoryParentName + "/" + transaction.categorySubName, FieldState.VALID),
+                    account = FieldUiState(transaction.account, FieldState.VALID),
+                    note = FieldUiState(transaction.note, FieldState.VALID),
                     date = transaction.date,
                     isIncome = transaction.isIncome,
                     isEditMode = true,
@@ -226,9 +260,9 @@ class AddTransactionFragmentViewModel @Inject constructor(
             it.copy(
                 amountRaw = FieldUiState("", FieldState.IDLE),
                 amountFormatted = "",
-                category = "",
-                account = "",
-                note = "",
+                category = FieldUiState("", FieldState.IDLE),
+                account = FieldUiState("", FieldState.IDLE),
+                note = FieldUiState("", FieldState.IDLE),
                 date = "",
             )
         }
@@ -238,18 +272,16 @@ class AddTransactionFragmentViewModel @Inject constructor(
         val state = _uiState.value
         return when {
             state.amountRaw.text.isEmpty() -> FieldType.AMOUNT
-            state.category.isEmpty() -> FieldType.CATEGORY
-            state.account.isEmpty() -> FieldType.ACCOUNT
-            state.note.isEmpty() -> FieldType.NOTE
+            state.category.text.isEmpty() -> FieldType.CATEGORY
+            state.account.text.isEmpty() -> FieldType.ACCOUNT
+            state.note.text.isEmpty() -> FieldType.NOTE
             else -> null
         }
     }
 
     fun onNextClicked() {
         val nextField = getNextEmptyField()
-        viewModelScope.launch {
-            _event.emit(AddTransactionEvent.FocusField(nextField))
-        }
+        emitEvent(AddTransactionEvent.FocusField(nextField))
     }
 
     fun onUserStartEditing() {
@@ -268,9 +300,9 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 // giữ data cũ
                 amountRaw = FieldUiState(current.amount.toLong().toString(), FieldState.VALID),
                 amountFormatted = Helper.formatCurrency(current.amount),
-                category = current.categoryParentName + "/" + current.categorySubName,
-                account = current.account,
-                note = current.note,
+                category = FieldUiState(current.categoryParentName + "/" + current.categorySubName, FieldState.VALID),
+                account = FieldUiState(current.account, FieldState.VALID),
+                note = FieldUiState(current.note, FieldState.VALID),
                 isIncome = current.isIncome,
 
                 // 🔥 QUAN TRỌNG
@@ -283,57 +315,28 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
 
         // focus lại amount cho UX đẹp
-        viewModelScope.launch {
-            _event.emit(AddTransactionEvent.FocusField(FieldType.AMOUNT))
-        }
+        emitEvent(AddTransactionEvent.FocusField(FieldType.AMOUNT))
     }
 
     fun onDeleteClicked() {
         val transaction = _uiState.value.existingTransaction ?: return
+        deleteTransaction(transaction)
 
-        viewModelScope.launch {
-            deleteTransaction(transaction)
-            _event.emit(AddTransactionEvent.ShowToast("transaction_delete"))
-            _event.emit(AddTransactionEvent.NavigateBack)
-        }
+        emitEvent(AddTransactionEvent.ShowToast("transaction_delete"))
+        emitEvent(AddTransactionEvent.NavigateBack)
     }
 
     fun onBookmarkClicked() {
         val transaction = _uiState.value.existingTransaction ?: return
+        val update = transaction.copy(isBookmarked = true)
+        updateTransaction(update)
 
-        viewModelScope.launch {
-            val update = transaction.copy(isBookmarked = true)
-            updateTransaction(update)
-            _event.emit(AddTransactionEvent.ShowToast("transaction_bookmark"))
-            _event.emit(AddTransactionEvent.NavigateBack)
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun handleSaveSuccess(date: String, closeAfterSave: Boolean) {
-        viewModelScope.launch {
-            val localDate = parseDisplayDateToLocalDate(date)
-            // 🔥 emit event thay vì xử lý trực tiếp
-            _event.emit(AddTransactionEvent.SaveCompleted(
-                date = date,
-                localDate = localDate,
-                closeAfterSave = closeAfterSave
-            ))
-        }
+        emitEvent(AddTransactionEvent.ShowToast("transaction_bookmark"))
+        emitEvent(AddTransactionEvent.NavigateBack)
     }
 
     fun getSelectedCategoryType() : CategoryType {
         return if (_uiState.value.isIncome) CategoryType.INCOME else CategoryType.EXPENSE
-    }
-
-    fun getTransactionColor(): Int {
-        return if (_uiState.value.isIncome) R.color.income else R.color.red
-    }
-
-    fun formatCategoryDisplay(item: CategoryItem): String {
-        val parentEmoji = item.parentEmoji ?: ""
-        val parentName = item.parentName?.let { "$it/" } ?: ""
-        return "$parentEmoji $parentName ${item.emoji} ${item.name}"
     }
 
     private fun validateAmount(text: String): FieldState {
@@ -350,12 +353,190 @@ class AddTransactionFragmentViewModel @Inject constructor(
         return if (text.isEmpty()) FieldState.ERROR else FieldState.VALID
     }
 
-    fun onAmountTouched() {
-        val current = uiState.value.amountRaw
-        val newState = validateAmount(current.text)
+    fun onAmountFocusChanged(hasFocus: Boolean) {
+        val current = _uiState.value.amountRaw
 
-        _uiState.value = uiState.value.copy(
-            amountRaw = current.copy(state = newState)
-        )
+        val newState = if (!hasFocus && current.isTouched) {
+            validateAmount(current.text)
+        } else current.state
+
+        _uiState.update {
+            it.copy(
+                amountRaw = current.copy(
+                    isFocused = hasFocus,
+                    isTouched = true,
+                    state = newState
+                )
+            )
+        }
+    }
+
+    fun onAmountChanged(input: String) {
+        val clean = input.replace("[^\\d]".toRegex(), "")
+
+        val formatted = if (clean.isNotEmpty()) {
+            val number = clean.toLongOrNull() ?: 0L
+            Helper.formatCurrency(number.toDouble())
+        } else ""
+
+        val current = _uiState.value.amountRaw
+
+        val newState = if (current.isTouched) {
+            validateAmount(clean)
+        } else FieldState.IDLE
+
+        _uiState.update {
+            it.copy(
+                amountRaw = current.copy(
+                    text = clean,
+                    state = newState
+                ),
+                amountFormatted = formatted
+            )
+        }
+    }
+
+    fun onCategoryClicked() {
+        val current = _uiState.value.category
+
+        _uiState.update {
+            it.copy(
+                category = current.copy(
+                    isTouched = true
+                )
+            )
+        }
+
+        emitEvent(AddTransactionEvent.OpenCategoryPicker)
+    }
+
+    fun onAccountClicked() {
+        val current = _uiState.value.account
+
+        _uiState.update {
+            it.copy(
+                account = current.copy(
+                    isTouched = true
+                )
+            )
+        }
+
+        emitEvent(AddTransactionEvent.OpenAccountPicker)
+    }
+
+    fun onCategorySelected(text: String) {
+        val current = _uiState.value.category
+
+        categoryJustSelected = true
+
+        _uiState.update {
+            it.copy(
+                category = current.copy(
+                    text = text,
+                    isTouched = true,
+                    isFocused = false,
+                    state = FieldState.VALID
+                )
+            )
+        }
+    }
+
+    fun onAccountSelected(text: String) {
+        val current = _uiState.value.account
+
+        accountJustSelected = true
+
+        _uiState.update {
+            it.copy(
+                account = current.copy(
+                    text = text,
+                    isTouched = true,
+                    isFocused = false,
+                    state = FieldState.VALID
+                )
+            )
+        }
+    }
+
+    fun onCategoryDismissed() {
+        val current = _uiState.value.category
+
+        val newState = if (!categoryJustSelected && current.isTouched) {
+            validateRequired(current.text)
+        } else {
+            current.state
+        }
+
+        _uiState.update {
+            it.copy(
+                category = current.copy(
+                    isFocused = false,
+                    isTouched = true,
+                    state = newState
+                )
+            )
+        }
+
+        // reset flag
+        categoryJustSelected = false
+    }
+
+    fun onAccountDismissed() {
+        val current = _uiState.value.account
+
+        val newState = if (!accountJustSelected && current.isTouched) {
+            validateRequired(current.text)
+        } else {
+            current.state
+        }
+
+        _uiState.update {
+            it.copy(
+                account = current.copy(
+                    isFocused = false,
+                    isTouched = true,
+                    state = newState
+                )
+            )
+        }
+
+        // reset flag
+        accountJustSelected = false
+    }
+
+    fun onCategoryFocusChanged(hasFocus: Boolean) {
+        val current = _uiState.value.category
+
+        val newState = if (!hasFocus && current.isTouched) {
+            validateRequired(current.text)
+        } else current.state
+
+        _uiState.update {
+            it.copy(
+                category = current.copy(
+                    isFocused = hasFocus,
+                    isTouched = true,
+                    state = newState
+                )
+            )
+        }
+    }
+
+    fun onAccountFocusChanged(hasFocus: Boolean) {
+        val current = _uiState.value.account
+
+        val newState = if (!hasFocus && current.isTouched) {
+            validateRequired(current.text)
+        } else current.state
+
+        _uiState.update {
+            it.copy(
+                account = current.copy(
+                    isFocused = hasFocus,
+                    isTouched = true,
+                    state = newState
+                )
+            )
+        }
     }
 }

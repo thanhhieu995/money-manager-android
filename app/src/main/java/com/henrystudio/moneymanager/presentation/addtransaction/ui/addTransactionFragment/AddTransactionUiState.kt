@@ -7,9 +7,9 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 data class AddTransactionUiState(
     val amountRaw: FieldUiState = FieldUiState(),
     val amountFormatted: String = "",
-    val category: String = "",
-    val account: String = "",
-    val note: String = "",
+    val category: FieldUiState = FieldUiState(),
+    val account: FieldUiState = FieldUiState(),
+    val note: FieldUiState = FieldUiState(),
     val date: String = "",
     val isIncome: Boolean = false,
     val isEditMode: Boolean = false,
