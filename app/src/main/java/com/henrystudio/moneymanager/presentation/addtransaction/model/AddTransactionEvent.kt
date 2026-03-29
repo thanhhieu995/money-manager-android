@@ -1,12 +1,12 @@
 package com.henrystudio.moneymanager.presentation.addtransaction.model
 
 import com.henrystudio.moneymanager.presentation.model.ItemType
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import java.time.LocalDate
 
 sealed class AddTransactionEvent {
     data class NavigateToAddItem(val action: AddItemAction, val itemType: ItemType): AddTransactionEvent()
-    data class NavigateToEditItem(val itemType: ItemType ,val action: AddItemAction): AddTransactionEvent()
-    data class NavigateToEditAccount(val action: AddItemAction): AddTransactionEvent()
+    data class NavigateToEditItem(val action: AddItemAction, val itemType: ItemType, val transactionType: TransactionType): AddTransactionEvent()
     data class NavigateToCategoryDetail(val item: EditItem, val action: AddItemAction): AddTransactionEvent()
     object NavigateBackToDaily: AddTransactionEvent()
     object PopBack: AddTransactionEvent()

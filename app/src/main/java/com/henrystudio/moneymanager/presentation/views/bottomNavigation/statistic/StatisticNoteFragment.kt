@@ -62,13 +62,13 @@ class StatisticNoteFragment : Fragment() {
                     combine(
                         sharedViewModel.allTransactions,
                         sharedViewModel.filterOption,
-                        sharedViewModel.statisticCategoryType
+                        sharedViewModel.statisticTransactionType
                     ) { transactions, option, type ->
                         Triple(transactions, option, type)
                     }.collect { (transactions, option, type) ->
                         viewModel.updateAllTransactions(transactions)
                         viewModel.updateFilterOption(option)
-                        viewModel.updateCategoryType(type)
+                        viewModel.updateTransactionType(type)
                     }
                 }
                 launch {

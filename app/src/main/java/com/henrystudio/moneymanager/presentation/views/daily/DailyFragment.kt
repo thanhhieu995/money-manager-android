@@ -8,8 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.util.component1
-import androidx.core.util.component2
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
@@ -24,11 +22,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
@@ -47,7 +45,7 @@ class DailyFragment : Fragment() {
     private var currentList: List<TransactionGroup> = emptyList()
     private var selectedList: List<Transaction> = emptyList()
     private var keyFilter: KeyFilter = KeyFilter.CategoryParent
-    private var categoryType: CategoryType = CategoryType.EXPENSE
+    private var transactionType: TransactionType = TransactionType.EXPENSE
 
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
     private val viewModel: DailyViewModel by viewModels()
@@ -65,8 +63,8 @@ class DailyFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val categoryName = arguments?.getString(ARG_CATEGORY_NAME)
-        categoryType = arguments?.getSerializable(ARG_CATEGORY_TYPE) as? CategoryType
-            ?: CategoryType.EXPENSE
+        transactionType = arguments?.getSerializable(ARG_CATEGORY_TYPE) as? TransactionType
+            ?: TransactionType.EXPENSE
         keyFilter = arguments?.getSerializable(ARG_CATEGORY_CHILD_CLICK) as? KeyFilter ?: KeyFilter.CategoryParent
 
         adapter = TransactionGroupAdapter()
@@ -113,7 +111,7 @@ class DailyFragment : Fragment() {
                             filterOption = option,
                             selectedMonth = selectedMonth,
                             categoryName = categoryName,
-                            categoryType = categoryType,
+                            transactionType = transactionType,
                             keyFilter = keyFilter,
                             isFromMainActivity = requireActivity() is MainActivity
                         )
@@ -271,12 +269,12 @@ class DailyFragment : Fragment() {
         const val ARG_CATEGORY_CHILD_CLICK = "item_click_statistic_keyWord"
         const val ARG_CATEGORY_TYPE = "item_click_statistic_category_type"
 
-        fun newDailyInstance(categoryName: String?, keyFilter: KeyFilter, categoryType: CategoryType): DailyFragment {
+        fun newDailyInstance(categoryName: String?, keyFilter: KeyFilter, transactionType: TransactionType): DailyFragment {
             val fragment = DailyFragment()
             val args = Bundle()
             args.putString(ARG_CATEGORY_NAME, categoryName ?: "")
             args.putSerializable(ARG_CATEGORY_CHILD_CLICK, keyFilter)
-            args.putSerializable(ARG_CATEGORY_TYPE, categoryType)
+            args.putSerializable(ARG_CATEGORY_TYPE, transactionType)
             fragment.arguments = args
             return fragment
         }

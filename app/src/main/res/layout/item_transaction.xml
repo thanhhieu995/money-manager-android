@@ -16,6 +16,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Food"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:scrollHorizontally="true"
             android:textSize="16sp"
             android:textColor="?android:attr/textColorPrimary"/>
         <TextView
@@ -23,6 +26,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Breakfast"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:scrollHorizontally="true"
             android:textColor="#888888"
             android:textSize="14sp"/>
     </LinearLayout>
@@ -36,6 +42,9 @@
         <TextView
             android:id="@+id/item_transaction_content"
             android:text="Tuition fee"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:scrollHorizontally="true"
             android:textColor="?android:attr/textColorPrimary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
@@ -45,6 +54,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Cash"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:scrollHorizontally="true"
             android:textColor="#888888"
             android:textSize="14sp"/>
     </LinearLayout>
@@ -56,6 +68,9 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="40.000đ"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:scrollHorizontally="true"
         android:textColor="#FF3B30"
         android:gravity="end"/>
 </LinearLayout>

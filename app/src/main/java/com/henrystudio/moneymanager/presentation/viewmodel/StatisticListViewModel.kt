@@ -4,10 +4,10 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 data class StatisticListUiState(
     val filterOption: FilterOption? = null,
-    val categoryType: CategoryType = CategoryType.EXPENSE,
+    val transactionType: TransactionType = TransactionType.EXPENSE,
     val currentFilterPeriod: FilterPeriodStatistic? = null,
     val monthLabel: String = "",
     val incomeSum: String = "0đ",
@@ -35,10 +35,10 @@ class StatisticListViewModel @Inject constructor() : ViewModel() {
     val uiState: StateFlow<StatisticListUiState> = _uiState.asStateFlow()
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setArgs(filterOption: FilterOption, categoryType: CategoryType, currentFilterPeriod: FilterPeriodStatistic) {
+    fun setArgs(filterOption: FilterOption, transactionType: TransactionType, currentFilterPeriod: FilterPeriodStatistic) {
         _uiState.update { it.copy(
             filterOption = filterOption,
-            categoryType = categoryType,
+            transactionType = transactionType,
             currentFilterPeriod = currentFilterPeriod,
             showBack = currentFilterPeriod != FilterPeriodStatistic.Trend,
             showNext = currentFilterPeriod != FilterPeriodStatistic.Trend,

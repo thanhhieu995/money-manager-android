@@ -81,7 +81,7 @@ class CategoryDetailFragment : Fragment() {
             arguments = Bundle().apply {
                 putSerializable("item_type", ItemType.CATEGORY)
                 putSerializable("source", AddItemSource.FROM_DETAIL_CATEGORY)
-                putSerializable("category_to_edit", categoryItem)
+                putParcelable("category_to_edit", categoryItem)
             }
         }
         parentFragmentManager.beginTransaction()
@@ -99,7 +99,7 @@ class CategoryDetailFragment : Fragment() {
         fun newInstance(item: EditItem, action: AddItemAction): CategoryDetailFragment{
             return CategoryDetailFragment().apply {
                 arguments = Bundle().apply {
-                    putSerializable("edit_child_item", item)
+                    putParcelable("edit_child_item", item)
                     putSerializable("action", action as Serializable?)
                 }
             }

@@ -79,7 +79,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         val newTitle = when (action) {
             is AddItemAction.FromAddTransaction -> ToolbarTitle.ADD
             is AddItemAction.FromEditCategory -> ToolbarTitle.CATEGORY
-            is AddItemAction.FromEditAccount -> ToolbarTitle.EDIT
+            is AddItemAction.FromEditAccount -> ToolbarTitle.ACCOUNT
             is AddItemAction.FromCategoryDetail -> ToolbarTitle.CATEGORY
         }
 
@@ -103,7 +103,12 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         currentAction = action
         currentItemType = itemType
 
-        val newTitle = ToolbarTitle.EDIT
+        val newTitle = when (action) {
+            is AddItemAction.FromAddTransaction -> ToolbarTitle.ADD
+            is AddItemAction.FromEditCategory -> ToolbarTitle.CATEGORY
+            is AddItemAction.FromEditAccount -> ToolbarTitle.ACCOUNT
+            is AddItemAction.FromCategoryDetail -> ToolbarTitle.CATEGORY
+        }
 
         titleStack.addLast(newTitle)
 
@@ -114,7 +119,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         )
 
         viewModelScope.launch {
-            _event.emit(AddTransactionEvent.NavigateToEditItem(itemType,action))
+            _event.emit(AddTransactionEvent.NavigateToEditItem(action, itemType, transactionType))
         }
     }
 

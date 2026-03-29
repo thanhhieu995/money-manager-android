@@ -344,7 +344,7 @@ class AddTransactionFragment : Fragment() {
                         }
                     }
                     is AddTransactionEvent.OpenCategoryPicker -> {
-                        val selectedType = viewModel.getSelectedCategoryType()
+                        val selectedType = viewModel.getSelectedTransactionType()
 
                         categoryJob?.cancel()
                         categoryJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -442,8 +442,8 @@ class AddTransactionFragment : Fragment() {
         }
 
         editButton.setOnClickListener {
-            activityViewModel.onAddItemClicked(
-                AddItemAction.FromEditAccount(targetEditText.text.toString()),
+            activityViewModel.onEditItemClicked(
+                AddItemAction.FromEditAccount,
                 itemType = ItemType.ACCOUNT
             )
 
@@ -513,10 +513,8 @@ class AddTransactionFragment : Fragment() {
         val addButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_add)
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
-        var selectedCategory: CategoryItem? = null
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
-            selectedCategory = selectedItem
             viewModel.onCategorySelected("${selectedItem.emoji} ${selectedItem.name}")
             bottomSheetDialog.dismiss()
             // Finish choose category and show account, finish account and show note auto
@@ -547,12 +545,10 @@ class AddTransactionFragment : Fragment() {
         }
 
         editButton.setOnClickListener {
-            selectedCategory?.let {
-                activityViewModel.onEditItemClicked(
-                    AddItemAction.FromEditCategory(it),
-                    ItemType.CATEGORY
-                )
-            }
+            activityViewModel.onEditItemClicked(
+                AddItemAction.FromEditCategory,
+                ItemType.CATEGORY
+            )
 
             bottomSheetDialog.dismiss()
         }

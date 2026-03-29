@@ -26,9 +26,9 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.color.MaterialColors
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticAccountBinding
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticAccountViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -71,8 +71,8 @@ class StatisticAccountFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.statisticCategoryType.collect { type ->
-                        viewModel.updateCategoryType(type)
+                    sharedViewModel.statisticTransactionType.collect { type ->
+                        viewModel.updateTransactionType(type)
                     }
                 }
                 launch {
@@ -88,7 +88,7 @@ class StatisticAccountFragment : Fragment() {
                 launch {
                     viewModel.uiState.collect { state ->
                         sharedViewModel.setStatisticTransactionFilter(state.filteredTransactions)
-                        updateCircleChartByAccount(state.categoryType, state.stats)
+                        updateCircleChartByAccount(state.transactionType, state.stats)
                         adapter.submitList(state.stats)
                     }
                 }
@@ -97,13 +97,13 @@ class StatisticAccountFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateCircleChartByAccount(statType: CategoryType, stats: List<CategoryStat>) {
+    private fun updateCircleChartByAccount(statType: TransactionType, stats: List<CategoryStat>) {
         val pieEntries = stats.map { PieEntry(it.percent, it.name) }
         drawPieChart(pieEntries, stats, statType)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun drawPieChart(entries: List<PieEntry>, stats: List<CategoryStat>, categoryType: CategoryType) {
+    private fun drawPieChart(entries: List<PieEntry>, stats: List<CategoryStat>, transactionType: TransactionType) {
         val dataSet = PieDataSet(entries, "")
         dataSet.colors = stats.map { it.color }
         dataSet.valueTextColor = Color.WHITE
@@ -114,8 +114,8 @@ class StatisticAccountFragment : Fragment() {
             override fun getFormattedValue(value: Float): String = "${Math.round(value)}%"
         })
 
-        val centerTextValue = if (categoryType == CategoryType.EXPENSE) requireContext().getString(R.string.Expense) else requireContext().getString(R.string.Income)
-        val color = if (categoryType == CategoryType.EXPENSE) Color.RED else ContextCompat.getColor(requireContext(), R.color.income)
+        val centerTextValue = if (transactionType == TransactionType.EXPENSE) requireContext().getString(R.string.Expense) else requireContext().getString(R.string.Income)
+        val color = if (transactionType == TransactionType.EXPENSE) Color.RED else ContextCompat.getColor(requireContext(), R.color.income)
 
         val spannable = SpannableString(centerTextValue).apply {
             setSpan(ForegroundColorSpan(color), 0, centerTextValue.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)

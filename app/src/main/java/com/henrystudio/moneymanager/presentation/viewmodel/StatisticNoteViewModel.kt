@@ -3,13 +3,13 @@ package com.henrystudio.moneymanager.presentation.viewmodel
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.Note
 import com.henrystudio.moneymanager.presentation.model.SortField
 import com.henrystudio.moneymanager.presentation.model.SortOrder
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 data class StatisticNoteUiState(
     val notes: List<Note> = emptyList(),
-    val categoryType: CategoryType = CategoryType.EXPENSE,
+    val transactionType: TransactionType = TransactionType.EXPENSE,
     val filterOption: FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now()),
     val allTransactions: List<Transaction> = emptyList(),
     val filteredTransactions: List<Transaction> = emptyList(),
@@ -39,8 +39,8 @@ class StatisticNoteViewModel @Inject constructor() : ViewModel() {
     val uiState: StateFlow<StatisticNoteUiState> = _uiState.asStateFlow()
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun updateCategoryType(type: CategoryType) {
-        _uiState.update { it.copy(categoryType = type) }
+    fun updateTransactionType(type: TransactionType) {
+        _uiState.update { it.copy(transactionType = type) }
         processData()
     }
 
@@ -72,7 +72,7 @@ class StatisticNoteViewModel @Inject constructor() : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun processData() {
         val state = _uiState.value
-        val filtered = filterTransactions(state.allTransactions, state.filterOption, state.categoryType)
+        val filtered = filterTransactions(state.allTransactions, state.filterOption, state.transactionType)
         val notes = calculateNotes(filtered)
         _uiState.update { it.copy(filteredTransactions = filtered, notes = notes, isEmpty = notes.isEmpty()) }
         sortNotes()
@@ -104,9 +104,9 @@ class StatisticNoteViewModel @Inject constructor() : ViewModel() {
     private fun filterTransactions(
         transactions: List<Transaction>,
         option: FilterOption,
-        type: CategoryType
+        type: TransactionType
     ): List<Transaction> {
-        val isIncome = type == CategoryType.INCOME
+        val isIncome = type == TransactionType.INCOME
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
         
         return transactions.filter { tx ->

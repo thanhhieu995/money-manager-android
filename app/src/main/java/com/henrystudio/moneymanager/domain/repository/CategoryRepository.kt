@@ -1,18 +1,18 @@
 package com.henrystudio.moneymanager.domain.repository
 
 import com.henrystudio.moneymanager.data.model.Category
-import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {
 
-    fun getParentCategories(type: CategoryType): Flow<List<Category>>
+    fun getParentCategories(type: TransactionType): Flow<List<Category>>
 
     fun getChildCategories(parentId: Int): Flow<List<Category>>
 
     fun getAll(): Flow<List<Category>>
 
-    fun getCategoriesByType(type: CategoryType): Flow<List<Category>>
+    fun getCategoriesByType(type: TransactionType): Flow<List<Category>>
 
     suspend fun insert(category: Category)
 

@@ -1,7 +1,9 @@
 package com.henrystudio.moneymanager.presentation.addtransaction.model
 
-import java.io.Serializable
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class CategoryItem(
     val id: Int = -1,
     val emoji: String,
@@ -12,4 +14,4 @@ data class CategoryItem(
     val isParent: Boolean,
     val children: List<CategoryItem> = emptyList(),
     var isExpanded: Boolean = false
-): Serializable
+): Parcelable

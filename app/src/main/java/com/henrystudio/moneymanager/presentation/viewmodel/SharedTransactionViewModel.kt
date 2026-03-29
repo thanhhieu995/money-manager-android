@@ -4,13 +4,13 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.model.Event
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -74,8 +74,8 @@ class SharedTransactionViewModel @Inject constructor(
     )
     val filterOption: StateFlow<FilterOption> = _filterOption
 
-    private val _statisticCategoryType = MutableStateFlow(CategoryType.EXPENSE)
-    val statisticCategoryType: StateFlow<CategoryType> = _statisticCategoryType
+    private val _statisticTransactionType = MutableStateFlow(TransactionType.EXPENSE)
+    val statisticTransactionType: StateFlow<TransactionType> = _statisticTransactionType
 
     private val _statisticListTransactionFilter =
         MutableStateFlow<List<Transaction>>(emptyList())
@@ -83,8 +83,8 @@ class SharedTransactionViewModel @Inject constructor(
         _statisticListTransactionFilter
 
     // Note screen: combined category type + filtered transactions
-    val combinedFilter: Flow<Pair<CategoryType, List<Transaction>>> =
-        combine(statisticCategoryType, statisticListTransactionFilter) { type, list ->
+    val combinedFilter: Flow<Pair<TransactionType, List<Transaction>>> =
+        combine(statisticTransactionType, statisticListTransactionFilter) { type, list ->
             type to list
         }
 
@@ -183,8 +183,8 @@ class SharedTransactionViewModel @Inject constructor(
         _filterOption.value = FilterOption(type, date)
     }
 
-    fun setStatisticCategoryType(type: CategoryType) {
-        _statisticCategoryType.value = type
+    fun setStatisticTransactionType(type: TransactionType) {
+        _statisticTransactionType.value = type
     }
 
     fun setStatisticTransactionFilter(list: List<Transaction>) {

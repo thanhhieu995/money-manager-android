@@ -3,11 +3,11 @@ package com.henrystudio.moneymanager.presentation.viewmodel
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 data class StatisticStatsUiState(
     val stats: List<CategoryStat> = emptyList(),
-    val categoryType: CategoryType = CategoryType.EXPENSE,
+    val transactionType: TransactionType = TransactionType.EXPENSE,
     val filterOption: FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now()),
     val allTransactions: List<Transaction> = emptyList()
 )
@@ -33,8 +33,8 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
     val uiState: StateFlow<StatisticStatsUiState> = _uiState.asStateFlow()
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun updateCategoryType(type: CategoryType) {
-        _uiState.update { it.copy(categoryType = type) }
+    fun updateTransactionType(type: TransactionType) {
+        _uiState.update { it.copy(transactionType = type) }
         calculateStats()
     }
 
@@ -53,8 +53,8 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateStats() {
         val state = _uiState.value
-        val filtered = filterTransactions(state.allTransactions, state.filterOption, state.categoryType)
-        val stats = convertToCategoryStats(filtered, state.categoryType == CategoryType.INCOME)
+        val filtered = filterTransactions(state.allTransactions, state.filterOption, state.transactionType)
+        val stats = convertToCategoryStats(filtered, state.transactionType == TransactionType.INCOME)
         _uiState.update { it.copy(stats = stats) }
     }
 
@@ -62,9 +62,9 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
     private fun filterTransactions(
         transactions: List<Transaction>,
         option: FilterOption,
-        type: CategoryType
+        type: TransactionType
     ): List<Transaction> {
-        val isIncome = type == CategoryType.INCOME
+        val isIncome = type == TransactionType.INCOME
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
         
         return transactions.filter { tx ->

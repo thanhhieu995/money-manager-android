@@ -1,12 +1,12 @@
 package com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic
 
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 
 data class StatisticListUiState(
     val filterOption: FilterOption? = null,
-    val categoryType: CategoryType? = null,
+    val transactionType: TransactionType? = null,
     val currentFilterPeriod: FilterPeriodStatistic? = null,
     val monthLabel: String = "",
     val incomeSum: String = "",

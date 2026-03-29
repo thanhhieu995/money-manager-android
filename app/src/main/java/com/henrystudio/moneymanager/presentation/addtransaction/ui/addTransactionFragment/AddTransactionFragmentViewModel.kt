@@ -4,23 +4,19 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
-import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldUiState
-import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import com.henrystudio.moneymanager.presentation.model.SaveTransactionParams
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.lang.reflect.Field
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -335,8 +331,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
         emitEvent(AddTransactionEvent.NavigateBack)
     }
 
-    fun getSelectedCategoryType() : CategoryType {
-        return if (_uiState.value.isIncome) CategoryType.INCOME else CategoryType.EXPENSE
+    fun getSelectedTransactionType() : TransactionType {
+        return if (_uiState.value.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
     }
 
     private fun validateAmount(text: String): FieldState {

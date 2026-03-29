@@ -27,7 +27,6 @@ import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragme
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment.AddTransactionFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment.CategoryDetailFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment.EditItemDialogFragment
-import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -292,15 +291,7 @@ class AddTransactionActivity : AppCompatActivity() {
                 navigateTo(
                     EditItemDialogFragment.newInstance(
                         itemType = event.itemType,
-                        action = event.action
-                    )
-                )
-            }
-
-            is AddTransactionEvent.NavigateToEditAccount -> {
-                navigateTo(
-                    AddItemFragment.newInstance(
-                        itemType = ItemType.ACCOUNT,
+                        transactionType = event.transactionType,
                         action = event.action
                     )
                 )
@@ -342,7 +333,7 @@ class AddTransactionActivity : AppCompatActivity() {
             ToolbarTitle.INCOME -> getString(R.string.Income)
             ToolbarTitle.EXPENSE -> getString(R.string.Expense)
             ToolbarTitle.ADD -> getString(R.string.add)
-            ToolbarTitle.EDIT -> getString(R.string.edit)
+            ToolbarTitle.ACCOUNT -> getString(R.string.account)
             ToolbarTitle.CATEGORY -> getString(R.string.category)
         }
     }

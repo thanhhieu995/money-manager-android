@@ -27,10 +27,10 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticViewPagerBinding
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.model.stringRes
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticViewPagerViewModel
@@ -109,8 +109,8 @@ class StatisticViewPagerFragment : Fragment() {
                     }
                 }
                 launch {
-                    sharedViewModel.statisticCategoryType.collect { type ->
-                        viewModel.updateCategoryType(type)
+                    sharedViewModel.statisticTransactionType.collect { type ->
+                        viewModel.updateTransactionType(type)
                     }
                 }
                 launch {
@@ -130,7 +130,7 @@ class StatisticViewPagerFragment : Fragment() {
                         selectedOption = state.filterOption.type
                         monthText.text = Helper.getUpdateMonthText(state.filterOption)
                         toggleGroupButton.check(
-                            if (state.categoryType == CategoryType.INCOME) incomeBtn.id else expenseBtn.id
+                            if (state.transactionType == TransactionType.INCOME) incomeBtn.id else expenseBtn.id
                         )
                         incomeBtn.text = getString(R.string.Income) + " " + Helper.formatCurrency(state.totalIncome)
                         expenseBtn.text = getString(R.string.exp) + " " + Helper.formatCurrency(state.totalExpense)
@@ -146,10 +146,10 @@ class StatisticViewPagerFragment : Fragment() {
         toggleGroupButton.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 val type = when (checkedId) {
-                    incomeBtn.id -> CategoryType.INCOME
-                    else -> CategoryType.EXPENSE
+                    incomeBtn.id -> TransactionType.INCOME
+                    else -> TransactionType.EXPENSE
                 }
-                sharedViewModel.setStatisticCategoryType(type)
+                sharedViewModel.setStatisticTransactionType(type)
             }
         }
 

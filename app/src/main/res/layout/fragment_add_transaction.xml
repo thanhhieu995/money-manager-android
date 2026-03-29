@@ -86,6 +86,11 @@
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:clickable="true"
+        android:inputType="textCapSentences"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:scrollHorizontally="true"
+        android:gravity="top|start"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 

@@ -4,12 +4,12 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.core.util.FilterTransactions
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.views.daily.DailyUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,12 +31,12 @@ class DailyViewModel @Inject constructor() : ViewModel() {
         filterOption: FilterOption,
         selectedMonth: LocalDate,
         categoryName: String?,
-        categoryType: CategoryType,
+        transactionType: TransactionType,
         keyFilter: KeyFilter,
         isFromMainActivity: Boolean
     ) {
         val filteredByCategory = if (categoryName != null) {
-            filterByCategory(transactions, categoryName, categoryType, keyFilter)
+            filterByCategory(transactions, categoryName, transactionType, keyFilter)
         } else {
             transactions
         }
@@ -76,10 +76,10 @@ class DailyViewModel @Inject constructor() : ViewModel() {
     private fun filterByCategory(
         transactions: List<TransactionGroup>,
         categoryName: String,
-        categoryType: CategoryType,
+        transactionType: TransactionType,
         keyFilter: KeyFilter
     ): List<TransactionGroup> {
-        val isInCome = categoryType == CategoryType.INCOME
+        val isInCome = transactionType == TransactionType.INCOME
         return transactions.mapNotNull { group ->
             val filteredTransactions = when (keyFilter) {
                 KeyFilter.CategoryParent -> {

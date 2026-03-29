@@ -16,32 +16,25 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
-import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentStatisticCategoryBinding
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.LineChartPoint
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticCategoryViewModel
-import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 @AndroidEntryPoint
@@ -69,11 +62,12 @@ class StatisticCategoryFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val categoryName = arguments?.getSerializable("item_click_statistic_category_name") as? String ?: ""
-        val categoryType = arguments?.getSerializable("item_click_statistic_category_type") as? CategoryType ?: CategoryType.EXPENSE
+        val transactionType = arguments?.getSerializable("item_click_statistic_category_type") as? TransactionType
+            ?: TransactionType.EXPENSE
         val filterOption = arguments?.getSerializable("item_click_statistic_filterOption") as? FilterOption ?: FilterOption(FilterPeriodStatistic.Monthly, java.time.LocalDate.now())
         val keyFilter = arguments?.getSerializable("item_click_statistic_keyWord") as? KeyFilter ?: KeyFilter.Time
 
-        viewModel.init(categoryName, categoryType, filterOption, keyFilter)
+        viewModel.init(categoryName, transactionType, filterOption, keyFilter)
 
         adapter = CategoryStatAdapter(emptyList())
         binding.fragmentStatisticCategoryStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -140,7 +134,7 @@ class StatisticCategoryFragment : Fragment() {
         binding.fragmentStatisticCategoryDailyContainer.visibility = if (state.isDailyVisible) View.VISIBLE else View.GONE
 
         if (state.chartPoints.isNotEmpty()) {
-            updateLineChart(state.chartPoints, state.filterOption.type, state.categoryName, state.categoryType)
+            updateLineChart(state.chartPoints, state.filterOption.type, state.categoryName, state.transactionType)
         }
     }
 
@@ -149,7 +143,7 @@ class StatisticCategoryFragment : Fragment() {
         chartPoints: List<LineChartPoint>,
         chartMode: FilterPeriodStatistic,
         categoryName: String,
-        categoryType: CategoryType
+        transactionType: TransactionType
     ) {
         val entries = chartPoints.mapIndexed { index, point -> Entry(index.toFloat(), point.amount.toFloat()) }
         val labels = chartPoints.map { point ->
@@ -158,7 +152,7 @@ class StatisticCategoryFragment : Fragment() {
             } else point.label
         }
 
-        val color = if (categoryType == CategoryType.INCOME) Color.GREEN else Color.RED
+        val color = if (transactionType == TransactionType.INCOME) Color.GREEN else Color.RED
         var textColor = getThemeColor(com.google.android.material.R.attr.colorOnSurface)
 
         val dataSet = LineDataSet(entries, categoryName).apply {

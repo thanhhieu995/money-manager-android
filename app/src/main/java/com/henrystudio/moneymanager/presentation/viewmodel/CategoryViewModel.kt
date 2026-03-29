@@ -3,8 +3,8 @@ package com.henrystudio.moneymanager.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.Category
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +19,7 @@ class CategoryViewModel @Inject constructor (private val categoryUseCases: Categ
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories: StateFlow<List<Category>> = _categories
 
-    fun getParentCategories(type: CategoryType): StateFlow<List<Category>> =
+    fun getParentCategories(type: TransactionType): StateFlow<List<Category>> =
         categoryUseCases.getParentCategories(type).stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -40,7 +40,7 @@ class CategoryViewModel @Inject constructor (private val categoryUseCases: Categ
             initialValue = emptyList()
         )
 
-    fun getCategoriesByType(type: CategoryType): StateFlow<List<Category>> =
+    fun getCategoriesByType(type: TransactionType): StateFlow<List<Category>> =
         categoryUseCases.getCategoriesByType(type).stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

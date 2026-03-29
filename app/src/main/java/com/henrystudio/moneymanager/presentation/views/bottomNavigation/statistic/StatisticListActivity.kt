@@ -19,9 +19,9 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticListViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -55,9 +55,9 @@ class StatisticListActivity : AppCompatActivity() {
         }
 
         val filterOption = intent.getSerializableExtra("filterOption") as FilterOption
-        val categoryType = intent.getSerializableExtra("categoryType") as CategoryType
+        val transactionType = intent.getSerializableExtra("transactionType") as TransactionType
         val currentFilterPeriod = intent.getSerializableExtra("currentFilterPeriodStatistic") as FilterPeriodStatistic
-        viewModel.setArgs(filterOption, categoryType, currentFilterPeriod)
+        viewModel.setArgs(filterOption, transactionType, currentFilterPeriod)
 
         imgClose.setOnClickListener {
             onBackAnimation()

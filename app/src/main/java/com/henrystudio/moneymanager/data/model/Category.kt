@@ -1,12 +1,12 @@
 package com.henrystudio.moneymanager.data.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.henrystudio.moneymanager.presentation.model.TransactionType
-import java.io.Serializable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(tableName = "categories")
 data class Category(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -14,24 +14,9 @@ data class Category(
     val name: String,
     val type: TransactionType,
     val parentId: Int? = null // null: danh mục cha, != null: danh mục con
-) : Serializable
+) : Parcelable
 
-enum class CategoryType : Parcelable {
-    INCOME {
-        override fun describeContents(): Int {
-            TODO("Not yet implemented")
-        }
-
-        override fun writeToParcel(p0: Parcel, p1: Int) {
-            TODO("Not yet implemented")
-        }
-    }, EXPENSE {
-        override fun describeContents(): Int {
-            TODO("Not yet implemented")
-        }
-
-        override fun writeToParcel(p0: Parcel, p1: Int) {
-            TODO("Not yet implemented")
-        }
-    }
-}
+//@Parcelize
+//enum class TransactionType : Parcelable {
+//    INCOME , EXPENSE
+//}

@@ -3,13 +3,13 @@ package com.henrystudio.moneymanager.data.repository
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.local.CategoryDao
 import com.henrystudio.moneymanager.domain.repository.CategoryRepository
-import com.henrystudio.moneymanager.data.model.CategoryType
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import kotlinx.coroutines.flow.Flow
 
 
 class CategoryRepositoryImpl(private val dao: CategoryDao) : CategoryRepository{
 
-    override fun getParentCategories(type: CategoryType): Flow<List<Category>> {
+    override fun getParentCategories(type: TransactionType): Flow<List<Category>> {
         return dao.getParentCategoriesByType(type)
     }
 
@@ -21,7 +21,7 @@ class CategoryRepositoryImpl(private val dao: CategoryDao) : CategoryRepository{
         return dao.getAll()
     }
 
-    override  fun getCategoriesByType(type: CategoryType): Flow<List<Category>> {
+    override  fun getCategoriesByType(type: TransactionType): Flow<List<Category>> {
         return dao.getCategoriesByType(type)
     }
 

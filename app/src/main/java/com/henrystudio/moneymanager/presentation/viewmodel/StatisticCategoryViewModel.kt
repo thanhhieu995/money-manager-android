@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Category
-import com.henrystudio.moneymanager.data.model.CategoryType
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
@@ -24,7 +23,7 @@ import javax.inject.Inject
 
 data class StatisticCategoryUiState(
     val categoryName: String = "",
-    val categoryType: CategoryType = CategoryType.EXPENSE,
+    val transactionType: TransactionType = TransactionType.EXPENSE,
     val filterOption: FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now()),
     val keyFilter: KeyFilter = KeyFilter.Time,
     val chartPoints: List<LineChartPoint> = emptyList(),
@@ -48,7 +47,7 @@ class StatisticCategoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(StatisticCategoryUiState())
     val uiState: StateFlow<StatisticCategoryUiState> = _uiState.asStateFlow()
 
-    private val _initParams = MutableStateFlow<Triple<String, CategoryType, FilterOption>?>(null)
+    private val _initParams = MutableStateFlow<Triple<String, TransactionType, FilterOption>?>(null)
     private var allTransactions: List<Transaction> = emptyList()
     private var allCategories: List<Category> = emptyList()
 
@@ -73,13 +72,13 @@ class StatisticCategoryViewModel @Inject constructor(
                 }
 
                 val locale = Helper.getAppLocale()
-                val chartPoints = calculateChartPoints(transactions, name, type == CategoryType.INCOME, filter, keyFilter, locale)
+                val chartPoints = calculateChartPoints(transactions, name, type == TransactionType.INCOME, filter, keyFilter, locale)
                 
                 val targetIndex = if (state.chartPoints.isEmpty()) findInitialIndex(chartPoints, filter) else state.currentIndex.coerceIn(0, chartPoints.lastIndex.coerceAtLeast(0))
                 
                 updateStateWithPoint(state.copy(
                     categoryName = name,
-                    categoryType = type,
+                    transactionType = type,
                     filterOption = filter,
                     parentId = parentId,
                     chartPoints = chartPoints
@@ -91,9 +90,9 @@ class StatisticCategoryViewModel @Inject constructor(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun init(categoryName: String, categoryType: CategoryType, filterOption: FilterOption, keyFilter: KeyFilter) {
+    fun init(categoryName: String, transactionType: TransactionType, filterOption: FilterOption, keyFilter: KeyFilter) {
         _uiState.update { it.copy(keyFilter = keyFilter) }
-        _initParams.value = Triple(categoryName, categoryType, filterOption)
+        _initParams.value = Triple(categoryName, transactionType, filterOption)
     }
 
     fun updateSelectionMode(enabled: Boolean) {
@@ -119,7 +118,7 @@ class StatisticCategoryViewModel @Inject constructor(
 
         val transactionsInPeriod = getTransactionsForPeriod(filtered, state.filterOption, point.date)
         val childCategories = if (state.parentId != -1) allCategories.filter { it.parentId == state.parentId } else emptyList()
-        val stats = Helper.convertToCategoryStats(childCategories, transactionsInPeriod, state.categoryType == CategoryType.INCOME, colors)
+        val stats = Helper.convertToCategoryStats(childCategories, transactionsInPeriod, state.transactionType == TransactionType.INCOME, colors)
         
         return state.copy(
             currentIndex = index,
@@ -233,7 +232,7 @@ class StatisticCategoryViewModel @Inject constructor(
                 val chartPoints = calculateChartPoints(
                     transactions,
                     name,
-                    type == CategoryType.INCOME,
+                    type == TransactionType.INCOME,
                     filter,
                     keyFilter,
                     locale
@@ -251,7 +250,7 @@ class StatisticCategoryViewModel @Inject constructor(
                 updateStateWithPoint(
                     state.copy(
                         categoryName = name,
-                        categoryType = type,
+                        transactionType = type,
                         filterOption = filter,
                         parentId = parentId,
                         chartPoints = chartPoints
