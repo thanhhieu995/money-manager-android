@@ -11,6 +11,7 @@ import com.henrystudio.moneymanager.presentation.model.Event
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.TransactionType
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -39,20 +41,32 @@ class SharedTransactionViewModel @Inject constructor(
     private val transactionUseCases: TransactionUseCases
 ) : ViewModel() {
 
-    val allTransactions: StateFlow<List<Transaction>> =
-        transactionUseCases.getTransactionsUseCase().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
+    val allTransactionsState: StateFlow<DataTransactionGroupState<List<Transaction>>> =
+        transactionUseCases.getTransactionsUseCase()
+            .map { list ->
+                if (list.isEmpty()) DataTransactionGroupState.Empty
+                else DataTransactionGroupState.Success(list)
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = DataTransactionGroupState.Loading
+            )
 
-    val groupedTransactions: StateFlow<List<TransactionGroup>> =
-        transactionUseCases.getTransactionsGroupUseCase().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
-
+    val groupedTransactionsState: StateFlow<DataTransactionGroupState<List<TransactionGroup>>> =
+        transactionUseCases.getTransactionsGroupUseCase()
+            .map { list ->
+                if (list.isEmpty()) {
+                    DataTransactionGroupState.Empty
+                } else {
+                    DataTransactionGroupState.Success(list)
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = DataTransactionGroupState.Loading // 👈 QUAN TRỌNG
+            )
     private val _currentFilterDate = MutableStateFlow(LocalDate.now())
     val currentFilterDate: StateFlow<LocalDate> = _currentFilterDate
 
@@ -89,9 +103,9 @@ class SharedTransactionViewModel @Inject constructor(
         }
 
     // Daily / Monthly screens: grouped transactions + currently selected date
-    val combineGroupAndDate: Flow<Pair<List<TransactionGroup>, LocalDate>> =
-        combine(groupedTransactions, currentFilterDate) { transactions, date ->
-            transactions to date
+    val combineGroupAndDate: Flow<Pair<DataTransactionGroupState<List<TransactionGroup>>, LocalDate>> =
+        combine(groupedTransactionsState, currentFilterDate) { state, date ->
+            state to date
         }.flowOn(Dispatchers.Default)
 
     private val _currentStatisticTabPosition = MutableStateFlow(0)

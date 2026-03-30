@@ -22,7 +22,10 @@ import com.henrystudio.moneymanager.presentation.views.setting.SettingFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -41,10 +44,7 @@ class MainActivity : AppCompatActivity() {
         val lastTab = prefs.getInt("last_selected_tab", R.id.nav_daily)
 
         init()
-        lifecycleScope.launch {
-            delay(1500)
-            initAds()
-        }
+        initAds()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.uiState.collect { state ->
+                mainViewModel.uiState.collectLatest { state ->
                     bottomNav.menu.findItem(R.id.nav_daily).title = state.bottomNavTitle
                 }
             }
@@ -86,7 +86,9 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
-        bottomNav.selectedItemId = lastTab
+        lifecycleScope.launch {
+            bottomNav.selectedItemId = lastTab
+        }
     }
 
     private fun init() {
@@ -94,9 +96,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initAds() {
-        MobileAds.initialize(this) {}
-        adView = findViewById(R.id.adView)
-        val adRequest = AdRequest.Builder().build()
-        adView.loadAd(adRequest)
+        lifecycleScope.launch(Dispatchers.IO) {
+            MobileAds.initialize(this@MainActivity) {}
+            withContext(Dispatchers.Main) {
+                adView = findViewById(R.id.adView)
+                val adRequest = AdRequest.Builder().build()
+                adView.loadAd(adRequest)
+            }
+        }
     }
 }

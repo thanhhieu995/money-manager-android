@@ -1,6 +1,7 @@
 package com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -187,7 +188,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 account = it.account.copy(
                     state = accountState,
                     isTouched = true
-                )
+                ),
+                date = it.date
             )
         }
 
@@ -276,6 +278,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
     }
 
     fun onNextClicked() {
+        Log.d("DEBUG", "NEXT CLICKED")
         val nextField = getNextEmptyField()
         emitEvent(AddTransactionEvent.FocusField(nextField))
     }

@@ -39,8 +39,25 @@
             android:src="@drawable/ic_baseline_close_24"/>
 
     </LinearLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/bottom_dialog_add_recyclerView"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/bottom_dialog_add_recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <!-- Loading -->
+        <ProgressBar
+            android:id="@+id/bottom_dialog_add_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"/>
+        <TextView
+            android:id="@+id/bottom_dialog_add_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_data"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+    </FrameLayout>
 </LinearLayout>

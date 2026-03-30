@@ -23,6 +23,7 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.viewmodel.MonthlyViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -57,8 +58,9 @@ class MonthlyFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.combineGroupAndDate.collect { (groups, date) ->
-                        viewModel.updateMonthlyData(groups = groups, anchorDate = date)
+                    sharedViewModel.combineGroupAndDate.collect { (state, date) ->
+                        viewModel.updateMonthlyData(groups = if (state is DataTransactionGroupState.Success)
+                            state.data else emptyList(), anchorDate = date)
                     }
                 }
                 launch {

@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -33,9 +32,10 @@ import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticCategoryViewModel
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.util.*
 
 @AndroidEntryPoint
 class StatisticCategoryFragment : Fragment() {
@@ -73,7 +73,9 @@ class StatisticCategoryFragment : Fragment() {
         binding.fragmentStatisticCategoryStatsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.fragmentStatisticCategoryStatsRecyclerView.adapter = adapter
 
-        viewModel.bindTransactions(sharedViewModel.allTransactions)
+        viewModel.bindTransactions(sharedViewModel.allTransactionsState.map { state ->
+           if (state is DataTransactionGroupState.Success) state.data else emptyList()
+        })
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {

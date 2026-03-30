@@ -31,6 +31,7 @@ import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticStatsViewModel
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -78,8 +79,8 @@ class StatisticStatsFragment : Fragment() {
                     }
                 }
                 launch {
-                    sharedViewModel.allTransactions.collect { transactionList ->
-                        viewModel.updateAllTransactions(transactionList)
+                    sharedViewModel.allTransactionsState.collect { state ->
+                        viewModel.updateAllTransactions(if (state is DataTransactionGroupState.Success) state.data else emptyList())
                     }
                 }
                 launch {

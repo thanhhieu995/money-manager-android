@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.presentation.viewmodel.DailyViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -33,6 +32,7 @@ import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import com.henrystudio.moneymanager.presentation.views.main.StickyHeaderItemDecoration
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.*
@@ -46,7 +46,6 @@ class DailyFragment : Fragment() {
     private var selectedList: List<Transaction> = emptyList()
     private var keyFilter: KeyFilter = KeyFilter.CategoryParent
     private var transactionType: TransactionType = TransactionType.EXPENSE
-
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
     private val viewModel: DailyViewModel by viewModels()
 
@@ -71,31 +70,33 @@ class DailyFragment : Fragment() {
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
 
-        val decoration = StickyHeaderItemDecoration(
-            isHeader = { position -> true },
-            createHeaderView = {
-                LayoutInflater.from(requireContext())
-                    .inflate(R.layout.item_transaction_header, binding.transactionList, false)
-            },
-            bindHeader = { header, position ->
-                val group = adapter.getGroupAt(position)
-                val headerText = header.findViewById<TextView>(R.id.item_transaction_header_date)
-                val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
-                val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val decoration = StickyHeaderItemDecoration(
+                isHeader = { position -> true },
+                createHeaderView = {
+                    LayoutInflater.from(requireContext())
+                        .inflate(R.layout.item_transaction_header, binding.transactionList, false)
+                },
+                bindHeader = { header, position ->
+                    val group = adapter.getGroupAt(position)
+                    val headerText = header.findViewById<TextView>(R.id.item_transaction_header_date)
+                    val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
+                    val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
 
-                val cleanedDate = group.date.substringBefore(" ")
-                val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
-                val localDate = LocalDate.parse(cleanedDate, inputFormatter)
-                val currentLocale = requireContext().resources.configuration.locales[0]
+                    val cleanedDate = group.date.substringBefore(" ")
+                    val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
+                    val localDate = LocalDate.parse(cleanedDate, inputFormatter)
+                    val currentLocale = requireContext().resources.configuration.locales[0]
 
-                val dayPart = localDate.format(DateTimeFormatter.ofPattern("dd", currentLocale))
-                val dayOfWeek = localDate.format(DateTimeFormatter.ofPattern("EEE", currentLocale))
-                headerText.text = "$dayPart $dayOfWeek"
-                headerIncome.text = Helper.formatCurrency(group.income)
-                headerExpense.text = Helper.formatCurrency(group.expense)
-            }
-        )
-        binding.transactionList.addItemDecoration(decoration)
+                    val dayPart = localDate.format(DateTimeFormatter.ofPattern("dd", currentLocale))
+                    val dayOfWeek = localDate.format(DateTimeFormatter.ofPattern("EEE", currentLocale))
+                    headerText.text = "$dayPart $dayOfWeek"
+                    headerIncome.text = Helper.formatCurrency(group.income)
+                    headerExpense.text = Helper.formatCurrency(group.expense)
+                }
+            )
+            binding.transactionList.addItemDecoration(decoration)
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -105,16 +106,28 @@ class DailyFragment : Fragment() {
                         sharedViewModel.filterOption
                     ) { (transactions, selectedMonth), option ->
                         Triple(transactions, selectedMonth, option)
-                    }.collect { (transactions, selectedMonth, option) ->
-                        viewModel.updateData(
-                            transactions = transactions,
-                            filterOption = option,
-                            selectedMonth = selectedMonth,
-                            categoryName = categoryName,
-                            transactionType = transactionType,
-                            keyFilter = keyFilter,
-                            isFromMainActivity = requireActivity() is MainActivity
-                        )
+                    }.collect { (state, selectedMonth, option) ->
+                        when(state) {
+                            is DataTransactionGroupState.Loading -> {
+                                viewModel.setLoading(selectedMonth)
+                            }
+                            is DataTransactionGroupState.Empty -> {
+                                viewModel.setEmpty(selectedMonth)
+                            }
+                            is DataTransactionGroupState.Success -> {
+                                viewModel.updateData(
+                                    transactions = state.data,
+                                    filterOption = option,
+                                    selectedMonth = selectedMonth,
+                                    categoryName = categoryName,
+                                    transactionType = transactionType,
+                                    keyFilter = keyFilter,
+                                    isFromMainActivity = requireActivity() is MainActivity
+                                )
+                            }
+
+                            else -> {}
+                        }
                     }
                 }
 
@@ -123,10 +136,36 @@ class DailyFragment : Fragment() {
                         currentList = uiState.transactions
                         adapter.setFilterYear(uiState.isYearly)
                         adapter.submitList(uiState.transactions)
-                        binding.noDataText.visibility = if (uiState.isEmpty) View.VISIBLE else View.GONE
+
+                        when (val state = uiState.dataTransactionGroupState) {
+
+                            is DataTransactionGroupState.Loading -> {
+                                binding.loadingView.visibility = View.VISIBLE
+                                binding.transactionList.visibility = View.GONE
+                                binding.noDataText.visibility = View.GONE
+                            }
+
+                            is DataTransactionGroupState.Empty -> {
+                                binding.loadingView.visibility = View.GONE
+                                binding.transactionList.visibility = View.GONE
+                                binding.noDataText.visibility = View.VISIBLE
+                            }
+
+                            is DataTransactionGroupState.Success -> {
+                                binding.loadingView.visibility = View.GONE
+                                binding.transactionList.visibility = View.VISIBLE
+                                binding.noDataText.visibility = View.GONE
+
+                                currentList = state.data
+                                adapter.setFilterYear(uiState.isYearly)
+                                adapter.submitList(state.data)
+                            }
+
+                            else -> {}
+                        }
 
                         if (SharedTransactionHolder.scrollToAddedTransaction) {
-                            val targetPosition = findPositionForDate(uiState.transactions, uiState.selectedDate)
+                            val targetPosition = findPositionForDate((uiState.dataTransactionGroupState as? DataTransactionGroupState.Success)?.data ?: emptyList(), uiState.selectedDate)
                             if (targetPosition >= 0) {
                                 binding.transactionList.scrollToPosition(targetPosition)
                             }

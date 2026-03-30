@@ -18,6 +18,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.viewmodel.AddBookmarkViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -51,15 +52,25 @@ class AddBookmarkFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.allTransactions.collect { list ->
-                    viewModel.updateTransactions(list)
+                sharedViewModel.allTransactionsState.collect { state ->
+                    when (state) {
+                        is DataTransactionGroupState.Loading -> {
+                            viewModel.setLoading()
+                        }
+                        is DataTransactionGroupState.Empty -> {
+                            viewModel.setEmpty()
+                        }
+                        is DataTransactionGroupState.Success -> {
+                            viewModel.updateTransactions(state.data)
+                        }
+                        else -> {}
+                    }
                 }
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    tvNoData.visibility = if (state.isEmpty) View.VISIBLE else View.GONE
                     transactionAdapter.updateList(state.transactions)
                 }
             }

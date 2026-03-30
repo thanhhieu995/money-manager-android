@@ -22,6 +22,7 @@ import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.SortField
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticNoteViewModel
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -60,13 +61,13 @@ class StatisticNoteFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     combine(
-                        sharedViewModel.allTransactions,
+                        sharedViewModel.allTransactionsState,
                         sharedViewModel.filterOption,
                         sharedViewModel.statisticTransactionType
                     ) { transactions, option, type ->
                         Triple(transactions, option, type)
-                    }.collect { (transactions, option, type) ->
-                        viewModel.updateAllTransactions(transactions)
+                    }.collect { (state, option, type) ->
+                        viewModel.updateAllTransactions(if (state is DataTransactionGroupState.Success) state.data else emptyList())
                         viewModel.updateFilterOption(option)
                         viewModel.updateTransactionType(type)
                     }

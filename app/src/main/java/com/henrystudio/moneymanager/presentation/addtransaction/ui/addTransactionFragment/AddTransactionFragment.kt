@@ -6,8 +6,11 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +23,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -39,6 +43,7 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getFormattedDateToday
 import com.henrystudio.moneymanager.core.util.Helper.Companion.setTextIfDifferent
+import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
@@ -194,6 +199,7 @@ class AddTransactionFragment : Fragment() {
         edtCategory.setOnClickListener {
             binding.root.clearFocus()
             edtCategory.requestFocus()
+            Log.d("DEBUG", "CLICK CATEGORY")
             viewModel.onCategoryClicked()
         }
 
@@ -279,98 +285,94 @@ class AddTransactionFragment : Fragment() {
             }
         }
 
-        lifecycleScope.launch {
-            viewModel.event.collect { event ->
-                when (event) {
-                    is AddTransactionEvent.NavigateBackToDaily -> {
-                        navigateBackToDaily()
-                    }
-
-                    is AddTransactionEvent.FocusField -> {
-                        when (event.fieldType) {
-                            FieldType.AMOUNT -> {
-                                focusWithKeyboard(edtAmount)
-                            }
-                            FieldType.CATEGORY -> {
-                                hideKeyboard()
-                                edtCategory.postDelayed({
-                                    edtCategory.performClick()
-                                }, 100)
-                            }
-                            FieldType.ACCOUNT -> {
-                                hideKeyboard()
-                                edtAccount.postDelayed({
-                                    edtAccount.performClick()
-                                }, 100)
-                            }
-                            FieldType.NOTE -> {
-                                focusWithKeyboard(edtNote)
-                            }
-                            else -> {}
-                        }
-                    }
-                    is AddTransactionEvent.CloseScreen -> {
-                        SharedTransactionHolder.scrollToAddedTransaction = true
-                    }
-                    is AddTransactionEvent.ResetForm -> {
-                        viewModel.resetForm()
-                    }
-                    is AddTransactionEvent.ShowToast -> {
-                        val message = when (event.message) {
-                            "transaction_delete" -> getString(R.string.transaction_delete)
-                            "bookmarked" -> getString(R.string.bookmarked)
-                            else -> event.message
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.event.collect { event ->
+                    when (event) {
+                        is AddTransactionEvent.NavigateBackToDaily -> {
+                            navigateBackToDaily()
                         }
 
-                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                    }
-                    is AddTransactionEvent.NavigateBack -> {
-                        requireActivity().finish()
-                        requireActivity().overridePendingTransition(
-                            R.anim.no_animation,
-                            R.anim.slide_out_right
-                        )
-                    }
-                    is AddTransactionEvent.SaveCompleted -> {
-                        SharedTransactionHolder.currentFilterDate = event.date
-                        event.localDate?.let {
-                            saveLastDate(requireContext(), it)
+                        is AddTransactionEvent.FocusField -> {
+                            when (event.fieldType) {
+                                FieldType.AMOUNT -> {
+                                    Log.d("DEBUG", "FOCUS AMOUNT EVENT")
+                                    focusWithKeyboard(edtAmount)
+                                }
+                                FieldType.CATEGORY -> {
+                                    Log.d("DEBUG", "FOCUS CATEGORY EVENT")
+                                    hideKeyboard()
+                                    edtCategory.postDelayed({
+                                        edtCategory.performClick()
+                                    }, 100)
+                                }
+                                FieldType.ACCOUNT -> {
+                                    Log.d("DEBUG", "FOCUS ACCOUNT EVENT")
+                                    hideKeyboard()
+                                    edtAccount.postDelayed({
+                                        edtAccount.performClick()
+                                    }, 100)
+                                }
+                                FieldType.NOTE -> {
+                                    Log.d("DEBUG", "FOCUS NOTE EVENT")
+                                    focusWithKeyboard(edtNote)
+                                }
+                                else -> {}
+                            }
                         }
-                        if (event.closeAfterSave) {
+                        is AddTransactionEvent.CloseScreen -> {
                             SharedTransactionHolder.scrollToAddedTransaction = true
-                            requireActivity().finish()
-                        } else {
+                        }
+                        is AddTransactionEvent.ResetForm -> {
                             viewModel.resetForm()
                         }
-                    }
-                    is AddTransactionEvent.OpenCategoryPicker -> {
-                        val selectedType = viewModel.getSelectedTransactionType()
+                        is AddTransactionEvent.ShowToast -> {
+                            val message = when (event.message) {
+                                "transaction_delete" -> getString(R.string.transaction_delete)
+                                "bookmarked" -> getString(R.string.bookmarked)
+                                else -> event.message
+                            }
 
-                        categoryJob?.cancel()
-                        categoryJob = viewLifecycleOwner.lifecycleScope.launch {
-                            val list = categoryViewModel
-                                .getCategoriesByType(selectedType)
-                                .first { it.isNotEmpty() }
-
-                            val treeItems = Helper.buildCategoryTree(list)
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                        }
+                        is AddTransactionEvent.NavigateBack -> {
+                            requireActivity().finish()
+                            requireActivity().overridePendingTransition(
+                                R.anim.no_animation,
+                                R.anim.slide_out_right
+                            )
+                        }
+                        is AddTransactionEvent.SaveCompleted -> {
+                            SharedTransactionHolder.currentFilterDate = event.date
+                            event.localDate?.let {
+                                saveLastDate(requireContext(), it)
+                            }
+                            if (event.closeAfterSave) {
+                                SharedTransactionHolder.scrollToAddedTransaction = true
+                                requireActivity().finish()
+                            } else {
+                                viewModel.resetForm()
+                            }
+                        }
+                        is AddTransactionEvent.OpenCategoryPicker -> {
+                            Log.d("DEBUG", "OPEN CATEGORY PICKER")
+                            val selectedType = viewModel.getSelectedTransactionType()
 
                             showCategoryBottomDialog(
                                 requireContext().getString(R.string.category),
-                                treeItems,
                                 edtCategory,
+                                selectedType
                             )
                         }
-                    }
-                    is AddTransactionEvent.OpenAccountPicker -> {
-                        accountJob?.cancel()
-                        accountJob = viewLifecycleOwner.lifecycleScope.launch {
+                        is AddTransactionEvent.OpenAccountPicker -> {
+                            Log.d("DEBUG", "OPEN ACCOUNT PICKER")
                             showAccountBottomDialog(
                                 requireContext().getString(R.string.account),
                                 edtAccount,
                             )
                         }
+                        else -> {}
                     }
-                    else -> {}
                 }
             }
         }
@@ -408,6 +410,8 @@ class AddTransactionFragment : Fragment() {
         val addButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_add)
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
+        val loading = view.findViewById<ProgressBar>(R.id.bottom_dialog_add_loading)
+        val emptyView = view.findViewById<TextView>(R.id.bottom_dialog_add_empty)
         titleBottom.text = title
 
         val adapter = AccountAdapter { selectedItem ->
@@ -420,10 +424,28 @@ class AddTransactionFragment : Fragment() {
         recyclerView.layoutManager = GridLayoutManager(context, 3)
         recyclerView.adapter = adapter
 
+        loading.visibility = View.VISIBLE
+        recyclerView.visibility = View.INVISIBLE
+        emptyView.visibility = View.GONE
+
         accountJob?.cancel()
-        accountJob = lifecycleScope.launch {
+        accountJob = viewLifecycleOwner.lifecycleScope.launch {
             accountViewModel.allAccounts.collectLatest { accounts ->
-                adapter.updateData(accounts)
+
+                loading.visibility = View.GONE
+
+                when {
+                    accounts.isEmpty() -> {
+                        // ❗ EMPTY
+                        recyclerView.visibility = View.GONE
+                        emptyView.visibility = View.VISIBLE
+                    }
+                    else -> {
+                        adapter.updateData(accounts)
+                        recyclerView.visibility = View.VISIBLE
+                        emptyView.visibility = View.GONE
+                    }
+                }
             }
         }
 
@@ -433,21 +455,23 @@ class AddTransactionFragment : Fragment() {
         }
 
         addButton.setOnClickListener {
-            activityViewModel.onAddItemClicked(
-                AddItemAction.FromAddTransaction,
-                itemType = ItemType.ACCOUNT
-            )
-
             bottomSheetDialog.dismiss()
+            Handler(Looper.getMainLooper()).post {
+                activityViewModel.onAddItemClicked(
+                    AddItemAction.FromAddTransaction,
+                    itemType = ItemType.ACCOUNT
+                )
+            }
         }
 
         editButton.setOnClickListener {
-            activityViewModel.onEditItemClicked(
-                AddItemAction.FromEditAccount,
-                itemType = ItemType.ACCOUNT
-            )
-
             bottomSheetDialog.dismiss()
+            Handler(Looper.getMainLooper()).post {
+                activityViewModel.onEditItemClicked(
+                    AddItemAction.FromEditAccount,
+                    itemType = ItemType.ACCOUNT
+                )
+            }
         }
 
         closeButton.setOnClickListener {
@@ -503,8 +527,8 @@ class AddTransactionFragment : Fragment() {
 
     private fun showCategoryBottomDialog(
         title: String,
-        categoryItems: List<CategoryItem>,
         targetEditText: EditText,
+        selectedType: TransactionType
     ) {
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
@@ -513,8 +537,10 @@ class AddTransactionFragment : Fragment() {
         val addButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_add)
         val editButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_edit)
         val closeButton = view.findViewById<ImageButton>(R.id.bottom_dialog_add_btn_close)
+        val loading = view.findViewById<ProgressBar>(R.id.bottom_dialog_add_loading)
+        val emptyView = view.findViewById<TextView>(R.id.bottom_dialog_add_empty)
         titleBottom.text = title
-        val adapter = ExpandableCategoryAdapter(categoryItems) { selectedItem ->
+        val adapter = ExpandableCategoryAdapter(mutableListOf()) { selectedItem ->
             viewModel.onCategorySelected("${selectedItem.emoji} ${selectedItem.name}")
             bottomSheetDialog.dismiss()
             // Finish choose category and show account, finish account and show note auto
@@ -536,27 +562,63 @@ class AddTransactionFragment : Fragment() {
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
 
+        // ✅ BAN ĐẦU: loading ON
+        loading.visibility = View.VISIBLE
+        recyclerView.visibility = View.INVISIBLE
+        emptyView.visibility = View.GONE
+
+        categoryJob?.cancel()
+        categoryJob = viewLifecycleOwner.lifecycleScope.launch {
+            categoryViewModel.getCategoriesByType(selectedType)
+                .collectLatest { list ->
+
+                    loading.visibility = View.GONE
+
+                    when {
+                        list.isEmpty() -> {
+                            // ❗ EMPTY
+                            recyclerView.visibility = View.GONE
+                            emptyView.visibility = View.VISIBLE
+                        }
+
+                        else -> {
+                            // ✅ DATA
+                            val treeItems = Helper.buildCategoryTree(list)
+
+                            adapter.updateData(treeItems)
+
+                            recyclerView.visibility = View.VISIBLE
+                            emptyView.visibility = View.GONE
+                        }
+                    }
+                }
+        }
+
         addButton.setOnClickListener {
-            activityViewModel.onAddItemClicked(
-                AddItemAction.FromAddTransaction,
-                ItemType.CATEGORY
-            )
             bottomSheetDialog.dismiss()
+            Handler(Looper.getMainLooper()).post {
+                activityViewModel.onAddItemClicked(
+                    AddItemAction.FromAddTransaction,
+                    ItemType.CATEGORY
+                )
+            }
         }
 
         editButton.setOnClickListener {
-            activityViewModel.onEditItemClicked(
-                AddItemAction.FromEditCategory,
-                ItemType.CATEGORY
-            )
-
             bottomSheetDialog.dismiss()
+            Handler(Looper.getMainLooper()).post {
+                activityViewModel.onEditItemClicked(
+                    AddItemAction.FromEditCategory,
+                    ItemType.CATEGORY
+                )
+            }
         }
 
         closeButton.setOnClickListener {
             bottomSheetDialog.dismiss()
         }
         bottomSheetDialog.setOnDismissListener {
+            categoryJob?.cancel()
             viewModel.onCategoryDismissed()
         }
 

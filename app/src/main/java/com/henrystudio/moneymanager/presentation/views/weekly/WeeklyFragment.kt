@@ -25,6 +25,7 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.WeeklyViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -68,8 +69,10 @@ class WeeklyFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.combineGroupAndDate.collect { (allTransactionGroups, localDate) ->
-                        viewModel.updateData(allTransactionGroups, localDate)
+                    sharedViewModel.combineGroupAndDate.collect { (state, localDate) ->
+                        viewModel.updateData(
+                            if (state is DataTransactionGroupState.Success) state.data else emptyList(),
+                            localDate)
                     }
                 }
                 launch {

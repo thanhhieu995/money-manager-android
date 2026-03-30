@@ -31,6 +31,7 @@ import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticAccountViewModel
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -76,8 +77,10 @@ class StatisticAccountFragment : Fragment() {
                     }
                 }
                 launch {
-                    sharedViewModel.allTransactions.collect { transactionList ->
-                        viewModel.updateAllTransactions(transactionList)
+                    sharedViewModel.allTransactionsState.collect { state ->
+                        if (state is DataTransactionGroupState.Success) {
+                            viewModel.updateAllTransactions(state.data)
+                        }
                     }
                 }
                 launch {

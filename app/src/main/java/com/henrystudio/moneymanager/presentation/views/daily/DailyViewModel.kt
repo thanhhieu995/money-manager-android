@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.viewmodel
+package com.henrystudio.moneymanager.presentation.views.daily
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -10,7 +10,6 @@ import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
-import com.henrystudio.moneymanager.presentation.views.daily.DailyUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,30 +44,41 @@ class DailyViewModel @Inject constructor() : ViewModel() {
         val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth())
 
         val finalFilteredList = if (isFromMainActivity) {
-            FilterTransactions.filterTransactionGroupByMonth(filteredByCategory, lastDayOfMonth)
+            FilterTransactions.Companion.filterTransactionGroupByMonth(filteredByCategory, lastDayOfMonth)
         } else {
             when (filterOption.type) {
                 FilterPeriodStatistic.Weekly -> {
-                    FilterTransactions.filterTransactionGroupByWeek(filteredByCategory, selectedMonth)
+                    FilterTransactions.Companion.filterTransactionGroupByWeek(filteredByCategory, selectedMonth)
                 }
                 FilterPeriodStatistic.Monthly -> {
-                    FilterTransactions.filterTransactionGroupByMonth(filteredByCategory, lastDayOfMonth)
+                    FilterTransactions.Companion.filterTransactionGroupByMonth(filteredByCategory, lastDayOfMonth)
                 }
                 FilterPeriodStatistic.Yearly -> {
-                    FilterTransactions.filterTransactionGroupByYear(filteredByCategory, lastDayOfMonth)
+                    FilterTransactions.Companion.filterTransactionGroupByYear(filteredByCategory, lastDayOfMonth)
                 }
                 else -> {
-                    FilterTransactions.filterTransactionGroupByMonth(filteredByCategory, lastDayOfMonth)
+                    FilterTransactions.Companion.filterTransactionGroupByMonth(filteredByCategory, lastDayOfMonth)
                 }
             }
         }
 
-        _uiState.update { 
+        // ❌ ignore empty lần đầu
+        if (finalFilteredList.isEmpty()) {
+            _uiState.update {
+                it.copy(dataTransactionGroupState = DataTransactionGroupState.Loading)
+            }
+            return
+        }
+
+        val newState = DataTransactionGroupState.Success(finalFilteredList)
+
+        _uiState.update {
             it.copy(
+                dataTransactionGroupState = newState,
                 transactions = finalFilteredList,
                 selectedDate = selectedMonth,
                 isEmpty = finalFilteredList.isEmpty(),
-                isYearly = filterOption.type == FilterPeriodStatistic.Yearly
+                isYearly = filterOption.type == FilterPeriodStatistic.Yearly,
             )
         }
     }
@@ -119,7 +129,7 @@ class DailyViewModel @Inject constructor() : ViewModel() {
         selectionMode: Boolean,
         selectedTransactions: List<Transaction>
     ) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectionMode = selectionMode,
                 selectedTransactions = selectedTransactions
@@ -129,5 +139,23 @@ class DailyViewModel @Inject constructor() : ViewModel() {
 
     fun updateSelectedDate(date: LocalDate) {
         _uiState.update { it.copy(selectedDate = date) }
+    }
+
+    fun setLoading(selectedMonth: LocalDate) {
+        _uiState.update {
+            it.copy(
+                dataTransactionGroupState = DataTransactionGroupState.Loading,
+                selectedDate = selectedMonth
+            )
+        }
+    }
+
+    fun setEmpty(selectedMonth: LocalDate) {
+        _uiState.update {
+            it.copy(
+                dataTransactionGroupState = DataTransactionGroupState.Empty,
+                selectedDate = selectedMonth
+            )
+        }
     }
 }

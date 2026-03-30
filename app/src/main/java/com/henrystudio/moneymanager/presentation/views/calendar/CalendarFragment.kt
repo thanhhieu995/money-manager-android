@@ -31,10 +31,10 @@ import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionView
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 
 @AndroidEntryPoint
 class CalendarFragment : Fragment() {
@@ -67,8 +67,11 @@ class CalendarFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.groupedTransactions.collect { list ->
-                        viewModel.updateGroupedTransactions(list)
+                    sharedViewModel.groupedTransactionsState.collect { state ->
+                        viewModel.updateGroupedTransactions(
+                            if (state is DataTransactionGroupState.Success)
+                        state.data else emptyList()
+                        )
                     }
                 }
                 launch {

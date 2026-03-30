@@ -11,7 +11,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryIt
 import com.henrystudio.moneymanager.presentation.addtransaction.model.DisplayedItem
 
 class ExpandableCategoryAdapter(
-    private val originalItems: List<CategoryItem>,
+    private val originalItems: MutableList<CategoryItem>,
     private val onItemClick: (CategoryItem) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -146,5 +146,13 @@ class ExpandableCategoryAdapter(
             item.isExpanded = true
             notifyItemChanged(parentIndex) // update arrow
         }
+    }
+
+    fun updateData(treeItems: List<CategoryItem>) {
+        originalItems.clear()
+        originalItems.addAll(treeItems)
+
+        refreshDisplayedItems()
+        notifyDataSetChanged()
     }
 }

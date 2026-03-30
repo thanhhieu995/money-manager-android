@@ -33,6 +33,7 @@ import com.henrystudio.moneymanager.presentation.viewmodel.DailyNavigateViewMode
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
+import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
 import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
@@ -119,18 +120,21 @@ class DailyNavigateFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 delay(100)
                 combine(
-                    sharedViewModel.combineGroupAndDate,
+                    sharedViewModel.groupedTransactionsState,
+                    sharedViewModel.currentFilterDate,
                     sharedViewModel.currentDailyNavigateTabPosition,
                     sharedViewModel.selectionMode,
                     sharedViewModel.selectedTransactions
-                ) { groupsAndDate, tabPosition, selectionMode, selected ->
-                    viewModel.updateFrom(
-                        groupsAndDate.first,
-                        groupsAndDate.second,
-                        tabPosition,
-                        selectionMode,
-                        selected
-                    )
+                ) { groupsState, date, tabPosition, selectionMode, selected ->
+                    if (groupsState is DataTransactionGroupState.Success) {
+                        viewModel.updateFrom(
+                            groupsState.data,
+                            date,
+                            tabPosition,
+                            selectionMode,
+                            selected
+                        )
+                    }
                 }.flowOn(Dispatchers.Default).collect { }
             }
         }

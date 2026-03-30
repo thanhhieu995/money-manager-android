@@ -10,5 +10,6 @@ data class DailyUiState(
     val selectionMode: Boolean = false,
     val selectedTransactions: List<Transaction> = emptyList(),
     val isEmpty: Boolean = false,
+    val dataTransactionGroupState: DataTransactionGroupState<List<TransactionGroup>> = DataTransactionGroupState.Loading,
     val isYearly: Boolean = false
 )
