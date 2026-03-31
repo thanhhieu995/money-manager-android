@@ -33,4 +33,7 @@ interface CategoryDao {
 
     @Update
     suspend fun update(category: Category)
+
+    @Query("SELECT * FROM categories")
+    suspend fun getAllOnce(): List<Category>
 }

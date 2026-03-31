@@ -18,7 +18,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.viewmodel.AddBookmarkViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -54,13 +54,13 @@ class AddBookmarkFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.allTransactionsState.collect { state ->
                     when (state) {
-                        is DataTransactionGroupState.Loading -> {
+                        is UiState.Loading -> {
                             viewModel.setLoading()
                         }
-                        is DataTransactionGroupState.Empty -> {
+                        is UiState.Empty -> {
                             viewModel.setEmpty()
                         }
-                        is DataTransactionGroupState.Success -> {
+                        is UiState.Success -> {
                             viewModel.updateTransactions(state.data)
                         }
                         else -> {}

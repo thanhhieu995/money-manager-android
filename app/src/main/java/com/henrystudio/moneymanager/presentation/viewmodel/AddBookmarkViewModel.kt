@@ -3,7 +3,7 @@ package com.henrystudio.moneymanager.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.bookmark.AddBookmarkUiState
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ class AddBookmarkViewModel @Inject constructor() : ViewModel() {
     fun setLoading() {
         _uiState.update {
             it.copy(
-                dataTransactionGroupState = DataTransactionGroupState.Loading
+                dataTransactionGroupState = UiState.Loading
             )
         }
     }
@@ -34,7 +34,7 @@ class AddBookmarkViewModel @Inject constructor() : ViewModel() {
     fun setEmpty() {
         _uiState.update {
             it.copy(
-                dataTransactionGroupState = DataTransactionGroupState.Empty
+                dataTransactionGroupState = UiState.Empty
             )
         }
     }

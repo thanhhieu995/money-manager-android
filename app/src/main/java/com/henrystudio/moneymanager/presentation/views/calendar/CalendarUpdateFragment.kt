@@ -26,7 +26,7 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.viewmodel.CalendarUpdateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
@@ -73,7 +73,7 @@ class CalendarUpdateFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.combineGroupAndDate.collect { (state, currentDate) ->
-                    viewModel.updateData(if (state is DataTransactionGroupState.Success)
+                    viewModel.updateData(if (state is UiState.Success)
                         state.data else emptyList(),
                         currentDate)
                 }

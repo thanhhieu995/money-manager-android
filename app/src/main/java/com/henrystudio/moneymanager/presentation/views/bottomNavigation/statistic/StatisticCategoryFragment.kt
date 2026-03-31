@@ -32,7 +32,7 @@ import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticCategoryViewModel
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -74,7 +74,7 @@ class StatisticCategoryFragment : Fragment() {
         binding.fragmentStatisticCategoryStatsRecyclerView.adapter = adapter
 
         viewModel.bindTransactions(sharedViewModel.allTransactionsState.map { state ->
-           if (state is DataTransactionGroupState.Success) state.data else emptyList()
+           if (state is UiState.Success) state.data else emptyList()
         })
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

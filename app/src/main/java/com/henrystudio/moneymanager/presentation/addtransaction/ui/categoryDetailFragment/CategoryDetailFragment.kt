@@ -45,7 +45,8 @@ class CategoryDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val item = arguments?.getSerializable("edit_child_item") as EditItem
+        val item = arguments?.getParcelable<EditItem>("edit_child_item")
+            ?: throw IllegalArgumentException("Missing edit_child_item")
         val recyclerView = binding.fragmentCategoryDetailRecyclerView
         adapter = DetailCategoryAdapter(
             emptyList(),
@@ -100,7 +101,7 @@ class CategoryDetailFragment : Fragment() {
             return CategoryDetailFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable("edit_child_item", item)
-                    putSerializable("action", action as Serializable?)
+                    putParcelable("action", action)
                 }
             }
         }

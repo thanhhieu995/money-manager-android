@@ -8,8 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.util.component1
-import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -25,11 +23,10 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.WeeklyViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 @AndroidEntryPoint
 class WeeklyFragment : Fragment() {
@@ -71,7 +68,7 @@ class WeeklyFragment : Fragment() {
                 launch {
                     sharedViewModel.combineGroupAndDate.collect { (state, localDate) ->
                         viewModel.updateData(
-                            if (state is DataTransactionGroupState.Success) state.data else emptyList(),
+                            if (state is UiState.Success) state.data else emptyList(),
                             localDate)
                     }
                 }

@@ -106,6 +106,10 @@ class ExpandableCategoryAdapter(
 
         fun bind(children: List<CategoryItem>) {
             recyclerView.layoutManager = GridLayoutManager(itemView.context, 3)
+
+            recyclerView.isNestedScrollingEnabled = false // 🔥 BẮT BUỘC
+            recyclerView.setHasFixedSize(false)
+
             recyclerView.adapter = object : RecyclerView.Adapter<ChildViewHolder>() {
                 override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChildViewHolder {
                     val view = LayoutInflater.from(parent.context)

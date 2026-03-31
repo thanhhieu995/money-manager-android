@@ -24,7 +24,7 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticListViewModel
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -101,7 +101,7 @@ class StatisticListActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.groupedTransactionsState.collect { state ->
-                    if (state is DataTransactionGroupState.Success) {
+                    if (state is UiState.Success) {
                         viewModel.updateGroups(state.data)
                     }
                 }

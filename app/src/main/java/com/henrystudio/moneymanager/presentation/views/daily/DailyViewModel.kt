@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
@@ -65,12 +66,12 @@ class DailyViewModel @Inject constructor() : ViewModel() {
         // ❌ ignore empty lần đầu
         if (finalFilteredList.isEmpty()) {
             _uiState.update {
-                it.copy(dataTransactionGroupState = DataTransactionGroupState.Loading)
+                it.copy(dataTransactionGroupState = UiState.Loading)
             }
             return
         }
 
-        val newState = DataTransactionGroupState.Success(finalFilteredList)
+        val newState = UiState.Success(finalFilteredList)
 
         _uiState.update {
             it.copy(
@@ -144,7 +145,7 @@ class DailyViewModel @Inject constructor() : ViewModel() {
     fun setLoading(selectedMonth: LocalDate) {
         _uiState.update {
             it.copy(
-                dataTransactionGroupState = DataTransactionGroupState.Loading,
+                dataTransactionGroupState = UiState.Loading,
                 selectedDate = selectedMonth
             )
         }
@@ -153,7 +154,7 @@ class DailyViewModel @Inject constructor() : ViewModel() {
     fun setEmpty(selectedMonth: LocalDate) {
         _uiState.update {
             it.copy(
-                dataTransactionGroupState = DataTransactionGroupState.Empty,
+                dataTransactionGroupState = UiState.Empty,
                 selectedDate = selectedMonth
             )
         }

@@ -55,6 +55,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransac
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
@@ -63,6 +64,8 @@ import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNav
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
@@ -272,6 +275,7 @@ class AddTransactionFragment : Fragment() {
                         expenseButton.isChecked = !isIncome
                     }
                     state.date.let { date ->
+                        Log.d("DEBUG","DATE: $date")
                         dateTextView.text = date
                     }
                     state.isEditMode.let { isEdit ->
@@ -430,20 +434,27 @@ class AddTransactionFragment : Fragment() {
 
         accountJob?.cancel()
         accountJob = viewLifecycleOwner.lifecycleScope.launch {
-            accountViewModel.allAccounts.collectLatest { accounts ->
-
-                loading.visibility = View.GONE
-
-                when {
-                    accounts.isEmpty() -> {
-                        // ❗ EMPTY
+            accountViewModel.accountState.collect{ state ->
+                when(state) {
+                    is UiState.Loading -> {
+                        loading.visibility = View.VISIBLE
+                        recyclerView.visibility = View.GONE
+                        emptyView.visibility = View.GONE
+                    }
+                    is UiState.Empty -> {
+                        loading.visibility = View.GONE
                         recyclerView.visibility = View.GONE
                         emptyView.visibility = View.VISIBLE
                     }
-                    else -> {
-                        adapter.updateData(accounts)
+                    is UiState.Success -> {
+                        loading.visibility = View.GONE
+                        adapter.updateData(state.data)
                         recyclerView.visibility = View.VISIBLE
                         emptyView.visibility = View.GONE
+                    }
+                    is UiState.Error -> {
+                        loading.visibility = View.GONE
+                        Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -569,29 +580,42 @@ class AddTransactionFragment : Fragment() {
 
         categoryJob?.cancel()
         categoryJob = viewLifecycleOwner.lifecycleScope.launch {
-            categoryViewModel.getCategoriesByType(selectedType)
-                .collectLatest { list ->
+            categoryViewModel.setType(selectedType)
+            categoryViewModel.categoryState.collect{ state ->
+                when (state) {
+                    is UiState.Loading -> {
+                        loading.visibility = View.VISIBLE
+                        recyclerView.visibility = View.GONE
+                        emptyView.visibility = View.GONE
+                    }
 
-                    loading.visibility = View.GONE
+                    is UiState.Empty -> {
+                        loading.visibility = View.GONE
+                        recyclerView.visibility = View.GONE
+                        emptyView.visibility = View.VISIBLE
+                    }
 
-                    when {
-                        list.isEmpty() -> {
-                            // ❗ EMPTY
-                            recyclerView.visibility = View.GONE
-                            emptyView.visibility = View.VISIBLE
+                    is UiState.Success -> {
+                        loading.visibility = View.GONE
+
+                        val treeItems = Helper.buildCategoryTree(state.data)
+                        adapter.updateData(treeItems)
+                        Log.d("DEBUG", "tree size = ${treeItems.size}")
+                        treeItems.forEach {
+                            Log.d("DEBUG", "parent: ${it.name}, children: ${it.children.size}")
                         }
 
-                        else -> {
-                            // ✅ DATA
-                            val treeItems = Helper.buildCategoryTree(list)
+                        recyclerView.visibility = View.VISIBLE
+                        emptyView.visibility = View.GONE
+                    }
 
-                            adapter.updateData(treeItems)
-
-                            recyclerView.visibility = View.VISIBLE
-                            emptyView.visibility = View.GONE
-                        }
+                    is UiState.Error -> {
+                        loading.visibility = View.GONE
+                        Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
                     }
                 }
+            }
+
         }
 
         addButton.setOnClickListener {

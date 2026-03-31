@@ -7,8 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
-import androidx.core.util.component1
-import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -23,7 +21,7 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.viewmodel.MonthlyViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -59,7 +57,7 @@ class MonthlyFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     sharedViewModel.combineGroupAndDate.collect { (state, date) ->
-                        viewModel.updateMonthlyData(groups = if (state is DataTransactionGroupState.Success)
+                        viewModel.updateMonthlyData(groups = if (state is UiState.Success)
                             state.data else emptyList(), anchorDate = date)
                     }
                 }

@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 
 @AndroidEntryPoint
 class CalendarFragment : Fragment() {
@@ -69,7 +69,7 @@ class CalendarFragment : Fragment() {
                 launch {
                     sharedViewModel.groupedTransactionsState.collect { state ->
                         viewModel.updateGroupedTransactions(
-                            if (state is DataTransactionGroupState.Success)
+                            if (state is UiState.Success)
                         state.data else emptyList()
                         )
                     }

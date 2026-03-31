@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
@@ -35,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 @AndroidEntryPoint
@@ -70,7 +72,7 @@ class DailyFragment : Fragment() {
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val decoration = StickyHeaderItemDecoration(
                 isHeader = { position -> true },
                 createHeaderView = {
@@ -100,7 +102,7 @@ class DailyFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
+                launch(Dispatchers.Default) {
                     combine(
                         sharedViewModel.combineGroupAndDate,
                         sharedViewModel.filterOption
@@ -108,13 +110,13 @@ class DailyFragment : Fragment() {
                         Triple(transactions, selectedMonth, option)
                     }.collect { (state, selectedMonth, option) ->
                         when(state) {
-                            is DataTransactionGroupState.Loading -> {
+                            is UiState.Loading -> {
                                 viewModel.setLoading(selectedMonth)
                             }
-                            is DataTransactionGroupState.Empty -> {
+                            is UiState.Empty -> {
                                 viewModel.setEmpty(selectedMonth)
                             }
-                            is DataTransactionGroupState.Success -> {
+                            is UiState.Success -> {
                                 viewModel.updateData(
                                     transactions = state.data,
                                     filterOption = option,
@@ -139,19 +141,19 @@ class DailyFragment : Fragment() {
 
                         when (val state = uiState.dataTransactionGroupState) {
 
-                            is DataTransactionGroupState.Loading -> {
+                            is UiState.Loading -> {
                                 binding.loadingView.visibility = View.VISIBLE
                                 binding.transactionList.visibility = View.GONE
                                 binding.noDataText.visibility = View.GONE
                             }
 
-                            is DataTransactionGroupState.Empty -> {
+                            is UiState.Empty -> {
                                 binding.loadingView.visibility = View.GONE
                                 binding.transactionList.visibility = View.GONE
                                 binding.noDataText.visibility = View.VISIBLE
                             }
 
-                            is DataTransactionGroupState.Success -> {
+                            is UiState.Success -> {
                                 binding.loadingView.visibility = View.GONE
                                 binding.transactionList.visibility = View.VISIBLE
                                 binding.noDataText.visibility = View.GONE
@@ -165,7 +167,7 @@ class DailyFragment : Fragment() {
                         }
 
                         if (SharedTransactionHolder.scrollToAddedTransaction) {
-                            val targetPosition = findPositionForDate((uiState.dataTransactionGroupState as? DataTransactionGroupState.Success)?.data ?: emptyList(), uiState.selectedDate)
+                            val targetPosition = findPositionForDate((uiState.dataTransactionGroupState as? UiState.Success)?.data ?: emptyList(), uiState.selectedDate)
                             if (targetPosition >= 0) {
                                 binding.transactionList.scrollToPosition(targetPosition)
                             }
@@ -176,15 +178,20 @@ class DailyFragment : Fragment() {
 
                 launch {
                     sharedViewModel.selectedTransactions.collect { selectedTransactions ->
+
+                        val (added, removed) = withContext(Dispatchers.Default) {
+                            val added = selectedTransactions.filterNot { selectedList.contains(it) }
+                            val removed = selectedList.filterNot { selectedTransactions.contains(it) }
+                            added to removed
+                        }
+
+                        // 🔥 quay lại Main để update UI
                         if (selectedTransactions.isEmpty()) {
                             for (tx in selectedList) {
                                 val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
                                 childAdapter.updateTransaction(tx)
                             }
                         } else {
-                            val added = selectedTransactions.filterNot { selectedList.contains(it) }
-                            val removed = selectedList.filterNot { selectedTransactions.contains(it) }
-
                             for (tx in added + removed) {
                                 val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
                                 childAdapter.updateTransaction(tx)
@@ -192,6 +199,7 @@ class DailyFragment : Fragment() {
                         }
 
                         selectedList = selectedTransactions
+
                         viewModel.updateSelection(
                             selectionMode = sharedViewModel.selectionMode.value,
                             selectedTransactions = selectedTransactions

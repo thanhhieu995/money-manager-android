@@ -12,8 +12,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.util.component1
-import androidx.core.util.component2
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -33,7 +31,7 @@ import com.henrystudio.moneymanager.presentation.viewmodel.DailyNavigateViewMode
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
@@ -126,7 +124,7 @@ class DailyNavigateFragment : Fragment() {
                     sharedViewModel.selectionMode,
                     sharedViewModel.selectedTransactions
                 ) { groupsState, date, tabPosition, selectionMode, selected ->
-                    if (groupsState is DataTransactionGroupState.Success) {
+                    if (groupsState is UiState.Success) {
                         viewModel.updateFrom(
                             groupsState.data,
                             date,

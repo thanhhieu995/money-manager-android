@@ -261,7 +261,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 category = FieldUiState("", FieldState.IDLE),
                 account = FieldUiState("", FieldState.IDLE),
                 note = FieldUiState("", FieldState.IDLE),
-                date = "",
+                date = _uiState.value.date,
             )
         }
     }

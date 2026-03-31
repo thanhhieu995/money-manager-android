@@ -2,6 +2,7 @@ package com.henrystudio.moneymanager.presentation.views.daily
 
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import java.time.LocalDate
 
 data class DailyUiState(
@@ -10,6 +11,6 @@ data class DailyUiState(
     val selectionMode: Boolean = false,
     val selectedTransactions: List<Transaction> = emptyList(),
     val isEmpty: Boolean = false,
-    val dataTransactionGroupState: DataTransactionGroupState<List<TransactionGroup>> = DataTransactionGroupState.Loading,
+    val dataTransactionGroupState: UiState<List<TransactionGroup>> = UiState.Loading,
     val isYearly: Boolean = false
 )

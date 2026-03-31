@@ -23,7 +23,7 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.viewmodel.SearchViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.views.daily.DataTransactionGroupState
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -158,7 +158,7 @@ class SearchActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.allTransactionsState.collect { state ->
                     viewModel.updateTransactions(
-                        if (state is DataTransactionGroupState.Success) state.data else emptyList()
+                        if (state is UiState.Success) state.data else emptyList()
                     )
                 }
             }
