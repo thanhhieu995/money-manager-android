@@ -52,4 +52,10 @@ class CategoryDetailViewModel @Inject constructor(
             categoryUseCases.deleteCategoryById(id)
         }
     }
+
+    fun updateCategory(category: Category) {
+        viewModelScope.launch {
+            categoryUseCases.updateCategory(category)
+        }
+    }
 }

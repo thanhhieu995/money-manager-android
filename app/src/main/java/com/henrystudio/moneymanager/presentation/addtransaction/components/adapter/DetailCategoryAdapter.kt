@@ -12,16 +12,22 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryIt
 class DetailCategoryAdapter(
     private var categoryItems: List<CategoryItem>,
     private val onDeleteClick: (CategoryItem) -> Unit,
+    private val onEditClick: (CategoryItem) -> Unit,
     private val onItemClick: (CategoryItem) -> Unit
 ): RecyclerView.Adapter<DetailCategoryAdapter.DetailCategoryViewHolder>() {
 
     inner class DetailCategoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val name: TextView = view.findViewById(R.id.item_category_detail_tvCategoryName)
         private val deleteIcon: ImageView = view.findViewById(R.id.item_category_detail_deleteIcon)
+        private val editIcon: ImageView = view.findViewById(R.id.item_category_detail_iconEdit)
+
         fun bind(item: CategoryItem) {
             name.text = "${item.emoji} ${item.name}"
             deleteIcon.setOnClickListener {
                 onDeleteClick.invoke(item)
+            }
+            editIcon.setOnClickListener {
+                onEditClick.invoke(item)
             }
             itemView.setOnClickListener {
                 onItemClick.invoke(item)

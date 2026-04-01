@@ -87,7 +87,7 @@ class Helper {
                 name = this.name,
                 emoji = this.emoji,
                 type = type,
-                parentId = null // hoặc truyền thêm nếu cần
+                parentId = this.parentId
             )
         }
 

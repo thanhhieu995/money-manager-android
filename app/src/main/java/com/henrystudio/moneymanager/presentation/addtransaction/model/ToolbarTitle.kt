@@ -1,5 +1,11 @@
 package com.henrystudio.moneymanager.presentation.addtransaction.model
 
-enum class ToolbarTitle {
-    INCOME, EXPENSE, ADD, ACCOUNT, CATEGORY
+sealed class ToolbarTitle {
+    object INCOME : ToolbarTitle()
+    object EXPENSE : ToolbarTitle()
+    object ADD : ToolbarTitle()
+    object ACCOUNT: ToolbarTitle()
+    object CATEGORY: ToolbarTitle()
+
+    data class Custom(val value: String) : ToolbarTitle()
 }

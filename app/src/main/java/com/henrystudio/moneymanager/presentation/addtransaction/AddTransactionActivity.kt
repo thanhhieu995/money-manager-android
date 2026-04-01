@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
@@ -20,6 +21,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.ToolbarTitle
@@ -27,6 +29,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragme
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment.AddTransactionFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment.CategoryDetailFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment.EditItemDialogFragment
+import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -53,8 +56,12 @@ class AddTransactionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_add_transaction)
         init()
         onBackPressedDispatcher.addCallback(this) {
-            finish()
-            overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
+            if (supportFragmentManager.backStackEntryCount > 0) {
+                addTransactionActivityViewModel.onBackClicked()
+                overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
+            } else {
+                finish()
+            }
         }
 
         setSupportActionBar(toolbar)
@@ -72,7 +79,6 @@ class AddTransactionActivity : AppCompatActivity() {
         iconBack.setOnClickListener {
             if (supportFragmentManager.backStackEntryCount > 0) {
                 addTransactionActivityViewModel.onBackClicked()
-                supportFragmentManager.popBackStack()
             } else {
                 finish()
             }
@@ -279,10 +285,12 @@ class AddTransactionActivity : AppCompatActivity() {
         when (event) {
 
             is AddTransactionEvent.NavigateToAddItem -> {
+                Log.d("DEBUG", "NAVIGATE TO ADD ITEM")
                 navigateTo(
                     AddItemFragment.newInstance(
                         itemType = event.itemType,
-                        action = event.action
+                        action = event.action,
+                        itemEdit = event.editItem
                     )
                 )
             }
@@ -297,18 +305,18 @@ class AddTransactionActivity : AppCompatActivity() {
                 )
             }
 
-            is AddTransactionEvent.NavigateToCategoryDetail -> {
-                navigateTo(
-                    CategoryDetailFragment.newInstance(event.item, event.action)
-                )
-            }
-
             AddTransactionEvent.PopBack -> {
                 supportFragmentManager.popBackStack()
             }
 
             AddTransactionEvent.NavigateBackToDaily -> {
                 finish()
+            }
+
+            is AddTransactionEvent.NavigateToCategoryDetailWithTitle -> {
+                navigateTo(
+                    CategoryDetailFragment.newInstance(event.item, event.action, event.title)
+                )
             }
 
             else -> {}
@@ -335,6 +343,7 @@ class AddTransactionActivity : AppCompatActivity() {
             ToolbarTitle.ADD -> getString(R.string.add)
             ToolbarTitle.ACCOUNT -> getString(R.string.account)
             ToolbarTitle.CATEGORY -> getString(R.string.category)
+            is ToolbarTitle.Custom -> title.value
         }
     }
 

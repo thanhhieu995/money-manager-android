@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -14,13 +15,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentEditCategoryBinding
-import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
-import com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment.CategoryDetailFragment
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.EditItemDialogAdapter
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
-import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment.AddItemFragment
-import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,6 +31,7 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
 
     private var adapter: EditItemDialogAdapter? = null
     private val viewModel: EditItemDialogViewModel by viewModels()
+    private val addTransactionActivityViewModel : AddTransactionActivityViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -58,8 +57,13 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
 
         val selectedType = arguments?.getParcelable<ItemType>(KEY_ITEM_TYPE)
         val transactionType = arguments?.getParcelable<TransactionType>(KEY_TRANSACTION_TYPE)
-        Log.d("hieu", "selectedType: $selectedType")
+        val action = arguments?.getParcelable<AddItemAction>(KEY_ACTION)
+        Log.d("DEBUG", "onViewCreated selectedType: $selectedType transactionType: $transactionType action: $action")
         viewModel.setType(selectedType, transactionType)
+//        addTransactionActivityViewModel.apply {
+//            currentItemType = selectedType
+//            currentAction = action
+//        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -73,43 +77,10 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
     override fun onEditItemClick(item: EditItem) {
         when(item) {
             is EditItem.Category -> {
-                val fragment = CategoryDetailFragment()
-                val bundle = Bundle().apply {
-                    putParcelable("edit_child_item", item)
-                    putSerializable("item_type", ItemType.CATEGORY)
-                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_CATEGORY_DIALOG)
-                }
-                fragment.arguments = bundle
-                parentFragmentManager.beginTransaction()
-                    .setCustomAnimations(
-                        R.anim.slide_in_right,  // enter
-                        R.anim.no_animation,    // exit
-                        R.anim.no_animation,    // popEnter (khi quay lại)
-                        R.anim.slide_out_right  // popExit (khi quay lại)
-                    )
-                    .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
-                    .addToBackStack(null)
-                    .commit()
+                addTransactionActivityViewModel.onRootCategoryItemClicked(item.item, AddItemAction.FromCategoryDetail)
             }
             is EditItem.AccountItem -> {
-                (requireActivity() as AddTransactionActivity).addIcon.visibility = View.GONE
-                val fragment = AddItemFragment()
-                val bundle = Bundle().apply {
-                    putSerializable("item_type", ItemType.ACCOUNT)
-                    putParcelable("account_to_edit", item)
-                    putSerializable("source", AddItemSource.FROM_EDIT_ITEM_ACCOUNT_DIALOG)
-                }
-                fragment.arguments = bundle
-                parentFragmentManager.beginTransaction()
-                    .setCustomAnimations(
-                    R.anim.slide_in_right,  // enter
-                    R.anim.no_animation,    // exit
-                    R.anim.no_animation,    // popEnter (khi quay lại)
-                    R.anim.slide_out_right  // popExit (khi quay lại)
-                    )
-                    .replace(R.id.fragment_container_add_transaction, fragment) // thay fragment container ID
-                    .addToBackStack(null)
-                    .commit()
+                addTransactionActivityViewModel.onEditItemClicked(AddItemAction.FromEditAccount, ItemType.ACCOUNT)
             }
         }
     }

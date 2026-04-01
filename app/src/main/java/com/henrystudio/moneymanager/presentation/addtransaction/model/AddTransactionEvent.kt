@@ -5,7 +5,7 @@ import com.henrystudio.moneymanager.presentation.model.TransactionType
 import java.time.LocalDate
 
 sealed class AddTransactionEvent {
-    data class NavigateToAddItem(val action: AddItemAction, val itemType: ItemType): AddTransactionEvent()
+    data class NavigateToAddItem(val action: AddItemAction, val itemType: ItemType, val editItem: EditItem?): AddTransactionEvent()
     data class NavigateToEditItem(val action: AddItemAction, val itemType: ItemType, val transactionType: TransactionType): AddTransactionEvent()
     data class NavigateToCategoryDetail(val item: EditItem, val action: AddItemAction): AddTransactionEvent()
     object NavigateBackToDaily: AddTransactionEvent()
@@ -18,4 +18,5 @@ sealed class AddTransactionEvent {
     data class SaveCompleted(val date: String, val localDate: LocalDate?, val closeAfterSave: Boolean): AddTransactionEvent()
     object OpenCategoryPicker: AddTransactionEvent()
     object OpenAccountPicker: AddTransactionEvent()
+    data class NavigateToCategoryDetailWithTitle(val item: EditItem, val action: AddItemAction, val title: String): AddTransactionEvent()
 }

@@ -1,10 +1,13 @@
 package com.henrystudio.moneymanager.presentation.addtransaction
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.ToolbarTitle
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
@@ -22,7 +25,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     val toolbarState : StateFlow<AddTransactionToolbarState> = _toolbarState
     private val _event = MutableSharedFlow<AddTransactionEvent>()
     val event = _event.asSharedFlow()
-    private var currentAction: AddItemAction? = null
+    var currentAction: AddItemAction? = null
     var currentItemType: ItemType? = null
     private var isIncome: Boolean = false
     var transactionType: TransactionType = TransactionType.EXPENSE
@@ -45,33 +48,10 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         )
     }
 
-    fun onEnterAddItem(title: String) {
-        _toolbarState.value = AddTransactionToolbarState(
-            title = (if (isIncome) ToolbarTitle.INCOME else ToolbarTitle.EXPENSE),
-            animation = TitleAnimation.SlideFromRight,
-            config = toolbarConfig()
-        )
-    }
-
-    fun onBackToRoot() {
-        _toolbarState.value = AddTransactionToolbarState(
-            title = (if (isIncome) ToolbarTitle.INCOME else ToolbarTitle.EXPENSE),
-            animation = TitleAnimation.SlideFromLeft,
-            config = toolbarConfig()
-        )
-    }
-
-    fun onRootScreen() {
-        _toolbarState.value = AddTransactionToolbarState(
-            title = (if (isIncome) ToolbarTitle.INCOME else ToolbarTitle.EXPENSE),
-            animation = TitleAnimation.None,
-            config = toolbarConfig()
-        )
-    }
-
     fun onAddItemClicked(
         action: AddItemAction,
-        itemType: ItemType
+        itemType: ItemType,
+        editItem: EditItem? = null
     ) {
         currentAction = action
         currentItemType = itemType
@@ -92,7 +72,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         )
 
         viewModelScope.launch {
-            _event.emit(AddTransactionEvent.NavigateToAddItem(action, itemType))
+            _event.emit(AddTransactionEvent.NavigateToAddItem(action, itemType, editItem))
         }
     }
 
@@ -115,7 +95,10 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         _toolbarState.value = AddTransactionToolbarState(
             title = newTitle,
             animation = TitleAnimation.SlideFromRight,
-            config = toolbarConfig()
+            config = toolbarConfig(showAdd = true).copy(
+                addAction = action,
+                addItemType = itemType
+            )
         )
 
         viewModelScope.launch {
@@ -124,20 +107,25 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onAddIconClicked() {
-        val action = currentAction ?: return
-        val itemType = currentItemType ?: return
+        val config = _toolbarState.value.config
+        Log.d("DEBUG", "onAddIconClicked: $config")
+        val action = config.addAction ?: return
+        val itemType = config.addItemType ?: return
 
-        _event.tryEmit(
-            AddTransactionEvent.NavigateToAddItem(
-                itemType = itemType,
-                action = action
+        viewModelScope.launch {
+            _event.emit(
+                AddTransactionEvent.NavigateToAddItem(
+                    itemType = itemType,
+                    action = action,
+                    editItem = null
+                )
             )
-        )
+        }
     }
 
     private fun toolbarConfig(
         showAdd: Boolean = false,
-        showBookmark: Boolean = true,
+        showBookmark: Boolean = false,
         alignTitleToBack: Boolean = false
     ) = ToolbarConfig(
         showAdd = showAdd,
@@ -198,6 +186,40 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
 
         viewModelScope.launch {
             _event.emit(AddTransactionEvent.PopBack)
+        }
+    }
+
+    fun onRootCategoryItemClicked(item: CategoryItem, action: AddItemAction) {
+        val title = item.name
+        val newTitle = ToolbarTitle.Custom(title)
+
+        titleStack.addLast(newTitle)
+
+        _toolbarState.value = AddTransactionToolbarState(
+            title = newTitle,
+            animation = TitleAnimation.SlideFromRight,
+            config = toolbarConfig(showAdd = true)
+        )
+
+        viewModelScope.launch {
+            _event.emit(AddTransactionEvent.NavigateToCategoryDetailWithTitle(EditItem.Category(item), action, title))
+        }
+    }
+
+    fun onChildCategoryClicked(item: CategoryItem) {
+        val title = item.name
+        val newTitle = ToolbarTitle.Custom(title)
+        titleStack.addLast(newTitle)
+
+        _toolbarState.value = AddTransactionToolbarState(
+            title = newTitle,
+            animation = TitleAnimation.SlideFromRight,
+            config = toolbarConfig(showAdd = true)
+        )
+
+        viewModelScope.launch {
+            _event.emit(AddTransactionEvent.NavigateToCategoryDetailWithTitle(EditItem.Category(item), AddItemAction.FromCategoryDetail
+            , title))
         }
     }
 }

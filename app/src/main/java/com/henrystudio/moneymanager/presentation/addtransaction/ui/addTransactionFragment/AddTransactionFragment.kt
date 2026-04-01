@@ -470,7 +470,8 @@ class AddTransactionFragment : Fragment() {
             Handler(Looper.getMainLooper()).post {
                 activityViewModel.onAddItemClicked(
                     AddItemAction.FromAddTransaction,
-                    itemType = ItemType.ACCOUNT
+                    itemType = ItemType.ACCOUNT,
+                    null
                 )
             }
         }

@@ -5,25 +5,26 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.util.Helper.Companion.toCategory
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.databinding.FragmentCategoryDetailBinding
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
+import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.DetailCategoryAdapter
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
-import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragment.AddItemFragment
-import com.henrystudio.moneymanager.presentation.model.AddItemSource
 import com.henrystudio.moneymanager.presentation.model.ItemType
+import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.io.Serializable
 
 @AndroidEntryPoint
 class CategoryDetailFragment : Fragment() {
@@ -32,6 +33,7 @@ class CategoryDetailFragment : Fragment() {
     private val binding  get() = _binding!!
     private lateinit var adapter : DetailCategoryAdapter
     private val viewModel: CategoryDetailViewModel by viewModels()
+    private val addTransactionActivityViewModel : AddTransactionActivityViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,6 +53,7 @@ class CategoryDetailFragment : Fragment() {
         adapter = DetailCategoryAdapter(
             emptyList(),
             onDeleteClick = { deleteChildrenCategory(it.id) },
+            onEditClick = { updateChildCategory(it) },
             onItemClick = { childrenCategoryClick(it) })
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -77,31 +80,19 @@ class CategoryDetailFragment : Fragment() {
         viewModel.deleteCategory(id)
     }
 
-    private fun childrenCategoryClick(categoryItem: CategoryItem) {
-        val fragment = AddItemFragment().apply {
-            arguments = Bundle().apply {
-                putSerializable("item_type", ItemType.CATEGORY)
-                putSerializable("source", AddItemSource.FROM_DETAIL_CATEGORY)
-                putParcelable("category_to_edit", categoryItem)
-            }
-        }
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.slide_in_right,  // enter
-                R.anim.no_animation,    // exit
-                R.anim.no_animation,    // popEnter (khi quay lại)
-                R.anim.slide_out_right  // popExit (khi quay lại)
-            ).replace(R.id.fragment_container_add_transaction, fragment)
-            .addToBackStack(null)
-            .commit()
+    private fun updateChildCategory(categoryItem: CategoryItem) {
+        addTransactionActivityViewModel.onAddItemClicked(AddItemAction.FromCategoryDetail, ItemType.CATEGORY, EditItem.Category(categoryItem))
     }
 
+    private fun childrenCategoryClick(categoryItem: CategoryItem) {}
+
     companion object {
-        fun newInstance(item: EditItem, action: AddItemAction): CategoryDetailFragment{
+        fun newInstance(item: EditItem, action: AddItemAction, title: String): CategoryDetailFragment{
             return CategoryDetailFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable("edit_child_item", item)
                     putParcelable("action", action)
+                    putSerializable("title", title)
                 }
             }
         }
