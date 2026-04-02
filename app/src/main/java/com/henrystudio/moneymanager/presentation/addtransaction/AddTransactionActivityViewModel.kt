@@ -1,5 +1,6 @@
 package com.henrystudio.moneymanager.presentation.addtransaction
 
+import android.content.ClipData.Item
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAct
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
+import com.henrystudio.moneymanager.presentation.addtransaction.model.ToolbarStateStack
 import com.henrystudio.moneymanager.presentation.addtransaction.model.ToolbarTitle
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
@@ -29,8 +31,8 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     var currentItemType: ItemType? = null
     private var isIncome: Boolean = false
     var transactionType: TransactionType = TransactionType.EXPENSE
-    private val titleStack = ArrayDeque<ToolbarTitle>()
-
+    private val toolbarStack = ArrayDeque<ToolbarStateStack>()
+    var currentParentCategoryId: Int? = null
     fun init(transaction: Transaction?) {
         val root = if (transaction?.isIncome == true) {
             ToolbarTitle.INCOME
@@ -38,8 +40,13 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             ToolbarTitle.EXPENSE
         }
 
-        titleStack.clear()
-        titleStack.add(root)
+        toolbarStack.clear()
+        toolbarStack.add(
+            ToolbarStateStack(
+                title = root,
+                config = toolbarConfig(showBookmark = true)
+            )
+        )
 
         _toolbarState.value = AddTransactionToolbarState(
             title = root,
@@ -63,12 +70,22 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             is AddItemAction.FromCategoryDetail -> ToolbarTitle.CATEGORY
         }
 
-        titleStack.addLast(newTitle)
+        val newConfig = toolbarConfig(showAdd = false).copy(
+            addAction = action,
+            addItemType = itemType
+        )
+
+        toolbarStack.addLast(
+            ToolbarStateStack(
+                title = newTitle,
+                config = newConfig
+            )
+        )
 
         _toolbarState.value = AddTransactionToolbarState(
             title = newTitle,
             animation = TitleAnimation.SlideFromRight,
-            config = toolbarConfig()
+            config = newConfig
         )
 
         viewModelScope.launch {
@@ -90,7 +107,15 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             is AddItemAction.FromCategoryDetail -> ToolbarTitle.CATEGORY
         }
 
-        titleStack.addLast(newTitle)
+        toolbarStack.addLast(
+            ToolbarStateStack(
+                title = newTitle,
+                config = toolbarConfig(showAdd = true).copy(
+                    addAction = action,
+                    addItemType = itemType
+                )
+            )
+        )
 
         _toolbarState.value = AddTransactionToolbarState(
             title = newTitle,
@@ -111,6 +136,40 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         Log.d("DEBUG", "onAddIconClicked: $config")
         val action = config.addAction ?: return
         val itemType = config.addItemType ?: return
+
+        val currentTitle = toolbarStack.lastOrNull()?.title
+
+        val newTitle = when (action) {
+            is AddItemAction.FromAddTransaction -> ToolbarTitle.ADD
+            is AddItemAction.FromEditCategory -> ToolbarTitle.CATEGORY
+            is AddItemAction.FromEditAccount -> ToolbarTitle.ACCOUNT
+
+            is AddItemAction.FromCategoryDetail -> {
+                // 🔥 dùng title hiện tại
+                when (currentTitle) {
+                    is ToolbarTitle.Custom -> currentTitle
+                    else -> ToolbarTitle.CATEGORY
+                }
+            }
+        }
+
+        val newConfig = toolbarConfig().copy(
+            addAction = action,
+            addItemType = itemType
+        )
+
+        toolbarStack.addLast(
+            ToolbarStateStack(
+                title = newTitle,
+                config = newConfig
+            )
+        )
+
+        _toolbarState.value = AddTransactionToolbarState(
+            title = newTitle,
+            animation = TitleAnimation.SlideFromRight,
+            config = newConfig
+        )
 
         viewModelScope.launch {
             _event.emit(
@@ -142,8 +201,13 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         }
 
         // 🔥 reset stack
-        titleStack.clear()
-        titleStack.add(newRoot)
+        toolbarStack.clear()
+        toolbarStack.addLast(
+            ToolbarStateStack(
+                title = newRoot,
+                config = toolbarConfig(showAdd = true)
+            )
+        )
 
         _toolbarState.value = AddTransactionToolbarState(
             title = newRoot,
@@ -156,15 +220,15 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onBackClicked() {
-        if (titleStack.size > 1) {
-            titleStack.removeLast()
+        if (toolbarStack.size > 1) {
+            toolbarStack.removeLast()
 
-            val newCurrent = titleStack.last()
+            val previous = toolbarStack.last()
 
             _toolbarState.value = AddTransactionToolbarState(
-                title = newCurrent,
+                title = previous.title,
                 animation = TitleAnimation.SlideFromLeft,
-                config = toolbarConfig(showBookmark = titleStack.size == 1)
+                config = previous.config
             )
         }
 
@@ -174,13 +238,15 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onSaveItem() {
-        if (titleStack.size > 1) {
-            titleStack.removeLast()
+        if (toolbarStack.size > 1) {
+            toolbarStack.removeLast()
+
+            val previous = toolbarStack.last()
 
             _toolbarState.value = AddTransactionToolbarState(
-                title = titleStack.last(),
+                title = previous.title,
                 animation = TitleAnimation.SlideFromLeft,
-                config = toolbarConfig(showBookmark = titleStack.size == 1)
+                config = previous.config
             )
         }
 
@@ -193,12 +259,22 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         val title = item.name
         val newTitle = ToolbarTitle.Custom(title)
 
-        titleStack.addLast(newTitle)
+        val newConfig = toolbarConfig(showAdd = true).copy(
+            addAction = action,
+            addItemType = ItemType.CATEGORY
+        )
+
+        toolbarStack.addLast(
+            ToolbarStateStack(
+                title = newTitle,
+                config = newConfig
+            )
+        )
 
         _toolbarState.value = AddTransactionToolbarState(
             title = newTitle,
             animation = TitleAnimation.SlideFromRight,
-            config = toolbarConfig(showAdd = true)
+            config = newConfig
         )
 
         viewModelScope.launch {
@@ -209,7 +285,12 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     fun onChildCategoryClicked(item: CategoryItem) {
         val title = item.name
         val newTitle = ToolbarTitle.Custom(title)
-        titleStack.addLast(newTitle)
+        toolbarStack.addLast(
+            ToolbarStateStack(
+                title = newTitle,
+                config = toolbarConfig(showAdd = true)
+            )
+        )
 
         _toolbarState.value = AddTransactionToolbarState(
             title = newTitle,
@@ -222,4 +303,15 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             , title))
         }
     }
+
+//    fun updateToolbarForCategoryDetail(action: AddItemAction) {
+//
+//        val config = toolbarConfig().copy(
+//            showAdd = true,
+//            addAction = action,
+//            addItemType = ItemType.CATEGORY
+//        )
+//
+//        _toolbarState.value = _toolbarState.value.copy(config = config)
+//    }
 }

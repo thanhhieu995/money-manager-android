@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.addtransaction.components.adapter
+package com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment
 
 import android.view.LayoutInflater
 import android.view.View

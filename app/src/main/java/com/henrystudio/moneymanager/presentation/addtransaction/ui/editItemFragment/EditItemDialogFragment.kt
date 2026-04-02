@@ -14,10 +14,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.databinding.FragmentEditCategoryBinding
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.EditItemDialogAdapter
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
@@ -77,6 +79,9 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
     override fun onEditItemClick(item: EditItem) {
         when(item) {
             is EditItem.Category -> {
+                // 🔥 FIX QUAN TRỌNG: set parentId
+                addTransactionActivityViewModel.currentParentCategoryId = item.item.id
+
                 addTransactionActivityViewModel.onRootCategoryItemClicked(item.item, AddItemAction.FromCategoryDetail)
             }
             is EditItem.AccountItem -> {

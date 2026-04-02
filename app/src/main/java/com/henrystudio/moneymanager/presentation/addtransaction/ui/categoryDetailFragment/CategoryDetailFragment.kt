@@ -11,17 +11,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.henrystudio.moneymanager.core.util.Helper.Companion.toCategory
-import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.databinding.FragmentCategoryDetailBinding
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
-import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.DetailCategoryAdapter
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.EditItem
 import com.henrystudio.moneymanager.presentation.model.ItemType
-import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -47,8 +43,10 @@ class CategoryDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val item = arguments?.getParcelable<EditItem>("edit_child_item")
+        val item = arguments?.getParcelable<EditItem>(KEY_ITEM)
             ?: throw IllegalArgumentException("Missing edit_child_item")
+        val action = arguments?.getParcelable<AddItemAction>(KEY_ACTION)
+            ?: AddItemAction.FromCategoryDetail
         val recyclerView = binding.fragmentCategoryDetailRecyclerView
         adapter = DetailCategoryAdapter(
             emptyList(),
@@ -87,12 +85,15 @@ class CategoryDetailFragment : Fragment() {
     private fun childrenCategoryClick(categoryItem: CategoryItem) {}
 
     companion object {
+        private const val KEY_ITEM = "edit_child_item"
+        private const val KEY_ACTION = "action"
+        private const val KEY_TITLE = "title"
         fun newInstance(item: EditItem, action: AddItemAction, title: String): CategoryDetailFragment{
             return CategoryDetailFragment().apply {
                 arguments = Bundle().apply {
-                    putParcelable("edit_child_item", item)
-                    putParcelable("action", action)
-                    putSerializable("title", title)
+                    putParcelable(KEY_ITEM, item)
+                    putParcelable(KEY_ACTION, action)
+                    putSerializable(KEY_TITLE, title)
                 }
             }
         }

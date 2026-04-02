@@ -63,10 +63,14 @@ class DailyViewModel @Inject constructor() : ViewModel() {
             }
         }
 
-        // ❌ ignore empty lần đầu
         if (finalFilteredList.isEmpty()) {
             _uiState.update {
-                it.copy(dataTransactionGroupState = UiState.Loading)
+                it.copy(
+                    dataTransactionGroupState = UiState.Empty,
+                    transactions = emptyList(),
+                    selectedDate = selectedMonth,
+                    isEmpty = true
+                )
             }
             return
         }
@@ -157,6 +161,47 @@ class DailyViewModel @Inject constructor() : ViewModel() {
                 dataTransactionGroupState = UiState.Empty,
                 selectedDate = selectedMonth
             )
+        }
+    }
+
+    fun processData(
+        state: UiState<List<TransactionGroup>>,
+        filterOption: FilterOption,
+        selectedMonth: LocalDate,
+        categoryName: String?,
+        transactionType: TransactionType,
+        keyFilter: KeyFilter,
+        isFromMainActivity: Boolean
+    ) {
+        when (state) {
+            is UiState.Loading -> {
+                setLoading(selectedMonth)
+            }
+
+            is UiState.Empty -> {
+                setEmpty(selectedMonth)
+            }
+
+            is UiState.Success -> {
+                updateData(
+                    transactions = state.data,
+                    filterOption = filterOption,
+                    selectedMonth = selectedMonth,
+                    categoryName = categoryName,
+                    transactionType = transactionType,
+                    keyFilter = keyFilter,
+                    isFromMainActivity = isFromMainActivity
+                )
+            }
+
+            is UiState.Error -> {
+                _uiState.update {
+                    it.copy(
+                        dataTransactionGroupState = state,
+                        selectedDate = selectedMonth
+                    )
+                }
+            }
         }
     }
 }

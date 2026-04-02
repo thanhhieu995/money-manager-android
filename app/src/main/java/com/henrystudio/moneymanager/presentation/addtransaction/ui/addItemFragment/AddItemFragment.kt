@@ -33,6 +33,7 @@ class AddItemFragment : Fragment() {
 
     private var itemType: ItemType? = null
     private var editItem: EditItem? = null
+    private var action: AddItemAction? = null
     private var transactionType: TransactionType? = null
     private val accountViewModel: AccountViewModel by viewModels()
     private val categoryViewModel: CategoryViewModel by viewModels()
@@ -63,6 +64,7 @@ class AddItemFragment : Fragment() {
     private fun getDataFromArguments() {
         itemType = arguments?.getParcelable(KEY_ITEM_TYPE) ?: activityViewModel.currentItemType
         editItem = arguments?.getParcelable(KEY_ITEM_EDIT)
+        action = arguments?.getParcelable(KEY_ACTION)
         transactionType = activityViewModel.transactionType
         Log.d("DEBUG", "itemType: $itemType, editItem: $editItem, transactionType: $transactionType")
     }
@@ -100,15 +102,25 @@ class AddItemFragment : Fragment() {
             // Trường hợp Update Category
             val category = currentEditItem.item.toCategory(transactionType ?: TransactionType.EXPENSE).copy(
                 name = name,
-                emoji = currentEditItem.item.emoji
+                emoji = currentEditItem.item.emoji,
+                id = currentEditItem.item.id,
+                parentId = currentEditItem.item.parentId
             )
             categoryViewModel.update(category)
         } else {
             // Trường hợp Insert Category mới
+            val parentId = when (action) {
+                is AddItemAction.FromCategoryDetail -> {
+                    // 👉 lấy parent từ category đang mở
+                    activityViewModel.currentParentCategoryId
+                }
+                else -> null // 👉 root
+            }
             val category = Category(
                 emoji = "", // Bạn có thể thêm logic chọn emoji ở đây
                 name = name,
-                type = transactionType ?: TransactionType.EXPENSE
+                type = transactionType ?: TransactionType.EXPENSE,
+                parentId = parentId
             )
             categoryViewModel.insert(category)
         }

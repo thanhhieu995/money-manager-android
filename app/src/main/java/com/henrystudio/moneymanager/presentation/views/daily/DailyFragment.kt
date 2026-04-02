@@ -109,27 +109,15 @@ class DailyFragment : Fragment() {
                     ) { (transactions, selectedMonth), option ->
                         Triple(transactions, selectedMonth, option)
                     }.collect { (state, selectedMonth, option) ->
-                        when(state) {
-                            is UiState.Loading -> {
-                                viewModel.setLoading(selectedMonth)
-                            }
-                            is UiState.Empty -> {
-                                viewModel.setEmpty(selectedMonth)
-                            }
-                            is UiState.Success -> {
-                                viewModel.updateData(
-                                    transactions = state.data,
-                                    filterOption = option,
-                                    selectedMonth = selectedMonth,
-                                    categoryName = categoryName,
-                                    transactionType = transactionType,
-                                    keyFilter = keyFilter,
-                                    isFromMainActivity = requireActivity() is MainActivity
-                                )
-                            }
-
-                            else -> {}
-                        }
+                        viewModel.processData(
+                            state = state,
+                            filterOption = option,
+                            selectedMonth = selectedMonth,
+                            categoryName = categoryName,
+                            transactionType = transactionType,
+                            keyFilter = keyFilter,
+                            isFromMainActivity = requireActivity() is MainActivity
+                        )
                     }
                 }
 
