@@ -1,7 +1,6 @@
 package com.henrystudio.moneymanager.presentation.addtransaction.model
 
 import android.os.Parcelable
-import com.henrystudio.moneymanager.presentation.model.ItemType
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

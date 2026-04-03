@@ -14,7 +14,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.databinding.FragmentEditCategoryBinding
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.components.adapter.EditItemDialogAdapter
@@ -34,6 +33,7 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
     private var adapter: EditItemDialogAdapter? = null
     private val viewModel: EditItemDialogViewModel by viewModels()
     private val addTransactionActivityViewModel : AddTransactionActivityViewModel by activityViewModels()
+    private var currentAction: AddItemAction? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,7 +51,8 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
         adapter = EditItemDialogAdapter(
             emptyList(),
             onDeleteClick = { item -> viewModel.deleteItem(item) },
-            clickItemListener = this
+            clickItemListener = this,
+            onEditClick = { updateRootEditItem(it)}
         )
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -59,13 +60,8 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
 
         val selectedType = arguments?.getParcelable<ItemType>(KEY_ITEM_TYPE)
         val transactionType = arguments?.getParcelable<TransactionType>(KEY_TRANSACTION_TYPE)
-        val action = arguments?.getParcelable<AddItemAction>(KEY_ACTION)
-        Log.d("DEBUG", "onViewCreated selectedType: $selectedType transactionType: $transactionType action: $action")
+        currentAction = arguments?.getParcelable(KEY_ACTION)
         viewModel.setType(selectedType, transactionType)
-//        addTransactionActivityViewModel.apply {
-//            currentItemType = selectedType
-//            currentAction = action
-//        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -88,6 +84,23 @@ class EditItemDialogFragment: Fragment(), EditItemDialogAdapter.OnEditClickListe
                 addTransactionActivityViewModel.onEditItemClicked(AddItemAction.FromEditAccount, ItemType.ACCOUNT)
             }
         }
+    }
+
+    private fun updateRootEditItem(editItem: EditItem) {
+        val (itemType, action) = when(editItem) {
+            is EditItem.Category -> {
+                ItemType.CATEGORY to AddItemAction.FromEditCategory
+            }
+
+            is EditItem.AccountItem -> {
+                ItemType.ACCOUNT to AddItemAction.FromEditAccount
+            }
+        }
+
+        addTransactionActivityViewModel.onAddItemClicked(
+            action,
+            itemType,
+            editItem)
     }
 
     companion object {

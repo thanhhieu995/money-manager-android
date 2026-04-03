@@ -175,7 +175,9 @@ class DailyViewModel @Inject constructor() : ViewModel() {
     ) {
         when (state) {
             is UiState.Loading -> {
-                setLoading(selectedMonth)
+                if (_uiState.value.transactions.isEmpty()) {
+                    setLoading(selectedMonth)
+                }
             }
 
             is UiState.Empty -> {

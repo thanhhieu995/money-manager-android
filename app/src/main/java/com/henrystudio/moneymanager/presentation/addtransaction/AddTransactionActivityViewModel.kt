@@ -30,7 +30,8 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     var currentAction: AddItemAction? = null
     var currentItemType: ItemType? = null
     private var isIncome: Boolean = false
-    var transactionType: TransactionType = TransactionType.EXPENSE
+    private val _transactionType = MutableStateFlow(TransactionType.EXPENSE)
+    var transactionType: StateFlow<TransactionType> = _transactionType
     private val toolbarStack = ArrayDeque<ToolbarStateStack>()
     var currentParentCategoryId: Int? = null
     fun init(transaction: Transaction?) {
@@ -127,14 +128,32 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         )
 
         viewModelScope.launch {
-            _event.emit(AddTransactionEvent.NavigateToEditItem(action, itemType, transactionType))
+            _event.emit(AddTransactionEvent.NavigateToEditItem(action, itemType, transactionType.value))
         }
     }
 
     fun onAddIconClicked() {
         val config = _toolbarState.value.config
         Log.d("DEBUG", "onAddIconClicked: $config")
-        val action = config.addAction ?: return
+        val action = when (config.addAction) {
+
+            is AddItemAction.FromEditAccount -> {
+                // đang ở Account → Add account mới
+                AddItemAction.FromEditAccount
+            }
+
+            is AddItemAction.FromEditCategory -> {
+                AddItemAction.FromEditCategory
+            }
+
+            is AddItemAction.FromCategoryDetail -> {
+                AddItemAction.FromCategoryDetail
+            }
+
+            else -> {
+                AddItemAction.FromAddTransaction
+            }
+        }
         val itemType = config.addItemType ?: return
 
         val currentTitle = toolbarStack.lastOrNull()?.title
@@ -153,7 +172,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             }
         }
 
-        val newConfig = toolbarConfig().copy(
+        val newConfig = toolbarConfig(showAdd = false).copy(
             addAction = action,
             addItemType = itemType
         )
@@ -193,7 +212,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     )
 
     fun transactionTypeChanged(type: TransactionType) {
-        transactionType = type
+        _transactionType.value = type
 
         val newRoot = when (type) {
             TransactionType.INCOME -> ToolbarTitle.INCOME

@@ -102,7 +102,7 @@ class DailyFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch(Dispatchers.Default) {
+                launch {
                     combine(
                         sharedViewModel.combineGroupAndDate,
                         sharedViewModel.filterOption

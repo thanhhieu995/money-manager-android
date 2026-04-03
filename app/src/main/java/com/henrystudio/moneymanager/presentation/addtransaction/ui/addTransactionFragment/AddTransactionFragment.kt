@@ -380,6 +380,14 @@ class AddTransactionFragment : Fragment() {
                 }
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                activityViewModel.transactionType.collect { type ->
+                    categoryViewModel.setType(type)
+                }
+            }
+        }
     }
 
     private fun navigateBackToDaily() {
@@ -581,7 +589,6 @@ class AddTransactionFragment : Fragment() {
 
         categoryJob?.cancel()
         categoryJob = viewLifecycleOwner.lifecycleScope.launch {
-            categoryViewModel.setType(selectedType)
             categoryViewModel.categoryState.collect{ state ->
                 when (state) {
                     is UiState.Loading -> {
@@ -616,7 +623,6 @@ class AddTransactionFragment : Fragment() {
                     }
                 }
             }
-
         }
 
         addButton.setOnClickListener {

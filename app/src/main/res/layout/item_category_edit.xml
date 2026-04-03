@@ -40,4 +40,13 @@
             android:textSize="12sp"
             android:textColor="#888888" />
     </LinearLayout>
+
+    <!-- ✨ Icon edit bên phải -->
+    <ImageView
+        android:id="@+id/item_category_edit_editIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_baseline_edit_grey_24"
+        android:contentDescription="Edit"
+        android:padding="4dp"/>
 </LinearLayout>

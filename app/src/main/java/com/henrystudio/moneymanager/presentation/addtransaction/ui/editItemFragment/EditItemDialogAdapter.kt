@@ -1,5 +1,6 @@
 package com.henrystudio.moneymanager.presentation.addtransaction.components.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +18,8 @@ import java.lang.IllegalArgumentException
 class EditItemDialogAdapter(
     private var itemList: List<EditItem>,
     private val onDeleteClick: (EditItem) -> Unit,
-    private val clickItemListener: OnEditClickListener
+    private val clickItemListener: OnEditClickListener,
+    private val onEditClick: (EditItem) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     interface OnEditClickListener {
@@ -35,6 +37,8 @@ class EditItemDialogAdapter(
         private val deleteIcon: ImageView = view.findViewById(R.id.item_category_edit_deleteIcon)
         private val categoryName: TextView = view.findViewById(R.id.item_category_edit_tvCategoryName)
         private val categorySub: TextView = view.findViewById(R.id.item_category_edit_tvSubcategories)
+        private val iconEdit : ImageView = view.findViewById(R.id.item_category_edit_editIcon)
+
         fun bind(item: CategoryItem) {
             if (item.children.isEmpty()) {
                 categorySub.visibility = View.GONE
@@ -51,21 +55,29 @@ class EditItemDialogAdapter(
             itemView.setOnClickListener {
                 clickItemListener.onEditItemClick(EditItem.Category(item))
             }
+
+            iconEdit.setOnClickListener {
+                onEditClick.invoke(EditItem.Category(item))
+            }
         }
     }
 
     inner class EditAccountViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val name: TextView = view.findViewById(R.id.item_account_name)
         private val icon: ImageView = view.findViewById(R.id.item_account_deleteIcon)
+        private val editIcon: ImageView = view.findViewById(R.id.item_account_editIcon)
 
         fun bind(item: Account) {
             name.text = item.name
             // icon.setImage... nếu có icon
             itemView.setOnClickListener {
-                clickItemListener?.onEditItemClick(EditItem.AccountItem(item))
+//                clickItemListener.onEditItemClick(EditItem.AccountItem(item))
             }
             icon.setOnClickListener {
                 onDeleteClick.invoke(EditItem.AccountItem(item))
+            }
+            editIcon.setOnClickListener {
+                onEditClick.invoke(EditItem.AccountItem(item))
             }
         }
     }
