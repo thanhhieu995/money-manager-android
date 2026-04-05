@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.bookmark
+package com.henrystudio.moneymanager.presentation.bookmark.ui
 
 import android.graphics.Canvas
 import android.graphics.Color
@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.viewmodel.BookmarkListViewModel
+import com.henrystudio.moneymanager.presentation.bookmark.components.adapter.BookmarkAdapter
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch

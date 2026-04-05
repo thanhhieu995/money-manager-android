@@ -62,6 +62,11 @@ class CategoryDetailFragment : Fragment() {
                     viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                         viewModel.uiState.collect { state ->
                             adapter.submitList(state.categoryItems)
+
+                            binding.fragmentCategoryDetailTvEmpty.visibility =
+                                if (state.categoryItems.isEmpty()) {
+                                    View.VISIBLE
+                                } else View.GONE
                         }
                     }
                 }

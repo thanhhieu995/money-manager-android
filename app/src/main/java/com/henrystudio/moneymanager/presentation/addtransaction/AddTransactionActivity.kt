@@ -21,7 +21,6 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.ToolbarTitle
@@ -29,8 +28,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.ui.addItemFragme
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment.AddTransactionFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.categoryDetailFragment.CategoryDetailFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.ui.editItemFragment.EditItemDialogFragment
-import com.henrystudio.moneymanager.presentation.model.ItemType
-import com.henrystudio.moneymanager.presentation.views.bookmark.BookmarkActivity
+import com.henrystudio.moneymanager.presentation.bookmark.BookmarkActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 

@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.bookmark
+package com.henrystudio.moneymanager.presentation.bookmark.components.adapter
 
 import android.view.LayoutInflater
 import android.view.View

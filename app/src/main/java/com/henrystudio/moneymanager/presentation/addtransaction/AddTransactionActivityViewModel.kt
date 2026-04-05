@@ -322,15 +322,4 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             , title))
         }
     }
-
-//    fun updateToolbarForCategoryDetail(action: AddItemAction) {
-//
-//        val config = toolbarConfig().copy(
-//            showAdd = true,
-//            addAction = action,
-//            addItemType = ItemType.CATEGORY
-//        )
-//
-//        _toolbarState.value = _toolbarState.value.copy(config = config)
-//    }
 }

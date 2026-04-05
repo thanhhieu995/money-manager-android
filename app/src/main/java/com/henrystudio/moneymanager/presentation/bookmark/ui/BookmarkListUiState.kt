@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.bookmark
+package com.henrystudio.moneymanager.presentation.bookmark.ui
 
 import com.henrystudio.moneymanager.data.model.Transaction
 

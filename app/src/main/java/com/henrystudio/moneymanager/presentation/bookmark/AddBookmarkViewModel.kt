@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.viewmodel
+package com.henrystudio.moneymanager.presentation.bookmark
 
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.data.model.Transaction

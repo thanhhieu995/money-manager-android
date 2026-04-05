@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.bookmark
+package com.henrystudio.moneymanager.presentation.bookmark.ui
 
 import android.os.Build
 import android.os.Bundle
@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.viewmodel.AddBookmarkViewModel
+import com.henrystudio.moneymanager.presentation.bookmark.AddBookmarkViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter

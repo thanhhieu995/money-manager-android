@@ -53,7 +53,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".presentation.views.bookmark.BookmarkActivity"
+            android:name=".presentation.bookmark.BookmarkActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"

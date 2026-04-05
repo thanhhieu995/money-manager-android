@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.bookmark
+package com.henrystudio.moneymanager.presentation.bookmark
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
@@ -12,8 +12,11 @@ import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.presentation.bookmark.AddBookmarkFragment
+import com.henrystudio.moneymanager.presentation.bookmark.ui.AddBookmarkFragment
+import com.henrystudio.moneymanager.presentation.bookmark.ui.BookmarkListFragment
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class BookmarkActivity : AppCompatActivity() {
     private lateinit var toolbar: Toolbar
 

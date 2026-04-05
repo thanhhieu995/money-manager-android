@@ -72,7 +72,7 @@ class DailyFragment : Fragment() {
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch {
             val decoration = StickyHeaderItemDecoration(
                 isHeader = { position -> true },
                 createHeaderView = {
