@@ -27,7 +27,7 @@ import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.viewmodel.CalendarUpdateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
-import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
+import com.henrystudio.moneymanager.presentation.main.TransactionGroupAdapter
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek

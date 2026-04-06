@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.daily
+package com.henrystudio.moneymanager.presentation.main
 
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -11,12 +11,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.views.daily.TransactionDailyDiffCallback
 
-class TransactionDailyAdapter(
+class TransactionAdapter(
     private val isSelected: ((Transaction) -> Boolean)? = null,
     private val clickListener: ((Transaction) -> Boolean)? = null,
     private val longClickListener: ((Transaction) -> Boolean)? = null
-) : ListAdapter<Transaction, TransactionDailyAdapter.TransactionViewHolder>(TransactionDailyDiffCallback) {
+) : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionDailyDiffCallback) {
 
     inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val noteText: TextView = itemView.findViewById(R.id.item_transaction_content)

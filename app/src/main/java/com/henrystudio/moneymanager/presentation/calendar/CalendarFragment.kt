@@ -28,7 +28,7 @@ import com.henrystudio.moneymanager.databinding.FragmentCalendarBinding
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.presentation.viewmodel.CalendarViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
+import com.henrystudio.moneymanager.presentation.main.TransactionGroupAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.*

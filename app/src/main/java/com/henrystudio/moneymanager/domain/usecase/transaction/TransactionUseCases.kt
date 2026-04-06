@@ -7,5 +7,6 @@ data class TransactionUseCases(
     val getBookmarkedTransactionsUseCase: GetBookmarkedTransactionsUseCase,
     val getTransactionsGroupUseCase: GetTransactionsGroupUseCase,
     val getTransactionsUseCase: GetTransactionsUseCase,
-    val updateTransactionsUseCase: UpdateTransactionsUseCase
+    val updateTransactionsUseCase: UpdateTransactionsUseCase,
+    val filterTransactionGroupsUseCase: FilterTransactionGroupsUseCase
 )

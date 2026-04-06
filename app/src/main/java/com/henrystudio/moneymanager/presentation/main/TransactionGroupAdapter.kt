@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.main
+package com.henrystudio.moneymanager.presentation.main
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -14,7 +14,6 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
-import com.henrystudio.moneymanager.presentation.views.daily.TransactionDailyAdapter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -25,7 +24,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
     private var filterYear: Boolean = false
 
     var isTransactionSelected: ((Transaction) -> Boolean)? = null
-    private val childAdapters = mutableMapOf<String, TransactionDailyAdapter>() // key = group.date
+    private val childAdapters = mutableMapOf<String, TransactionAdapter>() // key = group.date
 
     var onTransactionLongClick: ((Transaction) -> Boolean)? = null
     var onTransactionClick: ((Transaction) -> Boolean)? = null
@@ -92,7 +91,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
         childRecyclerView.setHasFixedSize(false)
         childRecyclerView.isNestedScrollingEnabled = false
         val adapter = childAdapters.getOrPut(group.date) {
-            TransactionDailyAdapter(
+            TransactionAdapter(
                 isSelected = isTransactionSelected,
                 clickListener = onTransactionClick,
                 longClickListener = onTransactionLongClick
@@ -108,7 +107,7 @@ class TransactionGroupAdapter : RecyclerView.Adapter<TransactionGroupAdapter.Gro
 
     fun getGroupAt(position: Int): TransactionGroup = groups[position]
 
-    fun getChildAdapterForGroup(groupDate: String): TransactionDailyAdapter? {
+    fun getChildAdapterForGroup(groupDate: String): TransactionAdapter? {
         return childAdapters[groupDate]
     }
 

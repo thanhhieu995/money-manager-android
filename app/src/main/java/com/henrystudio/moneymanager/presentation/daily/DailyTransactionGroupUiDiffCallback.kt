@@ -1,12 +1,14 @@
-package com.henrystudio.moneymanager.presentation.main
+package com.henrystudio.moneymanager.presentation.daily
 
 import androidx.recyclerview.widget.DiffUtil
 import com.henrystudio.moneymanager.data.model.TransactionGroup
+import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionGroupUi
 
-class TransactionGroupDiffCallback(
-    private val oldList: List<TransactionGroup>,
-    private val newList: List<TransactionGroup>
-): DiffUtil.Callback() {
+class DailyTransactionGroupUiDiffCallback(
+    private val oldList: List<DailyTransactionGroupUi>,
+    private val newList: List<DailyTransactionGroupUi>
+) : DiffUtil.Callback() {
+
     override fun getOldListSize(): Int = oldList.size
 
     override fun getNewListSize(): Int = newList.size

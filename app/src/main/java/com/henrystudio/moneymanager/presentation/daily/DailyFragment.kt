@@ -1,7 +1,8 @@
-package com.henrystudio.moneymanager.presentation.views.daily
+package com.henrystudio.moneymanager.presentation.daily
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -21,31 +22,29 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
-import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.daily.components.adapter.DailyTransactionGroupUiAdapter
+import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionGroupUi
+import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionUi
+import com.henrystudio.moneymanager.presentation.main.TransactionGroupAdapter
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import com.henrystudio.moneymanager.presentation.views.main.StickyHeaderItemDecoration
-import com.henrystudio.moneymanager.presentation.views.main.TransactionGroupAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
 @AndroidEntryPoint
 class DailyFragment : Fragment() {
-    private lateinit var adapter: TransactionGroupAdapter
+    private lateinit var adapter: DailyTransactionGroupUiAdapter
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
-    private var currentList: List<TransactionGroup> = emptyList()
-    private var selectedList: List<Transaction> = emptyList()
+    private var currentList: List<DailyTransactionGroupUi> = emptyList()
     private var keyFilter: KeyFilter = KeyFilter.CategoryParent
     private var transactionType: TransactionType = TransactionType.EXPENSE
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
@@ -68,7 +67,7 @@ class DailyFragment : Fragment() {
             ?: TransactionType.EXPENSE
         keyFilter = arguments?.getSerializable(ARG_CATEGORY_CHILD_CLICK) as? KeyFilter ?: KeyFilter.CategoryParent
 
-        adapter = TransactionGroupAdapter()
+        adapter = DailyTransactionGroupUiAdapter()
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
 
@@ -123,74 +122,20 @@ class DailyFragment : Fragment() {
 
                 launch {
                     viewModel.uiState.collect { uiState ->
-                        currentList = uiState.transactions
-                        adapter.setFilterYear(uiState.isYearly)
-                        adapter.submitList(uiState.transactions)
-
-                        when (val state = uiState.dataTransactionGroupState) {
-
-                            is UiState.Loading -> {
-                                binding.loadingView.visibility = View.VISIBLE
-                                binding.transactionList.visibility = View.GONE
-                                binding.noDataText.visibility = View.GONE
-                            }
-
-                            is UiState.Empty -> {
-                                binding.loadingView.visibility = View.GONE
-                                binding.transactionList.visibility = View.GONE
-                                binding.noDataText.visibility = View.VISIBLE
-                            }
-
-                            is UiState.Success -> {
-                                binding.loadingView.visibility = View.GONE
-                                binding.transactionList.visibility = View.VISIBLE
-                                binding.noDataText.visibility = View.GONE
-
-                                currentList = state.data
-                                adapter.setFilterYear(uiState.isYearly)
-                                adapter.submitList(state.data)
-                            }
-
-                            else -> {}
-                        }
-
-                        if (SharedTransactionHolder.scrollToAddedTransaction) {
-                            val targetPosition = findPositionForDate((uiState.dataTransactionGroupState as? UiState.Success)?.data ?: emptyList(), uiState.selectedDate)
-                            if (targetPosition >= 0) {
-                                binding.transactionList.scrollToPosition(targetPosition)
-                            }
-                            SharedTransactionHolder.scrollToAddedTransaction = false
-                        }
+                        renderUi(uiState)
                     }
                 }
 
                 launch {
-                    sharedViewModel.selectedTransactions.collect { selectedTransactions ->
-
-                        val (added, removed) = withContext(Dispatchers.Default) {
-                            val added = selectedTransactions.filterNot { selectedList.contains(it) }
-                            val removed = selectedList.filterNot { selectedTransactions.contains(it) }
-                            added to removed
-                        }
-
-                        // 🔥 quay lại Main để update UI
-                        if (selectedTransactions.isEmpty()) {
-                            for (tx in selectedList) {
-                                val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
-                                childAdapter.updateTransaction(tx)
-                            }
-                        } else {
-                            for (tx in added + removed) {
-                                val childAdapter = adapter.getChildAdapterForGroup(tx.date) ?: continue
-                                childAdapter.updateTransaction(tx)
-                            }
-                        }
-
-                        selectedList = selectedTransactions
-
+                    combine(
+                        sharedViewModel.selectionMode,
+                        sharedViewModel.selectedTransactions
+                    ) { mode, selected ->
+                        mode to selected
+                    }.collect { (mode, selected) ->
                         viewModel.updateSelection(
-                            selectionMode = sharedViewModel.selectionMode.value,
-                            selectedTransactions = selectedTransactions
+                            selectionMode = mode,
+                            selectedTransactions = selected
                         )
                     }
                 }
@@ -200,25 +145,14 @@ class DailyFragment : Fragment() {
         adapter.onTransactionLongClick = { transaction ->
             sharedViewModel.enterSelectionMode()
             sharedViewModel.toggleTransactionSelection(transaction)
-            updateTransactionItem(transaction)
-            true
         }
 
         adapter.onTransactionClick = { transaction ->
             if (sharedViewModel.selectionMode.value) {
                 sharedViewModel.toggleTransactionSelection(transaction)
-                updateTransactionItem(transaction)
             } else {
-                Helper.openTransactionDetail(requireContext(), transaction)
+                Helper.openTransactionDetail(requireContext(), transaction = transaction)
             }
-            true
-        }
-
-        adapter.isTransactionSelected = { transaction ->
-            val mode = sharedViewModel.selectionMode.value
-            val selectedList = sharedViewModel.selectedTransactions.value
-            val selected = selectedList.any { it.id == transaction.id }
-            mode && selected
         }
 
         val lastDate = loadLastDate(requireContext())
@@ -275,28 +209,60 @@ class DailyFragment : Fragment() {
         _binding = null
     }
 
-    private fun updateTransactionItem(transaction: Transaction) {
-        val groupIndex = currentList.indexOfFirst { group ->
-            group.transactions.contains(transaction)
-        }
-        if (groupIndex != -1) {
-            val group = currentList[groupIndex]
-            val transactionIndex = group.transactions.indexOf(transaction)
-            val childAdapter = adapter.getChildAdapterForGroup(group.date)
-            if (childAdapter != null && transactionIndex != -1) {
-                childAdapter.notifyItemChanged(transactionIndex)
-            }
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
-    fun findPositionForDate(transactions: List<TransactionGroup>, date: LocalDate): Int {
+    fun findPositionForDate(transactions: List<DailyTransactionGroupUi>, date: LocalDate): Int {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
         return transactions.indexOfFirst { tx ->
             val cleanedDate = tx.date.substringBefore(" ")
             val txDate = LocalDate.parse(cleanedDate, formatter)
             txDate == date
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun renderUi(uiState: DailyUiState) {
+        currentList = uiState.transactions
+        Log.d("DEBUG", "DailyFragment currentList: $currentList")
+        adapter.submitList(uiState.transactions.toList())
+
+        when (uiState.dataTransactionGroupState) {
+            is UiState.Loading -> {
+                renderLoading()
+            }
+            is UiState.Empty -> {
+                renderEmpty()
+            }
+            is UiState.Success -> {
+               renderSuccess()
+            }
+            else -> {}
+        }
+
+        if (SharedTransactionHolder.scrollToAddedTransaction) {
+            val targetPosition = findPositionForDate((uiState.dataTransactionGroupState as? UiState.Success)?.data ?: emptyList(), uiState.selectedDate)
+            if (targetPosition >= 0) {
+                binding.transactionList.scrollToPosition(targetPosition)
+            }
+            SharedTransactionHolder.scrollToAddedTransaction = false
+        }
+    }
+
+    private fun renderLoading() {
+        binding.loadingView.visibility = View.VISIBLE
+        binding.transactionList.visibility = View.GONE
+        binding.noDataText.visibility = View.GONE
+    }
+
+    private fun renderEmpty() {
+        binding.loadingView.visibility = View.GONE
+        binding.transactionList.visibility = View.GONE
+        binding.noDataText.visibility = View.VISIBLE
+    }
+
+    private fun renderSuccess() {
+        binding.loadingView.visibility = View.GONE
+        binding.transactionList.visibility = View.VISIBLE
+        binding.noDataText.visibility = View.GONE
     }
 
     companion object {

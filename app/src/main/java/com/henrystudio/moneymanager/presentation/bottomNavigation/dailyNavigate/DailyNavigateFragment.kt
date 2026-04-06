@@ -30,7 +30,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionAc
 import com.henrystudio.moneymanager.presentation.viewmodel.DailyNavigateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.bookmark.BookmarkActivity
-import com.henrystudio.moneymanager.presentation.views.daily.DailyFragment
+import com.henrystudio.moneymanager.presentation.daily.DailyFragment
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
