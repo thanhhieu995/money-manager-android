@@ -2,12 +2,16 @@ package com.henrystudio.moneymanager.di
 
 import com.henrystudio.moneymanager.domain.repository.AccountRepository
 import com.henrystudio.moneymanager.domain.repository.CategoryRepository
+import com.henrystudio.moneymanager.domain.repository.LastDateRepository
 import com.henrystudio.moneymanager.domain.repository.TransactionRepository
 import com.henrystudio.moneymanager.domain.usecase.account.AccountUseCases
 import com.henrystudio.moneymanager.domain.usecase.account.AddAccountUseCase
 import com.henrystudio.moneymanager.domain.usecase.account.DeleteAccountUseCase
 import com.henrystudio.moneymanager.domain.usecase.account.GetAccountsUseCase
 import com.henrystudio.moneymanager.domain.usecase.account.UpdateAccountUseCase
+import com.henrystudio.moneymanager.domain.usecase.appstate.GetLastDateUseCase
+import com.henrystudio.moneymanager.domain.usecase.appstate.PreferenceUseCases
+import com.henrystudio.moneymanager.domain.usecase.appstate.SaveLastDateUseCase
 import com.henrystudio.moneymanager.domain.usecase.category.*
 import com.henrystudio.moneymanager.domain.usecase.transaction.AddTransactionUseCase
 import com.henrystudio.moneymanager.domain.usecase.transaction.DeleteAllTransactionsUseCase
@@ -68,6 +72,16 @@ object UseCaseModule {
             deleteAccountUseCase = DeleteAccountUseCase(repository),
             updateAccountUseCase = UpdateAccountUseCase(repository),
             getAccountsUseCase = GetAccountsUseCase(repository)
+        )
+    }
+
+    @Provides
+    fun providePreferenceUseCases(
+        repository: LastDateRepository
+    ) : PreferenceUseCases {
+        return PreferenceUseCases(
+            saveLastDate = SaveLastDateUseCase(repository),
+            getLastDate = GetLastDateUseCase(repository)
         )
     }
 }

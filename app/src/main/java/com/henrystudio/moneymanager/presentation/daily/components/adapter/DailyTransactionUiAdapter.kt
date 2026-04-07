@@ -21,24 +21,12 @@ class DailyTransactionUiAdapter(
     private var items: List<DailyTransactionUi> = emptyList()
 
     fun submitList(newList: List<DailyTransactionUi>) {
-        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-            override fun getOldListSize() = items.size
-            override fun getNewListSize() = newList.size
-
-            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return items[oldItemPosition].transaction.id ==
-                        newList[newItemPosition].transaction.id
-            }
-
-            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return items[oldItemPosition] == newList[newItemPosition]
-            }
-        })
+        val diff = DiffUtil.calculateDiff(
+            DailyTransactionUiDiffCallback(items, newList)
+        )
 
         items = newList.toList()
         diff.dispatchUpdatesTo(this)
-        Log.d("DEBUG", "DailyTransactionUiAdapter newList: $newList")
-        Log.d("DEBUG", "DailyTransactionUiAdapter items: $items")
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -48,7 +36,6 @@ class DailyTransactionUiAdapter(
         private val account = view.findViewById<TextView>(R.id.item_transaction_account)
         private val category = view.findViewById<TextView>(R.id.item_transaction_category)
         fun bind(item: DailyTransactionUi) {
-            Log.d("DEBUG", "DailyTransactionUiAdapter viewHolder bind item: $item")
             // TODO bind data
             itemView.isSelected = item.isSelected
             noteText.text = item.transaction.note

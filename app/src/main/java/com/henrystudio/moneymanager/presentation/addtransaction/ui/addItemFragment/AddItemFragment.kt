@@ -66,7 +66,6 @@ class AddItemFragment : Fragment() {
         editItem = arguments?.getParcelable(KEY_ITEM_EDIT)
         action = arguments?.getParcelable(KEY_ACTION)
         transactionType = activityViewModel.transactionType.value
-        Log.d("DEBUG", "itemType: $itemType, editItem: $editItem, transactionType: $transactionType")
     }
 
     private fun setupUI() {
@@ -106,7 +105,6 @@ class AddItemFragment : Fragment() {
                 id = currentEditItem.item.id,
                 parentId = currentEditItem.item.parentId
             )
-            Log.d("DEBUG", "category: $category")
             categoryViewModel.update(category)
         } else {
             // Trường hợp Insert Category mới

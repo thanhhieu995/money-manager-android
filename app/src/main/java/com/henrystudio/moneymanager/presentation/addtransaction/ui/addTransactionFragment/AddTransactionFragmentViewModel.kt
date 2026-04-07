@@ -278,7 +278,6 @@ class AddTransactionFragmentViewModel @Inject constructor(
     }
 
     fun onNextClicked() {
-        Log.d("DEBUG", "NEXT CLICKED")
         val nextField = getNextEmptyField()
         emitEvent(AddTransactionEvent.FocusField(nextField))
     }

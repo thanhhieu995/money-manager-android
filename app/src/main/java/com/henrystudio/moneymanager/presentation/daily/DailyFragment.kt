@@ -2,7 +2,6 @@ package com.henrystudio.moneymanager.presentation.daily
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +11,6 @@ import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
-import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -25,13 +23,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.daily.components.adapter.DailyTransactionGroupUiAdapter
+import com.henrystudio.moneymanager.presentation.daily.model.DailyEvent
 import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionGroupUi
-import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionUi
-import com.henrystudio.moneymanager.presentation.main.TransactionGroupAdapter
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
-import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.loadLastDate
-import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import com.henrystudio.moneymanager.presentation.views.main.StickyHeaderItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
@@ -84,16 +79,14 @@ class DailyFragment : Fragment() {
                     val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
                     val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
 
-                    val cleanedDate = group.date.substringBefore(" ")
-                    val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
-                    val localDate = LocalDate.parse(cleanedDate, inputFormatter)
+                    val localDate = viewModel.onParseStringToLocaleDate(group.date)
                     val currentLocale = requireContext().resources.configuration.locales[0]
 
                     val dayPart = localDate.format(DateTimeFormatter.ofPattern("dd", currentLocale))
                     val dayOfWeek = localDate.format(DateTimeFormatter.ofPattern("EEE", currentLocale))
                     headerText.text = "$dayPart $dayOfWeek"
-                    headerIncome.text = Helper.formatCurrency(group.income)
-                    headerExpense.text = Helper.formatCurrency(group.expense)
+                    headerIncome.text = viewModel.onFormatCurrency(group.income)
+                    headerExpense.text = viewModel.onFormatCurrency(group.expense)
                 }
             )
             binding.transactionList.addItemDecoration(decoration)
@@ -102,41 +95,19 @@ class DailyFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    combine(
-                        sharedViewModel.combineGroupAndDate,
-                        sharedViewModel.filterOption
-                    ) { (transactions, selectedMonth), option ->
-                        Triple(transactions, selectedMonth, option)
-                    }.collect { (state, selectedMonth, option) ->
-                        viewModel.processData(
-                            state = state,
-                            filterOption = option,
-                            selectedMonth = selectedMonth,
-                            categoryName = categoryName,
-                            transactionType = transactionType,
-                            keyFilter = keyFilter,
-                            isFromMainActivity = requireActivity() is MainActivity
-                        )
-                    }
-                }
-
-                launch {
                     viewModel.uiState.collect { uiState ->
                         renderUi(uiState)
                     }
                 }
 
                 launch {
-                    combine(
-                        sharedViewModel.selectionMode,
-                        sharedViewModel.selectedTransactions
-                    ) { mode, selected ->
-                        mode to selected
-                    }.collect { (mode, selected) ->
-                        viewModel.updateSelection(
-                            selectionMode = mode,
-                            selectedTransactions = selected
-                        )
+                    viewModel.event.collect { event ->
+                        when(event) {
+                            is DailyEvent.ScrollToPosition -> {
+                                (binding.transactionList.layoutManager as LinearLayoutManager)
+                                    .scrollToPositionWithOffset(event.position, 0)
+                            }
+                        }
                     }
                 }
             }
@@ -151,18 +122,7 @@ class DailyFragment : Fragment() {
             if (sharedViewModel.selectionMode.value) {
                 sharedViewModel.toggleTransactionSelection(transaction)
             } else {
-                Helper.openTransactionDetail(requireContext(), transaction = transaction)
-            }
-        }
-
-        val lastDate = loadLastDate(requireContext())
-        if (lastDate != null && !SharedTransactionHolder.navigateFromMonthly) {
-            binding.transactionList.post {
-                val position = findPositionForDate(currentList, lastDate)
-                if (position != -1) {
-                    (binding.transactionList.layoutManager as LinearLayoutManager)
-                        .scrollToPositionWithOffset(position, 0)
-                }
+                viewModel.onOpenTransactionDetail(requireContext(), transaction)
             }
         }
 
@@ -174,14 +134,40 @@ class DailyFragment : Fragment() {
                     val firstPos = lm.findFirstVisibleItemPosition()
                     if (firstPos != RecyclerView.NO_POSITION) {
                         val txGroup = adapter.getGroupAt(firstPos)
-                        val cleanedDate = txGroup.date.substringBefore(" ")
-                        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-                        val date = LocalDate.parse(cleanedDate, formatter)
-                        saveLastDate(requireContext(), date)
+                        val date = viewModel.onParseStringToLocaleDate(txGroup.date)
+                        viewModel.onScrollStopped(date)
                     }
                 }
             }
         })
+
+        // 1. Set params
+        viewModel.setParamsProcessData(
+            categoryName = categoryName,
+            transactionType = transactionType,
+            keyFilter = keyFilter,
+            isFromMainActivity = requireActivity() is MainActivity
+        )
+
+        // 2. Bind flow
+        val combinedDataFlow = combine(
+            sharedViewModel.combineGroupAndDate,
+            sharedViewModel.filterOption
+        ) { (transactions, selectedMonth), option ->
+            Triple(transactions, selectedMonth, option)
+        }
+
+        val combineSelectionFlow = combine(
+            sharedViewModel.selectionMode,
+            sharedViewModel.selectedTransactions
+        ) { mode, selected ->
+            mode to selected
+        }
+
+        if (savedInstanceState == null) {
+            viewModel.bindProcessData(combinedDataFlow)
+            viewModel.bindSelection(combineSelectionFlow)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -196,10 +182,10 @@ class DailyFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun scrollToWeek(weekStart: LocalDate) {
-        val matchedIndex = findPositionForDate(currentList, weekStart)
+        val matchedIndex = viewModel.findPositionForDate(currentList, weekStart)
         if (matchedIndex != -1) {
             binding.transactionList.scrollToPosition(matchedIndex)
-            saveLastDate(requireContext(), weekStart)
+            viewModel.onScrollStopped(weekStart)
         }
         SharedTransactionHolder.navigateFromMonthly = false
     }
@@ -210,19 +196,8 @@ class DailyFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun findPositionForDate(transactions: List<DailyTransactionGroupUi>, date: LocalDate): Int {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-        return transactions.indexOfFirst { tx ->
-            val cleanedDate = tx.date.substringBefore(" ")
-            val txDate = LocalDate.parse(cleanedDate, formatter)
-            txDate == date
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun renderUi(uiState: DailyUiState) {
         currentList = uiState.transactions
-        Log.d("DEBUG", "DailyFragment currentList: $currentList")
         adapter.submitList(uiState.transactions.toList())
 
         when (uiState.dataTransactionGroupState) {
@@ -234,12 +209,15 @@ class DailyFragment : Fragment() {
             }
             is UiState.Success -> {
                renderSuccess()
+                viewModel.handleInitialScroll(
+                    isNavigateFromMonthly = SharedTransactionHolder.navigateFromMonthly
+                )
             }
             else -> {}
         }
 
         if (SharedTransactionHolder.scrollToAddedTransaction) {
-            val targetPosition = findPositionForDate((uiState.dataTransactionGroupState as? UiState.Success)?.data ?: emptyList(), uiState.selectedDate)
+            val targetPosition = viewModel.findPositionForDate((uiState.dataTransactionGroupState as? UiState.Success)?.data ?: emptyList(), uiState.selectedDate)
             if (targetPosition >= 0) {
                 binding.transactionList.scrollToPosition(targetPosition)
             }

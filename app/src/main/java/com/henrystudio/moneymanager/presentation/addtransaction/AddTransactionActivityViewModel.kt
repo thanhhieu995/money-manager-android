@@ -134,7 +134,6 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
 
     fun onAddIconClicked() {
         val config = _toolbarState.value.config
-        Log.d("DEBUG", "onAddIconClicked: $config")
         val action = when (config.addAction) {
 
             is AddItemAction.FromEditAccount -> {

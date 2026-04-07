@@ -283,7 +283,6 @@ class AddTransactionActivity : AppCompatActivity() {
         when (event) {
 
             is AddTransactionEvent.NavigateToAddItem -> {
-                Log.d("DEBUG", "NAVIGATE TO ADD ITEM")
                 navigateTo(
                     AddItemFragment.newInstance(
                         itemType = event.itemType,

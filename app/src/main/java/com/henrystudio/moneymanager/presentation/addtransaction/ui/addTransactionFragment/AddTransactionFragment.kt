@@ -202,7 +202,6 @@ class AddTransactionFragment : Fragment() {
         edtCategory.setOnClickListener {
             binding.root.clearFocus()
             edtCategory.requestFocus()
-            Log.d("DEBUG", "CLICK CATEGORY")
             viewModel.onCategoryClicked()
         }
 
@@ -275,7 +274,6 @@ class AddTransactionFragment : Fragment() {
                         expenseButton.isChecked = !isIncome
                     }
                     state.date.let { date ->
-                        Log.d("DEBUG","DATE: $date")
                         dateTextView.text = date
                     }
                     state.isEditMode.let { isEdit ->
@@ -300,25 +298,21 @@ class AddTransactionFragment : Fragment() {
                         is AddTransactionEvent.FocusField -> {
                             when (event.fieldType) {
                                 FieldType.AMOUNT -> {
-                                    Log.d("DEBUG", "FOCUS AMOUNT EVENT")
                                     focusWithKeyboard(edtAmount)
                                 }
                                 FieldType.CATEGORY -> {
-                                    Log.d("DEBUG", "FOCUS CATEGORY EVENT")
                                     hideKeyboard()
                                     edtCategory.postDelayed({
                                         edtCategory.performClick()
                                     }, 100)
                                 }
                                 FieldType.ACCOUNT -> {
-                                    Log.d("DEBUG", "FOCUS ACCOUNT EVENT")
                                     hideKeyboard()
                                     edtAccount.postDelayed({
                                         edtAccount.performClick()
                                     }, 100)
                                 }
                                 FieldType.NOTE -> {
-                                    Log.d("DEBUG", "FOCUS NOTE EVENT")
                                     focusWithKeyboard(edtNote)
                                 }
                                 else -> {}
@@ -359,7 +353,6 @@ class AddTransactionFragment : Fragment() {
                             }
                         }
                         is AddTransactionEvent.OpenCategoryPicker -> {
-                            Log.d("DEBUG", "OPEN CATEGORY PICKER")
                             val selectedType = viewModel.getSelectedTransactionType()
 
                             showCategoryBottomDialog(
@@ -369,7 +362,6 @@ class AddTransactionFragment : Fragment() {
                             )
                         }
                         is AddTransactionEvent.OpenAccountPicker -> {
-                            Log.d("DEBUG", "OPEN ACCOUNT PICKER")
                             showAccountBottomDialog(
                                 requireContext().getString(R.string.account),
                                 edtAccount,
@@ -608,10 +600,6 @@ class AddTransactionFragment : Fragment() {
 
                         val treeItems = Helper.buildCategoryTree(state.data)
                         adapter.updateData(treeItems)
-                        Log.d("DEBUG", "tree size = ${treeItems.size}")
-                        treeItems.forEach {
-                            Log.d("DEBUG", "parent: ${it.name}, children: ${it.children.size}")
-                        }
 
                         recyclerView.visibility = View.VISIBLE
                         emptyView.visibility = View.GONE

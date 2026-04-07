@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.views.daily.TransactionDailyDiffCallback
 
 class TransactionAdapter(
     private val isSelected: ((Transaction) -> Boolean)? = null,

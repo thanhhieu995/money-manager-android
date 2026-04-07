@@ -24,25 +24,10 @@ class DailyTransactionGroupUiAdapter : RecyclerView.Adapter<DailyTransactionGrou
     var onTransactionLongClick: ((Transaction) -> Unit)? = null
 
     fun submitList(newList: List<DailyTransactionGroupUi>) {
-        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-            override fun getOldListSize() = groups.size
-            override fun getNewListSize() = newList.size
-
-            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return groups[oldItemPosition].id == newList[newItemPosition].id
-            }
-
-            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return groups[oldItemPosition] == newList[newItemPosition]
-            }
-        })
+        val diff = DiffUtil.calculateDiff(DailyTransactionGroupUiDiffCallback(groups, newList))
 
         groups = newList
-        Log.d("DEBUG", "DailyTransactionGroupUiAdapter newList: $newList")
-
         val newKeys = newList.map { it.id }.toSet()
-        Log.d("DEBUG", "DailyTransactionGroupUiAdapter newKeys: $newKeys")
-
         childAdapters.keys.retainAll(newKeys)
 
         diff.dispatchUpdatesTo(this)
@@ -64,7 +49,6 @@ class DailyTransactionGroupUiAdapter : RecyclerView.Adapter<DailyTransactionGrou
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val group = groups[position]
-        Log.d("DEBUG", "DailyTransactionGroupAdapterUi onBindViewHolder group: $group")
 
         holder.date.text = group.date
         holder.income.text = Helper.formatCurrency(group.income)

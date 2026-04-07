@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.daily
+package com.henrystudio.moneymanager.presentation.daily.components.adapter
 
 import androidx.recyclerview.widget.DiffUtil
 import com.henrystudio.moneymanager.data.model.TransactionGroup

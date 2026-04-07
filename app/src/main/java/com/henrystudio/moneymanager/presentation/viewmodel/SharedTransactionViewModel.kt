@@ -111,6 +111,15 @@ class SharedTransactionViewModel @Inject constructor(
     private val _currentStatisticTabPosition = MutableStateFlow(0)
     val currentStatisticTabPosition: StateFlow<Int> = _currentStatisticTabPosition
 
+    val uiDataFlow = combine(
+        combineGroupAndDate,
+        filterOption
+    ) {
+        (transactions, selectedMonth), option -> {
+            Triple(transactions, selectedMonth, option)
+        }
+    }
+
     // CRUD operations
     fun insert(transaction: Transaction) = viewModelScope.launch {
         transactionUseCases.addTransactionUseCase(transaction)
