@@ -40,6 +40,14 @@ import javax.inject.Inject
 class SharedTransactionViewModel @Inject constructor(
     private val transactionUseCases: TransactionUseCases
 ) : ViewModel() {
+    private val _openDetail = MutableSharedFlow<Transaction>()
+    val openDetail = _openDetail.asSharedFlow()
+
+    private fun emitOpenDetail(transaction: Transaction) {
+        viewModelScope.launch {
+            _openDetail.emit(transaction)
+        }
+    }
 
     val allTransactionsState: StateFlow<UiState<List<Transaction>>> =
         transactionUseCases.getTransactionsUseCase()
@@ -216,5 +224,31 @@ class SharedTransactionViewModel @Inject constructor(
 
     fun setCurrentStatisticTab(position: Int) {
         _currentStatisticTabPosition.value = position
+    }
+
+    fun onAction(action: TransactionAction) {
+        when (action) {
+
+            is TransactionAction.OnTransactionLongClick -> {
+                onTransactionLongClick(action.transaction)
+            }
+
+            is TransactionAction.OnTransactionClick -> {
+               onTransactionClick(action.transaction)
+            }
+        }
+    }
+
+    fun onTransactionClick(transaction: Transaction) {
+        if (_selectionMode.value) {
+            toggleTransactionSelection(transaction)
+        } else {
+            emitOpenDetail(transaction)
+        }
+    }
+
+    fun onTransactionLongClick(transaction: Transaction) {
+        enterSelectionMode()
+        toggleTransactionSelection(transaction)
     }
 }

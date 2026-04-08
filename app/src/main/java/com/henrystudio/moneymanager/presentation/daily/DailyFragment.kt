@@ -23,10 +23,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.daily.components.adapter.DailyTransactionGroupUiAdapter
+import com.henrystudio.moneymanager.presentation.daily.model.DailyAction
 import com.henrystudio.moneymanager.presentation.daily.model.DailyEvent
 import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionGroupUi
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
+import com.henrystudio.moneymanager.presentation.viewmodel.TransactionAction
 import com.henrystudio.moneymanager.presentation.views.main.MainActivity
 import com.henrystudio.moneymanager.presentation.views.main.StickyHeaderItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
@@ -79,14 +81,10 @@ class DailyFragment : Fragment() {
                     val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
                     val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
 
-                    val localDate = viewModel.onParseStringToLocaleDate(group.date)
-                    val currentLocale = requireContext().resources.configuration.locales[0]
-
-                    val dayPart = localDate.format(DateTimeFormatter.ofPattern("dd", currentLocale))
-                    val dayOfWeek = localDate.format(DateTimeFormatter.ofPattern("EEE", currentLocale))
-                    headerText.text = "$dayPart $dayOfWeek"
-                    headerIncome.text = viewModel.onFormatCurrency(group.income)
-                    headerExpense.text = viewModel.onFormatCurrency(group.expense)
+                    val headerUi = viewModel.mapHeader(group)
+                    headerText.text = headerUi.dateText
+                    headerIncome.text = headerUi.incomeText
+                    headerExpense.text = headerUi.expenseText
                 }
             )
             binding.transactionList.addItemDecoration(decoration)
@@ -113,17 +111,18 @@ class DailyFragment : Fragment() {
             }
         }
 
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            sharedViewModel.openDetail.collect { transaction ->
+                viewModel.onOpenTransactionDetail(requireContext(), transaction)
+            }
+        }
+
         adapter.onTransactionLongClick = { transaction ->
-            sharedViewModel.enterSelectionMode()
-            sharedViewModel.toggleTransactionSelection(transaction)
+            sharedViewModel.onAction(TransactionAction.OnTransactionLongClick(transaction))
         }
 
         adapter.onTransactionClick = { transaction ->
-            if (sharedViewModel.selectionMode.value) {
-                sharedViewModel.toggleTransactionSelection(transaction)
-            } else {
-                viewModel.onOpenTransactionDetail(requireContext(), transaction)
-            }
+           sharedViewModel.onAction(TransactionAction.OnTransactionClick(transaction))
         }
 
         binding.transactionList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -135,7 +134,7 @@ class DailyFragment : Fragment() {
                     if (firstPos != RecyclerView.NO_POSITION) {
                         val txGroup = adapter.getGroupAt(firstPos)
                         val date = viewModel.onParseStringToLocaleDate(txGroup.date)
-                        viewModel.onScrollStopped(date)
+                        viewModel.onAction(DailyAction.OnScrollStopped(date))
                     }
                 }
             }

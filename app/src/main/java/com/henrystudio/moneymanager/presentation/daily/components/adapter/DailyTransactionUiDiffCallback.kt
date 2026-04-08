@@ -16,6 +16,19 @@ class DailyTransactionUiDiffCallback(
     }
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldList[oldItemPosition] == newList[newItemPosition]
+        val oldItem = oldList[oldItemPosition]
+        val newItem = newList[newItemPosition]
+
+        return oldItem.transaction == newItem.transaction &&
+                oldItem.isSelected == newItem.isSelected
+    }
+
+    override fun getChangePayload(oldPos: Int, newPos: Int): Any? {
+        val oldItem = oldList[oldPos]
+        val newItem = newList[newPos]
+
+        return if (oldItem.isSelected != newItem.isSelected) {
+            "SELECTION"
+        } else null
     }
 }

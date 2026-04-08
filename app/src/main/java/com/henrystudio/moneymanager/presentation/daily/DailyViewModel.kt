@@ -11,7 +11,9 @@ import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.domain.usecase.appstate.PreferenceUseCases
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.daily.model.DailyAction
 import com.henrystudio.moneymanager.presentation.daily.model.DailyEvent
+import com.henrystudio.moneymanager.presentation.daily.model.DailyHeaderUi
 import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionGroupUi
 import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionUi
 import com.henrystudio.moneymanager.presentation.daily.model.ParamsProcessData
@@ -268,6 +270,27 @@ class DailyViewModel @Inject constructor(
                     selected
                 )
             }
+        }
+    }
+
+    fun mapHeader(group: DailyTransactionGroupUi): DailyHeaderUi {
+        val localDate = Helper.parseStringToLocalDate(group.date)
+        val formatter = DateTimeFormatter.ofPattern("dd EEE")
+
+        return DailyHeaderUi(
+            dateText = localDate.format(formatter),
+            incomeText = Helper.formatCurrency(group.income),
+            expenseText = Helper.formatCurrency(group.expense)
+        )
+    }
+
+    fun onAction(action: DailyAction) {
+        when (action) {
+            is DailyAction.OnScrollStopped -> {
+                preferenceUseCases.saveLastDate(action.date)
+            }
+
+            else -> {}
         }
     }
 }

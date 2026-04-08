@@ -1,7 +1,6 @@
 package com.henrystudio.moneymanager.presentation.daily.components.adapter
 
 import android.graphics.Color
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -59,6 +58,11 @@ class DailyTransactionUiAdapter(
                 else
                     ContextCompat.getColor(itemView.context, R.color.red)
             )
+
+            updateSelection(item)
+        }
+
+        fun updateSelection(item: DailyTransactionUi) {
             itemView.setBackgroundColor(
                 if (item.isSelected)
                     ContextCompat.getColor(itemView.context, R.color.rose)
@@ -72,6 +76,16 @@ class DailyTransactionUiAdapter(
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_transaction, parent, false)
         return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isNotEmpty()) {
+            // chỉ update phần cần thiết
+            holder.updateSelection(items[position])
+        } else {
+            // bind full
+            holder.bind(items[position])
+        }
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

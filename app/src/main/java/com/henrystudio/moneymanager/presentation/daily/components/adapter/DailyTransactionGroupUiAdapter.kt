@@ -75,6 +75,40 @@ class DailyTransactionGroupUiAdapter : RecyclerView.Adapter<DailyTransactionGrou
         adapter.submitList(group.transactions)
     }
 
+    override fun onBindViewHolder(
+        holder: GroupViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        val group = groups[position]
+
+        val adapter = childAdapters.getOrPut(group.id) {
+            DailyTransactionUiAdapter(
+                onClick = { onTransactionClick?.invoke(it.transaction) },
+                onLongClick = { onTransactionLongClick?.invoke(it.transaction) }
+            )
+        }
+
+        if (payloads.isNotEmpty()) {
+            // 🔥 CHỈ update child list
+            adapter.submitList(group.transactions)
+        } else {
+            // bind full
+            holder.date.text = group.date
+            holder.income.text = Helper.formatCurrency(group.income)
+            holder.expense.text = Helper.formatCurrency(group.expense)
+
+            if (holder.recycler.layoutManager == null) {
+                holder.recycler.layoutManager = LinearLayoutManager(holder.itemView.context)
+            }
+
+            holder.recycler.adapter = adapter
+            holder.recycler.isNestedScrollingEnabled = false
+
+            adapter.submitList(group.transactions)
+        }
+    }
+
     override fun getItemCount() = groups.size
 
     fun getGroupAt(position: Int): DailyTransactionGroupUi = groups[position]
