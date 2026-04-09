@@ -13,7 +13,6 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.databinding.FragmentDailyBinding
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -22,10 +21,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
-import com.henrystudio.moneymanager.presentation.daily.components.adapter.DailyTransactionGroupUiAdapter
+import com.henrystudio.moneymanager.presentation.daily.components.adapter.DailyAdapter
 import com.henrystudio.moneymanager.presentation.daily.model.DailyAction
 import com.henrystudio.moneymanager.presentation.daily.model.DailyEvent
-import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionGroupUi
+import com.henrystudio.moneymanager.presentation.daily.model.DailyListItem
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionAction
@@ -38,10 +37,10 @@ import java.util.*
 
 @AndroidEntryPoint
 class DailyFragment : Fragment() {
-    private lateinit var adapter: DailyTransactionGroupUiAdapter
+    private lateinit var adapter: DailyAdapter
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
-    private var currentList: List<DailyTransactionGroupUi> = emptyList()
+    private var currentList: List<DailyListItem> = emptyList()
     private var keyFilter: KeyFilter = KeyFilter.CategoryParent
     private var transactionType: TransactionType = TransactionType.EXPENSE
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
@@ -64,27 +63,38 @@ class DailyFragment : Fragment() {
             ?: TransactionType.EXPENSE
         keyFilter = arguments?.getSerializable(ARG_CATEGORY_CHILD_CLICK) as? KeyFilter ?: KeyFilter.CategoryParent
 
-        adapter = DailyTransactionGroupUiAdapter()
+        adapter = DailyAdapter(
+            onClick = {transaction ->
+                sharedViewModel.onAction(TransactionAction.OnTransactionClick(transaction))
+            },
+            onLongClick = {transaction ->
+                sharedViewModel.onAction(TransactionAction.OnTransactionLongClick(transaction))
+            }
+        )
         binding.transactionList.layoutManager = LinearLayoutManager(requireContext())
         binding.transactionList.adapter = adapter
 
         viewLifecycleOwner.lifecycleScope.launch {
             val decoration = StickyHeaderItemDecoration(
-                isHeader = { position -> true },
+                isHeader = { position ->
+                    adapter.getItemAt(position) is DailyListItem.Header
+                           },
                 createHeaderView = {
                     LayoutInflater.from(requireContext())
                         .inflate(R.layout.item_transaction_header, binding.transactionList, false)
                 },
                 bindHeader = { header, position ->
-                    val group = adapter.getGroupAt(position)
-                    val headerText = header.findViewById<TextView>(R.id.item_transaction_header_date)
-                    val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
-                    val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
+                    val item = adapter.getItemAt(position)
+                    if (item is DailyListItem.Header) {
+                        val headerText = header.findViewById<TextView>(R.id.item_transaction_header_date)
+                        val headerIncome = header.findViewById<TextView>(R.id.item_transaction_header_income)
+                        val headerExpense = header.findViewById<TextView>(R.id.item_transaction_header_expense)
 
-                    val headerUi = viewModel.mapHeader(group)
-                    headerText.text = headerUi.dateText
-                    headerIncome.text = headerUi.incomeText
-                    headerExpense.text = headerUi.expenseText
+                        val headerUi = viewModel.mapHeader(item)
+                        headerText.text = headerUi.dateText
+                        headerIncome.text = headerUi.incomeText
+                        headerExpense.text = headerUi.expenseText
+                    }
                 }
             )
             binding.transactionList.addItemDecoration(decoration)
@@ -117,14 +127,6 @@ class DailyFragment : Fragment() {
             }
         }
 
-        adapter.onTransactionLongClick = { transaction ->
-            sharedViewModel.onAction(TransactionAction.OnTransactionLongClick(transaction))
-        }
-
-        adapter.onTransactionClick = { transaction ->
-           sharedViewModel.onAction(TransactionAction.OnTransactionClick(transaction))
-        }
-
         binding.transactionList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
@@ -132,9 +134,11 @@ class DailyFragment : Fragment() {
                     val lm = recyclerView.layoutManager as LinearLayoutManager
                     val firstPos = lm.findFirstVisibleItemPosition()
                     if (firstPos != RecyclerView.NO_POSITION) {
-                        val txGroup = adapter.getGroupAt(firstPos)
-                        val date = viewModel.onParseStringToLocaleDate(txGroup.date)
-                        viewModel.onAction(DailyAction.OnScrollStopped(date))
+                        val item = adapter.getItemAt(firstPos)
+                        if (item is DailyListItem.TransactionItem) {
+                            val date = viewModel.onParseStringToLocaleDate(item.transaction.date)
+                            viewModel.onAction(DailyAction.OnScrollStopped(date))
+                        }
                     }
                 }
             }
@@ -196,10 +200,10 @@ class DailyFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun renderUi(uiState: DailyUiState) {
-        currentList = uiState.transactions
-        adapter.submitList(uiState.transactions.toList())
+        currentList = uiState.dailyListItems
+        adapter.submitList(uiState.dailyListItems.toList())
 
-        when (uiState.dataTransactionGroupState) {
+        when (uiState.dailyListItemState) {
             is UiState.Loading -> {
                 renderLoading()
             }
@@ -216,7 +220,7 @@ class DailyFragment : Fragment() {
         }
 
         if (SharedTransactionHolder.scrollToAddedTransaction) {
-            val targetPosition = viewModel.findPositionForDate((uiState.dataTransactionGroupState as? UiState.Success)?.data ?: emptyList(), uiState.selectedDate)
+            val targetPosition = viewModel.findPositionForDate((uiState.dailyListItemState as? UiState.Success)?.data ?: emptyList(), uiState.selectedDate)
             if (targetPosition >= 0) {
                 binding.transactionList.scrollToPosition(targetPosition)
             }

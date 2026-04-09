@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.views.main.TransactionDiffCallback
+import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionDiffCallback
 
 class BookmarkAdapter(
     var items: List<Transaction>,

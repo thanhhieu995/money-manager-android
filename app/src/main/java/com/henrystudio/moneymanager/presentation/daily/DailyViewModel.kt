@@ -14,8 +14,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.daily.model.DailyAction
 import com.henrystudio.moneymanager.presentation.daily.model.DailyEvent
 import com.henrystudio.moneymanager.presentation.daily.model.DailyHeaderUi
-import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionGroupUi
-import com.henrystudio.moneymanager.presentation.daily.model.DailyTransactionUi
+import com.henrystudio.moneymanager.presentation.daily.model.DailyListItem
 import com.henrystudio.moneymanager.presentation.daily.model.ParamsProcessData
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
@@ -48,7 +47,7 @@ class DailyViewModel @Inject constructor(
     private val _event = MutableSharedFlow<DailyEvent>()
     val event = _event.asSharedFlow()
 
-    private var currentList: List<DailyTransactionGroupUi> = emptyList()
+    private var currentList: List<DailyListItem> = emptyList()
 
     private val paramsFlow = MutableStateFlow(ParamsProcessData())
     private val selectionFlow =
@@ -64,23 +63,23 @@ class DailyViewModel @Inject constructor(
         selectionMode: Boolean,
         selectedTransactions: List<Transaction>
     ) {
-        val currentGroups = _uiState.value.transactions
+        val items = _uiState.value.dailyListItems
 
-        val updatedGroups = currentGroups.map { group ->
-            group.copy(
-                transactions = group.transactions.map { item ->
-                    item.copy(
-                        isSelected = selectedTransactions.any { it.id == item.transaction.id }
-                    )
+        val updateItems = items.map { item ->
+            when (item) {
+                is DailyListItem.Header -> item
+
+                is DailyListItem.TransactionItem -> {
+                    item.copy(isSelected = selectedTransactions.any {it.id == item.transaction.id })
                 }
-            )
+            }
         }
 
         _uiState.update {
             it.copy(
                 selectionMode = selectionMode,
                 selectedTransactions = selectedTransactions,
-                transactions = updatedGroups
+                dailyListItems = updateItems
             )
         }
     }
@@ -92,7 +91,7 @@ class DailyViewModel @Inject constructor(
     fun setLoading(selectedMonth: LocalDate) {
         _uiState.update {
             it.copy(
-                dataTransactionGroupState = UiState.Loading,
+                dailyListItemState = UiState.Loading,
                 selectedDate = selectedMonth
             )
         }
@@ -101,7 +100,7 @@ class DailyViewModel @Inject constructor(
     fun setEmpty(selectedMonth: LocalDate) {
         _uiState.update {
             it.copy(
-                dataTransactionGroupState = UiState.Empty,
+                dailyListItemState = UiState.Empty,
                 selectedDate = selectedMonth
             )
         }
@@ -118,7 +117,7 @@ class DailyViewModel @Inject constructor(
     ) {
         when (state) {
             is UiState.Loading -> {
-                if (_uiState.value.transactions.isEmpty()) {
+                if (_uiState.value.dailyListItems.isEmpty()) {
                     setLoading(selectedMonth)
                 }
             }
@@ -146,12 +145,12 @@ class DailyViewModel @Inject constructor(
 
                 _uiState.update {
                     it.copy(
-                        dataTransactionGroupState = if (uiList.isEmpty()) {
+                        dailyListItemState = if (uiList.isEmpty()) {
                             UiState.Empty
                         } else {
                             UiState.Success(uiList)
                         },
-                        transactions = uiList,
+                        dailyListItems = uiList,
                         selectedDate = selectedMonth,
                         isEmpty = uiList.isEmpty(),
                         isYearly = filterOption.type == FilterPeriodStatistic.Yearly
@@ -162,7 +161,7 @@ class DailyViewModel @Inject constructor(
             is UiState.Error -> {
                 _uiState.update {
                     it.copy(
-                        dataTransactionGroupState = state,
+                        dailyListItemState = state,
                         selectedDate = selectedMonth
                     )
                 }
@@ -173,31 +172,48 @@ class DailyViewModel @Inject constructor(
     private fun mapToUi(
         groups: List<TransactionGroup>,
         selected: List<Transaction>
-    ): List<DailyTransactionGroupUi> {
+    ): List<DailyListItem> {
 
-        return groups.map { group ->
-            DailyTransactionGroupUi(
-                id = group.id,
-                date = group.date,
-                income = group.income,
-                expense = group.expense,
-                transactions = group.transactions.map { tx ->
-                    DailyTransactionUi(
-                        transaction = tx,
-                        isSelected = selected.any { it.id == tx.id }
-                    )
-                }
+        val selectedIds = selected.map { it.id }.toSet()
+
+        val result = mutableListOf<DailyListItem>()
+
+        groups.forEach { group ->
+            // 🔥 Header item
+            result.add(
+                DailyListItem.Header(
+                    id = group.id,
+                    date = group.date,
+                    income = group.income,
+                    expense = group.expense
+                )
             )
+
+            // 🔥 Transaction items
+            group.transactions.forEach { tx ->
+                result.add(
+                    DailyListItem.TransactionItem(
+                        transaction = tx,
+                        isSelected = selectedIds.contains(tx.id)
+                    )
+                )
+            }
         }
+
+        return result
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun findPositionForDate(transactions: List<DailyTransactionGroupUi>, date: LocalDate): Int {
+    fun findPositionForDate(items: List<DailyListItem>, date: LocalDate): Int {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-        return transactions.indexOfFirst { tx ->
-            val cleanedDate = tx.date.substringBefore(" ")
-            val txDate = LocalDate.parse(cleanedDate, formatter)
-            txDate == date
+        return items.indexOfFirst { item ->
+            if (item is DailyListItem.Header) {
+                val cleanedDate = item.date.substringBefore(" ")
+                val txDate = LocalDate.parse(cleanedDate, formatter)
+                txDate == date
+            } else {
+                false
+            }
         }
     }
 
@@ -273,14 +289,14 @@ class DailyViewModel @Inject constructor(
         }
     }
 
-    fun mapHeader(group: DailyTransactionGroupUi): DailyHeaderUi {
-        val localDate = Helper.parseStringToLocalDate(group.date)
+    fun mapHeader(item: DailyListItem.Header): DailyHeaderUi {
+        val localDate = Helper.parseStringToLocalDate(item.date)
         val formatter = DateTimeFormatter.ofPattern("dd EEE")
 
         return DailyHeaderUi(
             dateText = localDate.format(formatter),
-            incomeText = Helper.formatCurrency(group.income),
-            expenseText = Helper.formatCurrency(group.expense)
+            incomeText = Helper.formatCurrency(item.income),
+            expenseText = Helper.formatCurrency(item.expense)
         )
     }
 

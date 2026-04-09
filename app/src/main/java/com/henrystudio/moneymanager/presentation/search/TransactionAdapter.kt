@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.views.main.TransactionDiffCallback
+import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionDiffCallback
 import java.text.Normalizer
 import java.time.DayOfWeek
 import java.time.LocalDate

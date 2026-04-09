@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.main
+package com.henrystudio.moneymanager.presentation.calendar.components.adapter
 
 import androidx.recyclerview.widget.DiffUtil
 import com.henrystudio.moneymanager.data.model.Transaction

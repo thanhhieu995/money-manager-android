@@ -27,7 +27,9 @@ import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.viewmodel.CalendarUpdateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
-import com.henrystudio.moneymanager.presentation.main.TransactionGroupAdapter
+import com.henrystudio.moneymanager.presentation.calendar.components.adapter.CalendarDayAdapter
+import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionAdapter
+import com.henrystudio.moneymanager.presentation.calendar.model.CalendarDayItem
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek
@@ -156,7 +158,11 @@ class CalendarUpdateFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showBottomSheetForDate(date: LocalDate) {
-        val adapter = TransactionGroupAdapter()
+        val adapter = CalendarDayAdapter(
+            onClick = { tx ->
+                Helper.openTransactionDetail(requireContext(), tx)
+            },
+        )
         val dialogView = layoutInflater.inflate(R.layout.item_calendar_day_detail, null)
         val bottomSheet = BottomSheetDialog(requireContext())
         bottomSheet.setContentView(dialogView)
@@ -171,12 +177,30 @@ class CalendarUpdateFragment : Fragment() {
 
         val groupTransaction = viewModel.getGroupsForDate(dateString)
 
-        adapter.submitList(groupTransaction)
-        noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE
-        adapter.onTransactionClick = { transaction ->
-            Helper.openTransactionDetail(requireContext(), transaction)
-            true
+        val group = groupTransaction.firstOrNull()
+
+        val items = if (group != null) {
+            buildList {
+                // Header
+                add(
+                    CalendarDayItem.Header(
+                        date = group.date,
+                        income = group.income,
+                        expense = group.expense
+                    )
+                )
+
+                // Transactions
+                group.transactions.forEach {
+                    add(CalendarDayItem.TransactionItem(it))
+                }
+            }
+        } else {
+            emptyList()
         }
+
+        adapter.submitList(items)
+        noDataText.visibility = if (groupTransaction.isEmpty()) View.VISIBLE else View.GONE
 
         bottomSheet.show()
     }

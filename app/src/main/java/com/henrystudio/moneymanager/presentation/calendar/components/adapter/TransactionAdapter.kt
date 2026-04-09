@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.main
+package com.henrystudio.moneymanager.presentation.calendar.components.adapter
 
 import android.graphics.Color
 import android.view.LayoutInflater
