@@ -41,6 +41,7 @@ class DailyFragment : Fragment() {
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
     private var currentList: List<DailyListItem> = emptyList()
+    private var hasHandledInitialScroll = false
     private var keyFilter: KeyFilter = KeyFilter.CategoryParent
     private var transactionType: TransactionType = TransactionType.EXPENSE
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
@@ -201,7 +202,6 @@ class DailyFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun renderUi(uiState: DailyUiState) {
         currentList = uiState.dailyListItems
-        adapter.submitList(uiState.dailyListItems.toList())
 
         when (uiState.dailyListItemState) {
             is UiState.Loading -> {
@@ -212,9 +212,13 @@ class DailyFragment : Fragment() {
             }
             is UiState.Success -> {
                renderSuccess()
-                viewModel.handleInitialScroll(
-                    isNavigateFromMonthly = SharedTransactionHolder.navigateFromMonthly
-                )
+                adapter.submitList(uiState.dailyListItems)
+                if (!hasHandledInitialScroll) {
+                    viewModel.handleInitialScroll(
+                        isNavigateFromMonthly = SharedTransactionHolder.navigateFromMonthly
+                    )
+                    hasHandledInitialScroll = true
+                }
             }
             else -> {}
         }

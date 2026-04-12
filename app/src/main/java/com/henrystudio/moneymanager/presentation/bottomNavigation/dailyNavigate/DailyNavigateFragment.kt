@@ -1,49 +1,35 @@
-package com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate
+package com.henrystudio.moneymanager.presentation.bottomNavigation.dailyNavigate
 
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.core.util.Helper.Companion.getAppLocale
 import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
+import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
-import com.henrystudio.moneymanager.presentation.viewmodel.DailyNavigateViewModel
-import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.daily.DailyFragment
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager
 import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
-import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.Month
-import java.time.format.TextStyle
 
 @AndroidEntryPoint
 class DailyNavigateFragment : Fragment() {
@@ -51,33 +37,18 @@ class DailyNavigateFragment : Fragment() {
     private var _binding: FragmentDailyNavigateBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var search: ImageView
-    private lateinit var incomeCountAll: TextView
-    private lateinit var expenseCountAll: TextView
-    private lateinit var totalCount: TextView
-    private lateinit var monthBack: ImageView
-    private lateinit var monthNext: ImageView
-    private lateinit var monthText: TextView
-    private lateinit var bookmark: ImageView
-    private lateinit var btnAdd: FloatingActionButton
-    private lateinit var btnEditClose: ImageView
-    private lateinit var btnEditDelete: ImageView
-    private lateinit var layoutFunctionControl: LinearLayout
-    private lateinit var layoutEdit: LinearLayout
-
     private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
     private val viewModel: DailyNavigateViewModel by viewModels()
 
     private lateinit var viewPagerAdapter: ViewPagerAdapter
-    private lateinit var viewPager: ViewPager2
-    private lateinit var tabLayout: TabLayout
     private lateinit var pageCallback: ViewPager2.OnPageChangeCallback
     private var isRestoring = false
     private var mediator: TabLayoutMediator? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentDailyNavigateBinding.inflate(inflater, container, false)
@@ -87,194 +58,229 @@ class DailyNavigateFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        init()
-
-        tabLayout = view.findViewById(R.id.fragment_daily_navigate_tabLayout)
-
-        viewPager = view.findViewById(R.id.fragment_daily_navigate_viewPager)
-        viewPagerAdapter = ViewPagerAdapter(this)
-        viewPager.adapter = viewPagerAdapter
-        mediator = TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            when (position) {
-                0 -> tab.text = requireContext().getString(R.string.daily)
-                1 -> tab.text = requireContext().getString(R.string.calendar)
-                2 -> tab.text = requireContext().getString(R.string.monthly)
-            }
-        }.also { it.attach() }
-        viewPager.offscreenPageLimit = 1
-
-        val savedPos = PrefsManager.getTabPosition(requireContext())
-        viewPager.setCurrentItem(savedPos, false)
-        isRestoring = true
-        tabLayout.post {
-            tabLayout.getTabAt(savedPos)?.select()
-            viewPager.post {
-                viewPager.setCurrentItem(savedPos, false)
-                viewPager.post { isRestoring = false }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                delay(100)
-                combine(
-                    sharedViewModel.groupedTransactionsState,
-                    sharedViewModel.currentFilterDate,
-                    sharedViewModel.currentDailyNavigateTabPosition,
-                    sharedViewModel.selectionMode,
-                    sharedViewModel.selectedTransactions
-                ) { groupsState, date, tabPosition, selectionMode, selected ->
-                    if (groupsState is UiState.Success) {
-                        viewModel.updateFrom(
-                            groupsState.data,
-                            date,
-                            tabPosition,
-                            selectionMode,
-                            selected
-                        )
-                    }
-                }.flowOn(Dispatchers.Default).collect { }
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    monthText.text = state.monthLabel
-                    incomeCountAll.text = Helper.formatCurrency(state.incomeSum)
-                    expenseCountAll.text = Helper.formatCurrency(state.expenseSum)
-                    totalCount.text = Helper.formatCurrency(state.totalSum)
-                    layoutEdit.visibility = if (state.selectionMode) View.VISIBLE else View.GONE
-                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
-                        "${state.selectedCount} ${requireContext().getString(R.string.selected)}"
-                    binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
-                        "${requireContext().getString(R.string.Total)} : ${Helper.formatCurrency(state.selectedTotal)}"
-                }
-            }
-        }
-
-        monthText.setOnClickListener {
-            MonthPickerDialogFragment { month, year ->
-                val monthName = Month.of(month).getDisplayName(TextStyle.SHORT, getAppLocale())
-                monthText.text = "$monthName $year"
-                val lastDay = LocalDate.of(year, month, 1).lengthOfMonth()
-                val selectedDate = LocalDate.of(year, month, lastDay)
-                sharedViewModel.setLocalDateCurrentFilterDate(selectedDate)
-            }.show(parentFragmentManager, "monthPicker")
-        }
-
-        monthBack.setOnClickListener {
-            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
-            if (fragment is MonthlyFragment) {
-                sharedViewModel.changeYear(-1)
-            } else {
-                sharedViewModel.changeMonth(-1)
-            }
-        }
-
-        monthNext.setOnClickListener {
-            val fragment = (viewPager.adapter as ViewPagerAdapter).getCurrentFragment(viewPager.currentItem)
-            if (fragment is MonthlyFragment) {
-                sharedViewModel.changeYear(1)
-            } else {
-                sharedViewModel.changeMonth(1)
-            }
-        }
-
-        search.setOnClickListener {
-            startActivity(Intent(requireContext(), SearchActivity::class.java))
-            requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
-        }
-
-        bookmark.setOnClickListener {
-            startActivity(Intent(requireContext(), BookmarkActivity::class.java))
-            requireActivity().overridePendingTransition(R.anim.slide_in_bottom, R.anim.no_animation)
-        }
-
-        btnAdd.setOnClickListener {
-            startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
-            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.no_animation)
-        }
-
-        btnEditClose.setOnClickListener {
-            sharedViewModel.exitSelectionMode()
-        }
-
-        btnEditDelete.setOnClickListener {
-            val selected = sharedViewModel.selectedTransactions.value
-            if (selected.isNotEmpty()) {
-                sharedViewModel.deleteAll(selected)
-                sharedViewModel.exitSelectionMode()
-            }
-        }
-
-        layoutFunctionControl.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener{
-            override fun onGlobalLayout() {
-                layoutFunctionControl.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                val height = layoutFunctionControl.height
-                val params = layoutEdit.layoutParams
-                params.height = height
-                layoutEdit.layoutParams = params
-            }
-        })
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                sharedViewModel.navigateToWeekFromMonthly.collect { event ->
-                    event.getContentIfNotHandled()?.let { date ->
-                        navigateToDailyTabAndScrollToWeek(date)
-                    }
-                }
-            }
-        }
+        setupViewPager()
+        registerPageCallback()
+        bindViewModel()
+        setupListeners()
+        syncEditLayoutHeight()
+        restoreSavedTab()
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun registerPageCallback() {
         pageCallback = object : ViewPager2.OnPageChangeCallback() {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 if (isRestoring) return
-                PrefsManager.saveTabPosition(requireContext(), position)
-                 sharedViewModel.setCurrentDailyNavigateTab(position)
+                viewModel.onAction(DailyNavigateAction.OnTabChanged(position))
             }
         }
-        viewPager.registerOnPageChangeCallback(pageCallback)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        viewPager.unregisterOnPageChangeCallback(pageCallback)
+        binding.fragmentDailyNavigateViewPager.registerOnPageChangeCallback(pageCallback)
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        binding.fragmentDailyNavigateViewPager.unregisterOnPageChangeCallback(pageCallback)
+        mediator?.detach()
+        mediator = null
         _binding = null
+        super.onDestroyView()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun navigateToDailyTabAndScrollToWeek(weekStart: LocalDate) {
-        viewPager.setCurrentItem(0, true)
-        viewPager.postDelayed({
-            val dailyFragment = (viewPager.adapter as ViewPagerAdapter)
-                .getCurrentFragment(0) as? DailyFragment
-            dailyFragment?.scrollToWeek(weekStart)
-        }, 100)
+    private fun bindViewModel() {
+        viewModel.bind(
+            groupedTransactionsState = sharedViewModel.groupedTransactionsState,
+            currentFilterDate = sharedViewModel.currentFilterDate,
+            currentDailyNavigateTabPosition = sharedViewModel.currentDailyNavigateTabPosition,
+            selectionMode = sharedViewModel.selectionMode,
+            selectedTransactions = sharedViewModel.selectedTransactions
+        )
+        viewModel.bindNavigation(sharedViewModel.navigateToWeekFromMonthly)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.uiState.collect { state ->
+                        render(state)
+                    }
+                }
+
+                launch {
+                    viewModel.effect.collect { effect ->
+                        handleEffect(effect)
+                    }
+                }
+            }
+        }
     }
 
-    private fun init() {
-        search = binding.fragmentDailyNavigateSearch
-        incomeCountAll = binding.fragmentDailyNavigateIncomeCountAll
-        expenseCountAll = binding.fragmentDailyNavigateExpenseCountAll
-        totalCount = binding.fragmentDailyNavigateTotalCount
-        monthBack = binding.fragmentDailyNavigateMonthBack
-        monthNext = binding.fragmentDailyNavigateMonthNext
-        monthText = binding.fragmentDailyNavigateMonthText
-        bookmark = binding.fragmentDailyNavigateBookmark
-        btnAdd = binding.fragmentDailyNavigateBtnAdd
-        btnEditClose = binding.fragmentDailyNavigateLayoutEditLineOneBtnClose
-        btnEditDelete = binding.fragmentDailyNavigateLayoutEditLineOneBtnDelete
-        layoutFunctionControl = binding.fragmentDailyNavigateLayoutFunctionControl
-        layoutEdit = binding.fragmentDailyNavigateLayoutEdit
+    private fun setupViewPager() {
+        viewPagerAdapter = ViewPagerAdapter(this)
+        binding.fragmentDailyNavigateViewPager.adapter = viewPagerAdapter
+        binding.fragmentDailyNavigateViewPager.offscreenPageLimit = 1
+
+        mediator = TabLayoutMediator(
+            binding.fragmentDailyNavigateTabLayout,
+            binding.fragmentDailyNavigateViewPager
+        ) { tab, position ->
+            tab.text = when (position) {
+                0 -> getString(R.string.daily)
+                1 -> getString(R.string.calendar)
+                else -> getString(R.string.monthly)
+            }
+        }.also { it.attach() }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun setupListeners() {
+        binding.fragmentDailyNavigateMonthText.setOnClickListener {
+            MonthPickerDialogFragment { month, year ->
+                viewModel.onAction(DailyNavigateAction.OnMonthPicked(month, year))
+            }.show(parentFragmentManager, "monthPicker")
+        }
+
+        binding.fragmentDailyNavigateMonthBack.setOnClickListener {
+            viewModel.onAction(DailyNavigateAction.OnPreviousPeriodClick)
+        }
+
+        binding.fragmentDailyNavigateMonthNext.setOnClickListener {
+            viewModel.onAction(DailyNavigateAction.OnNextPeriodClick)
+        }
+
+        binding.fragmentDailyNavigateSearch.setOnClickListener {
+            viewModel.onAction(DailyNavigateAction.OnSearchClick)
+        }
+
+        binding.fragmentDailyNavigateBookmark.setOnClickListener {
+            viewModel.onAction(DailyNavigateAction.OnBookmarkClick)
+        }
+
+        binding.fragmentDailyNavigateBtnAdd.setOnClickListener {
+            viewModel.onAction(DailyNavigateAction.OnAddTransactionClick)
+        }
+
+        binding.fragmentDailyNavigateLayoutEditLineOneBtnClose.setOnClickListener {
+            viewModel.onAction(DailyNavigateAction.OnExitSelectionClick)
+        }
+
+        binding.fragmentDailyNavigateLayoutEditLineOneBtnDelete.setOnClickListener {
+            viewModel.onAction(DailyNavigateAction.OnDeleteSelectionClick)
+        }
+    }
+
+    private fun render(state: DailyNavigateUiState) {
+        binding.fragmentDailyNavigateMonthText.text = state.monthLabel
+        binding.fragmentDailyNavigateIncomeCountAll.text = Helper.formatCurrency(state.incomeSum)
+        binding.fragmentDailyNavigateExpenseCountAll.text = Helper.formatCurrency(state.expenseSum)
+        binding.fragmentDailyNavigateTotalCount.text = Helper.formatCurrency(state.totalSum)
+        binding.fragmentDailyNavigateLayoutEdit.visibility =
+            if (state.selectionMode) View.VISIBLE else View.GONE
+        binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
+            "${state.selectedCount} ${getString(R.string.selected)}"
+        binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
+            "${getString(R.string.Total)} : ${Helper.formatCurrency(state.selectedTotal)}"
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun handleEffect(effect: DailyNavigateEffect) {
+        when (effect) {
+            DailyNavigateEffect.OpenAddTransaction -> {
+                startActivity(Intent(requireContext(), AddTransactionActivity::class.java))
+                requireActivity().overridePendingTransition(
+                    R.anim.slide_in_right,
+                    R.anim.no_animation
+                )
+            }
+
+            DailyNavigateEffect.OpenBookmark -> {
+                startActivity(Intent(requireContext(), BookmarkActivity::class.java))
+                requireActivity().overridePendingTransition(
+                    R.anim.slide_in_bottom,
+                    R.anim.no_animation
+                )
+            }
+
+            DailyNavigateEffect.OpenSearch -> {
+                startActivity(Intent(requireContext(), SearchActivity::class.java))
+                requireActivity().overridePendingTransition(
+                    R.anim.slide_in_bottom,
+                    R.anim.no_animation
+                )
+            }
+
+            is DailyNavigateEffect.ChangeMonth -> {
+                sharedViewModel.changeMonth(effect.offset)
+            }
+
+            is DailyNavigateEffect.ChangeYear -> {
+                sharedViewModel.changeYear(effect.offset)
+            }
+
+            is DailyNavigateEffect.DeleteSelectedTransactions -> {
+                sharedViewModel.deleteAll(effect.transactions)
+                sharedViewModel.exitSelectionMode()
+            }
+
+            DailyNavigateEffect.ExitSelectionMode -> {
+                sharedViewModel.exitSelectionMode()
+            }
+
+            is DailyNavigateEffect.NavigateToDailyWeek -> {
+                navigateToDailyTabAndScrollToWeek(effect.date)
+            }
+
+            is DailyNavigateEffect.PersistTabPosition -> {
+                PrefsManager.saveTabPosition(requireContext(), effect.position)
+            }
+
+            is DailyNavigateEffect.UpdateCurrentFilterDate -> {
+                sharedViewModel.setLocalDateCurrentFilterDate(effect.date)
+            }
+
+            is DailyNavigateEffect.UpdateCurrentTab -> {
+                sharedViewModel.setCurrentDailyNavigateTab(effect.position)
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun restoreSavedTab() {
+        val savedPos = PrefsManager.getTabPosition(requireContext())
+        sharedViewModel.setCurrentDailyNavigateTab(savedPos)
+        binding.fragmentDailyNavigateViewPager.setCurrentItem(savedPos, false)
+        isRestoring = true
+
+        binding.fragmentDailyNavigateTabLayout.post {
+            binding.fragmentDailyNavigateTabLayout.getTabAt(savedPos)?.select()
+            binding.fragmentDailyNavigateViewPager.post {
+                binding.fragmentDailyNavigateViewPager.setCurrentItem(savedPos, false)
+                binding.fragmentDailyNavigateViewPager.post {
+                    isRestoring = false
+                }
+            }
+        }
+    }
+
+    private fun syncEditLayoutHeight() {
+        binding.fragmentDailyNavigateLayoutFunctionControl.viewTreeObserver
+            .addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    binding.fragmentDailyNavigateLayoutFunctionControl.viewTreeObserver
+                        .removeOnGlobalLayoutListener(this)
+
+                    val params = binding.fragmentDailyNavigateLayoutEdit.layoutParams
+                    params.height = binding.fragmentDailyNavigateLayoutFunctionControl.height
+                    binding.fragmentDailyNavigateLayoutEdit.layoutParams = params
+                }
+            })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun navigateToDailyTabAndScrollToWeek(weekStart: LocalDate) {
+        binding.fragmentDailyNavigateViewPager.setCurrentItem(0, true)
+        binding.fragmentDailyNavigateViewPager.postDelayed({
+            val dailyFragment = viewPagerAdapter.getCurrentFragment(0) as? DailyFragment
+            dailyFragment?.scrollToWeek(weekStart)
+        }, 100)
     }
 }

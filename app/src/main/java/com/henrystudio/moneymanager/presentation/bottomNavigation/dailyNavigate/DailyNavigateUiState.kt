@@ -1,4 +1,6 @@
-package com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate
+package com.henrystudio.moneymanager.presentation.bottomNavigation.dailyNavigate
+
+import java.time.LocalDate
 
 data class DailyNavigateUiState(
     val monthLabel: String = "",
@@ -7,5 +9,8 @@ data class DailyNavigateUiState(
     val totalSum: Double = 0.0,
     val selectionMode: Boolean = false,
     val selectedCount: Int = 0,
-    val selectedTotal: Double = 0.0
+    val selectedTotal: Double = 0.0,
+    val currentTabPosition: Int = 0,
+    val selectedDate: LocalDate = LocalDate.now(),
+    val isYearlyView: Boolean = false
 )

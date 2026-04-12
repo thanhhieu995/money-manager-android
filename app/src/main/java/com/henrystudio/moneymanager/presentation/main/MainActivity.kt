@@ -16,14 +16,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.presentation.viewmodel.MainViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.DailyNavigateFragment
+import com.henrystudio.moneymanager.presentation.bottomNavigation.dailyNavigate.DailyNavigateFragment
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.presentation.views.setting.SettingFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 
