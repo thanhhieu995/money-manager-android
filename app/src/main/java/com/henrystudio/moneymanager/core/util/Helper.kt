@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
+import android.util.Log
 import android.view.Gravity
 import android.widget.EditText
 import android.widget.ImageView
@@ -104,7 +105,8 @@ class Helper {
 
             return categories.mapIndexedNotNull { index, category ->
                 val categoryTransactions = filteredTransactions.filter {
-                   it.categorySubName.trim() == (category.emoji + category.name).trim()
+                   normalizeCategoryLabel(it.categorySubName)
+                       .equals(category.name.trim(), ignoreCase = true)
                 }
                 val categoryAmount = categoryTransactions.sumOf { it.amount }
                 if (categoryAmount > 0) {
@@ -122,16 +124,32 @@ class Helper {
 
         data class CategoryParts(val parent: String, val sub: String)
 
+        fun normalizeCategoryLabel(text: String): String {
+            val trimmed = text.trim()
+            if (trimmed.isEmpty()) return ""
+
+            val firstSpace = trimmed.indexOf(' ')
+            if (firstSpace == -1) return trimmed
+
+            val firstToken = trimmed.substring(0, firstSpace)
+            return if (firstToken.any { it.isLetterOrDigit() }) {
+                trimmed
+            } else {
+                trimmed.substring(firstSpace + 1).trim()
+            }
+        }
+
         fun splitCategoryName(fullCategory: String): CategoryParts {
             return if ("/" in fullCategory) {
                 val parts = fullCategory.split("/")
+                Log.d("DEBUG", "Splitting category: '$fullCategory' into parent: '${parts[0].trim()}' and sub: '${parts.getOrNull(1)?.trim() ?: ""}'")
                 CategoryParts(
-                    parent = parts[0].trim(),
-                    sub = parts.getOrNull(1)?.trim() ?: ""
+                    parent = normalizeCategoryLabel(parts[0]),
+                    sub = normalizeCategoryLabel(parts.getOrNull(1)?.trim() ?: "")
                 )
             } else {
                 CategoryParts(
-                    parent = fullCategory.trim(),
+                    parent = normalizeCategoryLabel(fullCategory),
                     sub = ""
                 )
             }

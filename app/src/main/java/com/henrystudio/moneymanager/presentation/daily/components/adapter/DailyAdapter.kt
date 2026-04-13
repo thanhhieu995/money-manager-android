@@ -1,10 +1,12 @@
 package com.henrystudio.moneymanager.presentation.daily.components.adapter
 
 import android.graphics.Color
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -12,6 +14,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.daily.model.DailyListItem
+import java.time.format.DateTimeFormatter
 
 class DailyAdapter(
     private val onClick: (Transaction) -> Unit,
@@ -41,6 +44,7 @@ class DailyAdapter(
 
     override fun getItemCount(): Int = items.size
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(val item = items[position]) {
             is DailyListItem.Header -> {
@@ -75,9 +79,11 @@ class DailyAdapter(
         private val date : TextView = view.findViewById(R.id.transaction_date)
         private val income: TextView = view.findViewById(R.id.transaction_income)
         private val expense : TextView = view.findViewById(R.id.transaction_total_expense)
+        private val headerFormatter = DateTimeFormatter.ofPattern("dd EEE")
 
+        @RequiresApi(Build.VERSION_CODES.O)
         fun bind(item: DailyListItem.Header) {
-            date.text = item.date
+            date.text = Helper.parseStringToLocalDate(item.date).format(headerFormatter)
             income.text = Helper.formatCurrency(item.income)
             expense.text = Helper.formatCurrency(item.expense)
         }

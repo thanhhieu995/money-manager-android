@@ -4,8 +4,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
@@ -178,8 +178,10 @@ class StatisticCategoryViewModel @Inject constructor(
             val txDate = try { LocalDate.parse(tx.date, formatter) } catch(e: Exception) { null }
             if (txDate == null || tx.isIncome != isIncome) return@filter false
             when (keyFilter) {
-                KeyFilter.CategoryParent -> tx.categoryParentName.equals(categoryName.trim(), ignoreCase = true)
-                KeyFilter.CategorySub -> tx.categorySubName.trim().equals(categoryName.trim(), ignoreCase = true)
+                KeyFilter.CategoryParent -> Helper.normalizeCategoryLabel(tx.categoryParentName)
+                    .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
+                KeyFilter.CategorySub -> Helper.normalizeCategoryLabel(tx.categorySubName)
+                    .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
                 KeyFilter.Note -> tx.note.trim().equals(categoryName.trim(), ignoreCase = true)
                 KeyFilter.Account -> tx.account.trim().equals(categoryName.trim(), ignoreCase = true)
                 else -> true

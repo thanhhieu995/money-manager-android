@@ -168,10 +168,8 @@ class DailyFragment : Fragment() {
             mode to selected
         }
 
-        if (savedInstanceState == null) {
-            viewModel.bindProcessData(combinedDataFlow)
-            viewModel.bindSelection(combineSelectionFlow)
-        }
+        viewModel.bindProcessData(combinedDataFlow)
+        viewModel.bindSelection(combineSelectionFlow)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

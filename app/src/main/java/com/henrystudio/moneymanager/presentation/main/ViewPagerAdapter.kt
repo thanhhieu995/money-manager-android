@@ -7,19 +7,13 @@ import com.henrystudio.moneymanager.presentation.daily.DailyFragment
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyFragment
 
 class ViewPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+    override fun getItemCount() = 3
 
-    private val fragments = listOf(
-        DailyFragment(),
-        CalendarUpdateFragment(),
-        MonthlyFragment()
-    )
-
-    override fun getItemCount() = fragments.size
-
-    override fun createFragment(position: Int) = fragments[position]
-
-    fun getCurrentFragment(position: Int): Fragment {
-        return fragments[position]
+    override fun createFragment(position: Int): Fragment {
+        return when (position) {
+            0 -> DailyFragment()
+            1 -> CalendarUpdateFragment()
+            else -> MonthlyFragment()
+        }
     }
 }
-

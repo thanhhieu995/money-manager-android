@@ -21,6 +21,7 @@ import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,8 @@ class DailyViewModel @Inject constructor(
     val event = _event.asSharedFlow()
 
     private var currentList: List<DailyListItem> = emptyList()
+    private var bindProcessDataJob: Job? = null
+    private var bindSelectionJob: Job? = null
 
     private val paramsFlow = MutableStateFlow(ParamsProcessData())
     private val selectionFlow =
@@ -189,8 +192,11 @@ class DailyViewModel @Inject constructor(
                 )
             )
 
+            // 🔥 SORT transaction mới nhất lên trên
+            val sortedTransactions = group.transactions
+                .sortedByDescending { it.id } // 👈 QUAN TRỌNG
             // 🔥 Transaction items
-            group.transactions.forEach { tx ->
+            sortedTransactions.forEach { tx ->
                 result.add(
                     DailyListItem.TransactionItem(
                         transaction = tx,
@@ -260,7 +266,9 @@ class DailyViewModel @Inject constructor(
     }
 
     fun bindProcessData(flow: Flow<Triple<UiState<List<TransactionGroup>>, LocalDate, FilterOption>>) {
-        viewModelScope.launch {
+        if (bindProcessDataJob != null) return
+
+        bindProcessDataJob = viewModelScope.launch {
             combine(flow, paramsFlow) { triple, params ->
                 Pair(triple, params)
             }.collect { (triple, params) ->
@@ -279,7 +287,9 @@ class DailyViewModel @Inject constructor(
     }
 
     fun bindSelection(flow: Flow<Pair<Boolean, List<Transaction>>>) {
-        viewModelScope.launch {
+        if (bindSelectionJob != null) return
+
+        bindSelectionJob = viewModelScope.launch {
             flow.collect { (mode, selected) ->
                 updateSelection(
                     mode,

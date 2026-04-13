@@ -8,6 +8,7 @@ import java.time.LocalDate
 object PrefsManager {
     private const val PREF_NAME = "app_prefs"
     private const val KEY_TAB_POSITION = "tab_daily_position"
+    private const val KEY_HAS_SEEN_ADD_TUTORIAL = "has_seen_add_tutorial"
     private const val PREF_SCROLL_NAME = "scroll_prefs"
     private const val KEY_LAST_DATE = "last_date"
     private const val PREF_STATISTIC = "app_pref_statistic"
@@ -21,6 +22,16 @@ object PrefsManager {
     fun getTabPosition(context: Context): Int {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return prefs.getInt(KEY_TAB_POSITION, 0) // mặc định = 0
+    }
+
+    fun saveHasSeenAddTutorial(context: Context, hasSeen: Boolean) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_HAS_SEEN_ADD_TUTORIAL, hasSeen).apply()
+    }
+
+    fun hasSeenAddTutorial(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_HAS_SEEN_ADD_TUTORIAL, false)
     }
 
     fun saveLastDate(context: Context, date: LocalDate) {

@@ -7,7 +7,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 data class AddTransactionUiState(
     val amountRaw: FieldUiState = FieldUiState(),
     val amountFormatted: String = "",
-    val category: FieldUiState = FieldUiState(),
+    val category: CategorySelectionUiState = CategorySelectionUiState(),
     val account: FieldUiState = FieldUiState(),
     val note: FieldUiState = FieldUiState(),
     val date: String = "",
@@ -16,4 +16,9 @@ data class AddTransactionUiState(
     val isContinueVisible: Boolean = true,
     val noteSuggestions: List<String> = emptyList(),
     val existingTransaction: Transaction? = null
+)
+
+data class CategorySelectionUiState(
+    val parent: FieldUiState = FieldUiState(),
+    val child: FieldUiState = FieldUiState()
 )

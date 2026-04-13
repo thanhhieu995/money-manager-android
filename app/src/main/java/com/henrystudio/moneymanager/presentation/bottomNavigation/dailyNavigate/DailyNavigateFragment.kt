@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -21,6 +22,7 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
 import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
+import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
 import com.henrystudio.moneymanager.presentation.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.daily.DailyFragment
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
@@ -44,6 +46,10 @@ class DailyNavigateFragment : Fragment() {
     private lateinit var pageCallback: ViewPager2.OnPageChangeCallback
     private var isRestoring = false
     private var mediator: TabLayoutMediator? = null
+    private var fabTouchOffsetX = 0f
+    private var fabTouchOffsetY = 0f
+    private var isDraggingFab = false
+    private var isAddTutorialVisible = false
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -110,6 +116,16 @@ class DailyNavigateFragment : Fragment() {
                         handleEffect(effect)
                     }
                 }
+
+                launch {
+                    sharedViewModel.allTransactionsState.collect { state ->
+                        when (state) {
+                            is UiState.Empty -> maybeShowAddTutorial()
+                            is UiState.Success -> hideAddTutorial(markSeen = false)
+                            else -> Unit
+                        }
+                    }
+                }
             }
         }
     }
@@ -156,7 +172,65 @@ class DailyNavigateFragment : Fragment() {
         }
 
         binding.fragmentDailyNavigateBtnAdd.setOnClickListener {
+            if (isDraggingFab) return@setOnClickListener
+            hideAddTutorial()
             viewModel.onAction(DailyNavigateAction.OnAddTransactionClick)
+        }
+
+        binding.fragmentDailyNavigateBtnAdd.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    val parentLocation = IntArray(2)
+                    binding.root.getLocationOnScreen(parentLocation)
+                    fabTouchOffsetX = event.rawX - parentLocation[0] - view.x
+                    fabTouchOffsetY = event.rawY - parentLocation[1] - view.y
+                    isDraggingFab = false
+                    view.bringToFront()
+                    true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    val parentLocation = IntArray(2)
+                    binding.root.getLocationOnScreen(parentLocation)
+                    val nextX = event.rawX - parentLocation[0] - fabTouchOffsetX
+                    val nextY = event.rawY - parentLocation[1] - fabTouchOffsetY
+
+                    if (!isDraggingFab && (
+                            kotlin.math.abs(nextX - view.x) > 10f ||
+                                kotlin.math.abs(nextY - view.y) > 10f
+                            )
+                    ) {
+                        isDraggingFab = true
+                    }
+
+                    if (isDraggingFab) {
+                        moveFabWithinParent(
+                            view = view,
+                            nextX = nextX,
+                            nextY = nextY
+                        )
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    if (isDraggingFab) {
+                        snapFabToNearestEdge(view)
+                        isDraggingFab = false
+                        true
+                    } else {
+                        view.performClick()
+                        true
+                    }
+                }
+
+                MotionEvent.ACTION_CANCEL -> {
+                    isDraggingFab = false
+                    true
+                }
+
+                else -> false
+            }
         }
 
         binding.fragmentDailyNavigateLayoutEditLineOneBtnClose.setOnClickListener {
@@ -165,6 +239,19 @@ class DailyNavigateFragment : Fragment() {
 
         binding.fragmentDailyNavigateLayoutEditLineOneBtnDelete.setOnClickListener {
             viewModel.onAction(DailyNavigateAction.OnDeleteSelectionClick)
+        }
+
+        binding.fragmentDailyNavigateTutorialOverlay.setOnClickListener {
+            hideAddTutorial()
+        }
+
+        binding.fragmentDailyNavigateTutorialClose.setOnClickListener {
+            hideAddTutorial()
+        }
+
+        binding.fragmentDailyNavigateTutorialAction.setOnClickListener {
+            hideAddTutorial()
+            viewModel.onAction(DailyNavigateAction.OnAddTransactionClick)
         }
     }
 
@@ -275,11 +362,114 @@ class DailyNavigateFragment : Fragment() {
             })
     }
 
+    private fun moveFabWithinParent(view: View, nextX: Float, nextY: Float) {
+        val parent = binding.root
+        val maxX = (parent.width - view.width).toFloat().coerceAtLeast(0f)
+        val maxY = (parent.height - view.height).toFloat().coerceAtLeast(0f)
+
+        view.x = nextX.coerceIn(0f, maxX)
+        view.y = nextY.coerceIn(0f, maxY)
+
+        if (isAddTutorialVisible) {
+            positionAddTutorial()
+        }
+    }
+
+    private fun snapFabToNearestEdge(view: View) {
+        val parent = binding.root
+        val maxX = (parent.width - view.width).toFloat().coerceAtLeast(0f)
+        val targetX = if (view.x + view.width / 2f < parent.width / 2f) 0f else maxX
+
+        view.animate()
+            .x(targetX)
+            .setDuration(180L)
+            .start()
+
+        if (isAddTutorialVisible) {
+            view.postDelayed({ positionAddTutorial() }, 180L)
+        }
+    }
+
+    private fun maybeShowAddTutorial() {
+        if (isAddTutorialVisible) return
+        if (PrefsManager.hasSeenAddTutorial(requireContext())) return
+
+        binding.root.post {
+            if (!isAdded || _binding == null) return@post
+            isAddTutorialVisible = true
+            binding.fragmentDailyNavigateTutorialOverlay.visibility = View.VISIBLE
+            binding.fragmentDailyNavigateTutorialArrow.visibility = View.VISIBLE
+            binding.fragmentDailyNavigateTutorialCard.visibility = View.VISIBLE
+            binding.fragmentDailyNavigateTutorialOverlay.post {
+                positionAddTutorial()
+            }
+        }
+    }
+
+    private fun hideAddTutorial(markSeen: Boolean = true) {
+        if (!isAddTutorialVisible && binding.fragmentDailyNavigateTutorialOverlay.visibility == View.GONE) {
+            return
+        }
+
+        if (markSeen) {
+            PrefsManager.saveHasSeenAddTutorial(requireContext(), true)
+        }
+
+        isAddTutorialVisible = false
+        binding.fragmentDailyNavigateTutorialOverlay.visibility = View.GONE
+        binding.fragmentDailyNavigateTutorialArrow.visibility = View.GONE
+        binding.fragmentDailyNavigateTutorialCard.visibility = View.GONE
+    }
+
+    private fun positionAddTutorial() {
+        val fab = binding.fragmentDailyNavigateBtnAdd
+        val overlay = binding.fragmentDailyNavigateTutorialOverlay
+        val arrow = binding.fragmentDailyNavigateTutorialArrow
+        val card = binding.fragmentDailyNavigateTutorialCard
+
+        if (
+            overlay.width == 0 ||
+            overlay.height == 0 ||
+            fab.width == 0 ||
+            fab.height == 0 ||
+            arrow.width == 0 ||
+            arrow.height == 0 ||
+            card.width == 0 ||
+            card.height == 0
+        ) {
+            overlay.post { positionAddTutorial() }
+            return
+        }
+
+        val spacing = 12f * resources.displayMetrics.density
+        val fabCenterX = fab.x + fab.width / 2f
+
+        val arrowX = (fabCenterX - arrow.width / 2f).coerceIn(
+            0f,
+            (overlay.width - arrow.width).toFloat().coerceAtLeast(0f)
+        )
+        val arrowY = (fab.y - arrow.height - spacing).coerceAtLeast(0f)
+
+        val cardX = (fabCenterX - card.width / 2f).coerceIn(
+            spacing,
+            (overlay.width - card.width - spacing).coerceAtLeast(spacing)
+        )
+        val cardY = (arrowY - card.height - spacing).coerceAtLeast(spacing)
+
+        arrow.x = arrowX
+        arrow.y = arrowY
+        card.x = cardX
+        card.y = cardY
+        arrow.bringToFront()
+        card.bringToFront()
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun navigateToDailyTabAndScrollToWeek(weekStart: LocalDate) {
         binding.fragmentDailyNavigateViewPager.setCurrentItem(0, true)
         binding.fragmentDailyNavigateViewPager.postDelayed({
-            val dailyFragment = viewPagerAdapter.getCurrentFragment(0) as? DailyFragment
+            val dailyFragment =
+                childFragmentManager.findFragmentByTag("f0") as? DailyFragment
             dailyFragment?.scrollToWeek(weekStart)
         }, 100)
     }

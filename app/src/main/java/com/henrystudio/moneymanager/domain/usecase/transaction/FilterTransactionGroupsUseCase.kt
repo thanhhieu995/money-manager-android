@@ -3,6 +3,7 @@ package com.henrystudio.moneymanager.domain.usecase.transaction
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.henrystudio.moneymanager.core.util.FilterTransactions
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
@@ -57,12 +58,14 @@ class FilterTransactionGroupsUseCase @Inject constructor() {
             val filteredTransactions = when (keyFilter) {
                 KeyFilter.CategoryParent -> {
                     group.transactions.filter {
-                        it.categoryParentName.equals(categoryName, ignoreCase = true)
+                        Helper.normalizeCategoryLabel(it.categoryParentName)
+                            .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
                     }
                 }
                 KeyFilter.CategorySub -> {
                     group.transactions.filter {
-                        it.categorySubName.trim().equals(categoryName.trim(), ignoreCase = true)
+                        Helper.normalizeCategoryLabel(it.categorySubName)
+                            .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
                     }
                 }
                 KeyFilter.Note -> {

@@ -95,6 +95,10 @@ class AddTransactionFragment : Fragment() {
     private val accountViewModel: AccountViewModel by viewModels()
     private var categoryJob: Job? = null
     private var accountJob: Job? = null
+    private var openNextFieldAfterCategoryDismiss = false
+    private var openNextFieldAfterAccountDismiss = false
+    private var activePickerDialog: BottomSheetDialog? = null
+    private var hasRequestedInitialAmountFocus = false
     private lateinit var defaultTintMap: Map<EditText, ColorStateList?>
 
     override fun onCreateView(
@@ -251,8 +255,8 @@ class AddTransactionFragment : Fragment() {
                         }
                     }
                     state.category.let { category ->
-                        edtCategory.setTextIfDifferent(category.text)
-                        edtCategory.backgroundTintList = when (category.state) {
+                        edtCategory.setTextIfDifferent(buildCategoryDisplayText(category))
+                        edtCategory.backgroundTintList = when (category.parent.state) {
                             FieldState.IDLE -> defaultTintMap[edtCategory]
                             FieldState.ERROR -> ContextCompat.getColorStateList(requireContext(), R.color.red)
                             FieldState.VALID -> ContextCompat.getColorStateList(requireContext(), R.color.income)
@@ -407,7 +411,9 @@ class AddTransactionFragment : Fragment() {
         title: String,
         targetEditText: EditText,
     ) {
+        activePickerDialog?.dismiss()
         val bottomSheetDialog = BottomSheetDialog(requireContext())
+        activePickerDialog = bottomSheetDialog
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
         val recyclerView = view.findViewById<RecyclerView>(R.id.bottom_dialog_add_recyclerView)
         val titleBottom = view.findViewById<TextView>(R.id.bottom_dialog_add_title)
@@ -420,10 +426,9 @@ class AddTransactionFragment : Fragment() {
 
         val adapter = AccountAdapter { selectedItem ->
             viewModel.onAccountSelected(selectedItem.name)
+            openNextFieldAfterAccountDismiss =
+                targetEditText.id == R.id.fragment_add_transaction_edtAccount
             bottomSheetDialog.dismiss()
-            if (targetEditText.id == R.id.fragment_add_transaction_edtAccount) {
-                navigateNextEmptyField()
-            }
         }
         recyclerView.layoutManager = GridLayoutManager(context, 3)
         recyclerView.adapter = adapter
@@ -461,8 +466,17 @@ class AddTransactionFragment : Fragment() {
         }
 
         bottomSheetDialog.setOnDismissListener {
+            if (activePickerDialog === bottomSheetDialog) {
+                activePickerDialog = null
+            }
             accountJob?.cancel()
             viewModel.onAccountDismissed()
+            if (openNextFieldAfterAccountDismiss) {
+                openNextFieldAfterAccountDismiss = false
+                binding.root.postDelayed({
+                    navigateNextEmptyField()
+                }, 100)
+            }
         }
 
         addButton.setOnClickListener {
@@ -497,6 +511,13 @@ class AddTransactionFragment : Fragment() {
     private fun handleToAddTransaction() {
         val transaction = arguments?.getSerializable("transaction") as? Transaction
         viewModel.initTransaction(transaction)
+        if (transaction == null && !hasRequestedInitialAmountFocus) {
+            hasRequestedInitialAmountFocus = true
+            binding.root.postDelayed({
+                if (!isAdded || _binding == null) return@postDelayed
+                focusWithKeyboard(edtAmount)
+            }, 200)
+        }
     }
 
     private fun amountTextChangeListener() {
@@ -533,6 +554,8 @@ class AddTransactionFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        activePickerDialog?.dismiss()
+        activePickerDialog = null
         super.onDestroyView()
         _binding = null
     }
@@ -542,7 +565,9 @@ class AddTransactionFragment : Fragment() {
         targetEditText: EditText,
         selectedType: TransactionType
     ) {
+        activePickerDialog?.dismiss()
         val bottomSheetDialog = BottomSheetDialog(requireContext())
+        activePickerDialog = bottomSheetDialog
         val view = layoutInflater.inflate(R.layout.bottom_dialog_add, null)
         val recyclerView = view.findViewById<RecyclerView>(R.id.bottom_dialog_add_recyclerView)
         val titleBottom = view.findViewById<TextView>(R.id.bottom_dialog_add_title)
@@ -553,12 +578,10 @@ class AddTransactionFragment : Fragment() {
         val emptyView = view.findViewById<TextView>(R.id.bottom_dialog_add_empty)
         titleBottom.text = title
         val adapter = ExpandableCategoryAdapter(mutableListOf()) { selectedItem ->
-            viewModel.onCategorySelected("${selectedItem.emoji} ${selectedItem.name}")
+            viewModel.onCategorySelected(selectedItem)
+            openNextFieldAfterCategoryDismiss =
+                targetEditText.id == R.id.fragment_add_transaction_edtCategory
             bottomSheetDialog.dismiss()
-            // Finish choose category and show account, finish account and show note auto
-            if (targetEditText.id == R.id.fragment_add_transaction_edtCategory) {
-                navigateNextEmptyField()
-            }
         }
 
         val layoutManager = GridLayoutManager(context, 3)
@@ -637,8 +660,17 @@ class AddTransactionFragment : Fragment() {
             bottomSheetDialog.dismiss()
         }
         bottomSheetDialog.setOnDismissListener {
+            if (activePickerDialog === bottomSheetDialog) {
+                activePickerDialog = null
+            }
             categoryJob?.cancel()
             viewModel.onCategoryDismissed()
+            if (openNextFieldAfterCategoryDismiss) {
+                openNextFieldAfterCategoryDismiss = false
+                binding.root.postDelayed({
+                    navigateNextEmptyField()
+                }, 100)
+            }
         }
 
         bottomSheetDialog.setContentView(view)
@@ -676,5 +708,13 @@ class AddTransactionFragment : Fragment() {
             edtAccount to edtAccount.backgroundTintList,
             edtNote to edtNote.backgroundTintList
         )
+    }
+
+    private fun buildCategoryDisplayText(category: CategorySelectionUiState): String {
+        return when {
+            category.parent.text.isBlank() -> ""
+            category.child.text.isBlank() -> category.parent.text
+            else -> "${category.parent.text}/${category.child.text}"
+        }
     }
 }

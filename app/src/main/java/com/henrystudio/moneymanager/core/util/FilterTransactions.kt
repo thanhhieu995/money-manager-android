@@ -128,7 +128,8 @@ class FilterTransactions {
             categoryName: String
         ) : List<Transaction> {
             return allTransactions.filter { tx ->
-                tx.categoryParentName.equals(categoryName, ignoreCase = true)
+                Helper.normalizeCategoryLabel(tx.categoryParentName)
+                    .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
             }
         }
 

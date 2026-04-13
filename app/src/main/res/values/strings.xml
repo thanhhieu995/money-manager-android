@@ -71,5 +71,9 @@
     <string name="no">No</string>
     <string name="transaction_delete">Transaction deleted</string>
     <string name="bookmarked">Bookmarked</string>
+    <string name="tutorial_add_title">Add your first transaction</string>
+    <string name="tutorial_add_message">Tap the Add button to record your first income or expense and start using MoneyManager.</string>
+    <string name="tutorial_got_it">Got it</string>
+    <string name="tutorial_add_action">Add first transaction</string>
 
 </resources>

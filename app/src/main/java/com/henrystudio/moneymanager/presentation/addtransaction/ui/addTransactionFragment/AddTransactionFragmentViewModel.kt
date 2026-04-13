@@ -1,13 +1,13 @@
 package com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransactionFragment
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
@@ -58,14 +58,12 @@ class AddTransactionFragmentViewModel @Inject constructor(
     fun saveTransaction(
         params: SaveTransactionParams
     ) {
-        if (params.category.isEmpty() || params.account.isEmpty()) {
+        if (params.categoryParent.isEmpty() || params.account.isEmpty()) {
             emitEvent(AddTransactionEvent.ShowToast("fill_required"))
             return
         }
 
         val amount = params.amount.replace("[^\\d]".toRegex(), "").toDoubleOrNull() ?: 0.0
-        val categoryParts = Helper.splitCategoryName(params.category)
-        
         val localDate = parseDisplayDateToLocalDate(params.date) ?: LocalDate.now()
         val englishFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
         val dateForDb = localDate.format(englishFormatter)
@@ -74,8 +72,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
             try {
                 if (params.existing != null) {
                     val updated = params.existing.copy(
-                        categoryParentName = categoryParts.parent,
-                        categorySubName = categoryParts.sub,
+                        categoryParentName = params.categoryParent,
+                        categorySubName = params.categoryChild,
                         note = params.note.trim(),
                         account = params.account,
                         amount = amount,
@@ -86,8 +84,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 } else {
                     val newTransaction = Transaction(
                         title = "",
-                        categoryParentName = categoryParts.parent,
-                        categorySubName = categoryParts.sub,
+                        categoryParentName = params.categoryParent,
+                        categorySubName = params.categoryChild,
                         note = params.note.trim(),
                         account = params.account,
                         amount = amount,
@@ -135,7 +133,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 amountRaw = current.amountRaw.copy(
                     state = amountState
                 ),
-                category = FieldUiState("", FieldState.IDLE),
+                category = CategorySelectionUiState(),
                 account = FieldUiState("", FieldState.IDLE),
                 note = current.note.copy(
                     state = FieldState.IDLE
@@ -171,8 +169,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSaveClicked(closeAfterSave: Boolean) {
         val state = _uiState.value
-        val amountState = validateRequired(state.amountRaw.text)
-        val categoryState = validateRequired(state.category.text)
+        val amountState = validateAmount(state.amountRaw.text)
+        val categoryState = validateRequired(state.category.parent.text)
         val accountState = validateRequired(state.account.text)
 
         _uiState.update {
@@ -182,8 +180,14 @@ class AddTransactionFragmentViewModel @Inject constructor(
                     isTouched = true
                 ),
                 category = it.category.copy(
-                    state = categoryState,
-                    isTouched = true
+                    parent = it.category.parent.copy(
+                        state = categoryState,
+                        isTouched = true
+                    ),
+                    child = it.category.child.copy(
+                        state = categoryState,
+                        isTouched = true
+                    )
                 ),
                 account = it.account.copy(
                     state = accountState,
@@ -211,7 +215,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
 
         val params = SaveTransactionParams(
             amount = state.amountRaw.text,
-            category = state.category.text,
+            categoryParent = state.category.parent.text,
+            categoryChild = state.category.child.text,
             account = state.account.text,
             note = state.note.text,
             date = state.date,
@@ -231,7 +236,10 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 it.copy(
                     amountRaw = FieldUiState(transaction.amount.toLong().toString(), FieldState.VALID),
                     amountFormatted = Helper.formatCurrency(transaction.amount),
-                    category = FieldUiState(transaction.categoryParentName + "/" + transaction.categorySubName, FieldState.VALID),
+                    category = CategorySelectionUiState(
+                        parent = FieldUiState(transaction.categoryParentName, FieldState.VALID),
+                        child = FieldUiState(transaction.categorySubName, FieldState.VALID)
+                    ),
                     account = FieldUiState(transaction.account, FieldState.VALID),
                     note = FieldUiState(transaction.note, FieldState.VALID),
                     date = transaction.date,
@@ -258,7 +266,10 @@ class AddTransactionFragmentViewModel @Inject constructor(
             it.copy(
                 amountRaw = FieldUiState("", FieldState.IDLE),
                 amountFormatted = "",
-                category = FieldUiState("", FieldState.IDLE),
+                category = CategorySelectionUiState(
+                    parent = FieldUiState("", FieldState.IDLE),
+                    child = FieldUiState("", FieldState.IDLE)
+                ),
                 account = FieldUiState("", FieldState.IDLE),
                 note = FieldUiState("", FieldState.IDLE),
                 date = _uiState.value.date,
@@ -270,7 +281,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         val state = _uiState.value
         return when {
             state.amountRaw.text.isEmpty() -> FieldType.AMOUNT
-            state.category.text.isEmpty() -> FieldType.CATEGORY
+            state.category.parent.text.isEmpty() -> FieldType.CATEGORY
             state.account.text.isEmpty() -> FieldType.ACCOUNT
             state.note.text.isEmpty() -> FieldType.NOTE
             else -> null
@@ -298,7 +309,10 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 // giữ data cũ
                 amountRaw = FieldUiState(current.amount.toLong().toString(), FieldState.VALID),
                 amountFormatted = Helper.formatCurrency(current.amount),
-                category = FieldUiState(current.categoryParentName + "/" + current.categorySubName, FieldState.VALID),
+                category = CategorySelectionUiState(
+                    parent = FieldUiState(current.categoryParentName, FieldState.VALID),
+                    child = FieldUiState(current.categorySubName, FieldState.VALID)
+                ),
                 account = FieldUiState(current.account, FieldState.VALID),
                 note = FieldUiState(current.note, FieldState.VALID),
                 isIncome = current.isIncome,
@@ -400,7 +414,12 @@ class AddTransactionFragmentViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 category = current.copy(
-                    isTouched = true
+                    parent = current.parent.copy(
+                        isTouched = true
+                    ),
+                    child = current.child.copy(
+                        isTouched = true
+                    )
                 )
             )
         }
@@ -422,18 +441,38 @@ class AddTransactionFragmentViewModel @Inject constructor(
         emitEvent(AddTransactionEvent.OpenAccountPicker)
     }
 
-    fun onCategorySelected(text: String) {
+    fun onCategorySelected(categoryItem: CategoryItem) {
         val current = _uiState.value.category
 
         categoryJustSelected = true
 
+        val parentName = categoryItem.parentName ?: categoryItem.name
+        val parentEmoji = categoryItem.parentEmoji ?: categoryItem.emoji
+        val childName = if (categoryItem.parentName != null) categoryItem.name else ""
+        val childEmoji = if (categoryItem.parentName != null) categoryItem.emoji else ""
+
+        val parentDisplay = listOf(parentEmoji, parentName)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+        val childDisplay = listOf(childEmoji, childName)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+
         _uiState.update {
             it.copy(
                 category = current.copy(
-                    text = text,
-                    isTouched = true,
-                    isFocused = false,
-                    state = FieldState.VALID
+                    parent = current.parent.copy(
+                        text = parentDisplay,
+                        isTouched = true,
+                        isFocused = false,
+                        state = FieldState.VALID
+                    ),
+                    child = current.child.copy(
+                        text = childDisplay,
+                        isTouched = true,
+                        isFocused = false,
+                        state = if (childDisplay.isEmpty()) FieldState.IDLE else FieldState.VALID
+                    )
                 )
             )
         }
@@ -459,18 +498,20 @@ class AddTransactionFragmentViewModel @Inject constructor(
     fun onCategoryDismissed() {
         val current = _uiState.value.category
 
-        val newState = if (!categoryJustSelected && current.isTouched) {
-            validateRequired(current.text)
+        val newState = if (!categoryJustSelected && current.parent.isTouched) {
+            validateRequired(current.parent.text)
         } else {
-            current.state
+            current.parent.state
         }
 
         _uiState.update {
             it.copy(
                 category = current.copy(
-                    isFocused = false,
-                    isTouched = true,
-                    state = newState
+                    parent = current.parent.copy(
+                        isFocused = false,
+                        isTouched = true,
+                        state = newState
+                    ),
                 )
             )
         }
@@ -505,16 +546,21 @@ class AddTransactionFragmentViewModel @Inject constructor(
     fun onCategoryFocusChanged(hasFocus: Boolean) {
         val current = _uiState.value.category
 
-        val newState = if (!hasFocus && current.isTouched) {
-            validateRequired(current.text)
-        } else current.state
+        val newState = if (!hasFocus && current.parent.isTouched) {
+            validateRequired(current.parent.text)
+        } else current.parent.state
 
         _uiState.update {
             it.copy(
                 category = current.copy(
-                    isFocused = hasFocus,
-                    isTouched = true,
-                    state = newState
+                    parent = current.parent.copy(
+                        isFocused = hasFocus,
+                        isTouched = true,
+                        state = newState
+                    ),
+                    child = current.child.copy(
+                        isFocused = false
+                    )
                 )
             )
         }
