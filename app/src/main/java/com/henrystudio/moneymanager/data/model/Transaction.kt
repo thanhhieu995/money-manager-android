@@ -8,12 +8,14 @@ import java.io.Serializable
 data class Transaction(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
-    val categoryParentName: String,
-    val categorySubName: String,
+    val categoryParentId: Int,
+    val categoryChildId: Int?,
     val note: String,
     val account: String,
     val amount: Double,
     val isIncome: Boolean,
-    val date: String,
-    val isBookmarked: Boolean = false
+    val date: Long,
+    val isBookmarked: Boolean = false,
+    val createdAt: Long,
+    val updatedAt: Long?
 ) : Serializable

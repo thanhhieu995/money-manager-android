@@ -16,6 +16,7 @@ data class CategoryUseCases(
 
     val deleteCategoryById: DeleteCategoryByIdUseCase,
 
-    val updateCategory: UpdateCategoryUseCase
+    val updateCategory: UpdateCategoryUseCase,
 
+    val increaseCategoryUsage: IncreaseCategoryUsageUseCase
 )

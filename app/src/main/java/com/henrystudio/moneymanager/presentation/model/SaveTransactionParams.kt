@@ -8,7 +8,7 @@ data class SaveTransactionParams(
     val categoryChild: String,
     val account: String,
     val note: String,
-    val date: String,
+    val date: Long,
     val isIncome: Boolean,
     val existing: Transaction?,
     val closeAfterSave: Boolean

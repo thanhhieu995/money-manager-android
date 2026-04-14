@@ -6,8 +6,9 @@ import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.ZoneId
 
 class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRepository {
     override fun getAllTransactions(): Flow<List<Transaction>> {
@@ -31,11 +32,13 @@ class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRe
     }
 
     override fun getGroupedTransactions(): Flow<List<TransactionGroup>> {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)")
-
         return dao.getAll().map { transactionList ->
             transactionList
-                .groupBy { LocalDate.parse(it.date, formatter) }
+                .groupBy { tx ->
+                    Instant.ofEpochMilli(tx.date)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                }
                 .map { (localDate, transactionsOnDate) ->
 
                     val income = transactionsOnDate
@@ -46,9 +49,12 @@ class TransactionRepositoryImpl(private val dao: TransactionDao) : TransactionRe
                         .filter { !it.isIncome }
                         .sumOf { it.amount }
 
+                    val epochStartOfDay =
+                        localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
                     TransactionGroup(
                         id = localDate.toEpochDay().toInt(),
-                        date = localDate.format(formatter),
+                        date = epochStartOfDay,
                         income = income,
                         expense = expense,
                         transactions = transactionsOnDate

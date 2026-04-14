@@ -40,4 +40,12 @@ class CategoryRepositoryImpl(private val dao: CategoryDao) : CategoryRepository{
     override suspend fun update(category: Category) {
         dao.update(category)
     }
+
+    override suspend fun increaseUsageCount(categoryId: Int) {
+        dao.increaseUsageCount(categoryId, System.currentTimeMillis())
+    }
+
+    override suspend fun getById(id: Int): Category? {
+        return dao.getById(id)
+    }
 }

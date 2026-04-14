@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.core.util.FilterTransactions
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyData
 import com.henrystudio.moneymanager.presentation.views.monthly.MonthlyUiState
@@ -48,14 +49,11 @@ class MonthlyViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun groupTransactionsByMonth(transactions: List<TransactionGroup>): List<MonthlyData> {
-        val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
         val outputFormatter = DateTimeFormatter.ofPattern("dd-MM")
 
         return transactions
             .groupBy { group ->
-                val rawDate = group.date
-                val cleanedDate = rawDate.substringBefore(" ")
-                val localDate = LocalDate.parse(cleanedDate, inputFormatter)
+                val localDate = Helper.epochMillisToLocalDate(group.date)
                 LocalDate.of(localDate.year, localDate.month, 1)
             }
             .map { (monthStart, monthList) ->
@@ -71,9 +69,7 @@ class MonthlyViewModel @Inject constructor() : ViewModel() {
                     }"
 
                 val weeklyGroups = monthList.groupBy { group ->
-                    val rawDate = group.date
-                    val cleanedDate = rawDate.substringBefore(" ")
-                    val date = LocalDate.parse(cleanedDate, inputFormatter)
+                    val date = Helper.epochMillisToLocalDate(group.date)
                     date.with(DayOfWeek.MONDAY)
                 }
 

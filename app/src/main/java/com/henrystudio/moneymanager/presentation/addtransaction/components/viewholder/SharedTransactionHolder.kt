@@ -3,7 +3,7 @@ package com.henrystudio.moneymanager.presentation.addtransaction.components.view
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 
 object SharedTransactionHolder {
-    var currentFilterDate: String? = null
+    var currentFilterDate: Long? = null
     var filterOption: FilterOption? = null
     var scrollToAddedTransaction: Boolean = false
     var navigateFromMonthly: Boolean = false  // 🟡 thêm flag này

@@ -4,8 +4,11 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
+import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.model.Event
 import com.henrystudio.moneymanager.presentation.model.FilterOption
@@ -27,7 +30,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Collections.emptyList
 import javax.inject.Inject
 
@@ -38,7 +40,8 @@ import javax.inject.Inject
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class SharedTransactionViewModel @Inject constructor(
-    private val transactionUseCases: TransactionUseCases
+    private val transactionUseCases: TransactionUseCases,
+    private val categoryUseCases: CategoryUseCases
 ) : ViewModel() {
     private val _openDetail = MutableSharedFlow<Transaction>()
     val openDetail = _openDetail.asSharedFlow()
@@ -59,6 +62,14 @@ class SharedTransactionViewModel @Inject constructor(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = UiState.Loading
+            )
+
+    val categoriesState: StateFlow<List<Category>> =
+        categoryUseCases.getAllCategories()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
             )
 
     val groupedTransactionsState: StateFlow<UiState<List<TransactionGroup>>> =
@@ -149,15 +160,8 @@ class SharedTransactionViewModel @Inject constructor(
         return transactionUseCases.getBookmarkedTransactionsUseCase()
     }
 
-    fun setCurrentFilterDate(date: String) {
-        val cleanedDate = date.substringBefore(" ")
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-        try {
-            val localDate = LocalDate.parse(cleanedDate, formatter)
-            _currentFilterDate.value = localDate
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    fun setCurrentFilterDate(dateEpochMillis: Long) {
+        _currentFilterDate.value = Helper.epochMillisToLocalDate(dateEpochMillis)
     }
 
     fun setLocalDateCurrentFilterDate(localDate: LocalDate) {

@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.data.model.TransactionGroup
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.presentation.views.calendar.CalendarEventItem
 import com.henrystudio.moneymanager.presentation.views.calendar.CalendarUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,7 @@ class CalendarViewModel @Inject constructor() : ViewModel() {
     fun updateGroupedTransactions(groups: List<TransactionGroup>) {
         groupedTransactions = groups
         val eventItems = groups.map { group ->
-            val dateKey = group.date.substringBefore(" ")
+            val dateKey = Helper.formatEpochMillisToDateKey(group.date)
             CalendarEventItem(
                 dateKey = dateKey,
                 income = group.income,
@@ -41,9 +42,7 @@ class CalendarViewModel @Inject constructor() : ViewModel() {
         _uiState.update { it.copy(currentFilterDate = date) }
     }
 
-    fun getGroupsForDate(dateString: String): List<TransactionGroup> {
-        return groupedTransactions.filter { group ->
-            group.date.substringBefore(" ") == dateString
-        }
+    fun getGroupsForDate(dateEpochMillis: Long): List<TransactionGroup> {
+        return groupedTransactions.filter { group -> group.date == dateEpochMillis }
     }
 }

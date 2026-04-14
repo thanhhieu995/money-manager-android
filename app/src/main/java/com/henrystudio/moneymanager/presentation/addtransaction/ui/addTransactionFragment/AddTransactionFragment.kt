@@ -40,10 +40,13 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDisplayDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDateToLocalDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getFormattedDateToday
 import com.henrystudio.moneymanager.core.util.Helper.Companion.setTextIfDifferent
 import com.henrystudio.moneymanager.data.model.Account
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivityViewModel
@@ -157,7 +160,7 @@ class AddTransactionFragment : Fragment() {
             val datePicker =
                 DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
                     val newFormattedDate =
-                        formatPickedDate(selectedYear, selectedMonth, selectedDay)
+                        formatPickedDateToLocalDate(selectedYear, selectedMonth, selectedDay)
                     viewModel.onDateChanged(newFormattedDate)
                 }, year, month, day)
 
@@ -278,7 +281,7 @@ class AddTransactionFragment : Fragment() {
                         expenseButton.isChecked = !isIncome
                     }
                     state.date.let { date ->
-                        dateTextView.text = date
+                        dateTextView.text = date.toString()
                     }
                     state.isEditMode.let { isEdit ->
                         layoutSave.visibility = if (isEdit) View.GONE else View.VISIBLE
@@ -345,7 +348,7 @@ class AddTransactionFragment : Fragment() {
                             )
                         }
                         is AddTransactionEvent.SaveCompleted -> {
-                            SharedTransactionHolder.currentFilterDate = event.date
+                            SharedTransactionHolder.currentFilterDate = event.dateEpochMillis
                             event.localDate?.let {
                                 saveLastDate(requireContext(), it)
                             }
@@ -621,7 +624,13 @@ class AddTransactionFragment : Fragment() {
                     is UiState.Success -> {
                         loading.visibility = View.GONE
 
-                        val treeItems = Helper.buildCategoryTree(state.data)
+                        val sorted = state.data.sortedWith(
+                            compareByDescending<Category> { it.usageCount }
+                                .thenByDescending { it.lastUsed }.
+                            thenBy { it.name }
+                        )
+
+                        val treeItems = Helper.buildCategoryTree(sorted)
                         adapter.updateData(treeItems)
 
                         recyclerView.visibility = View.VISIBLE

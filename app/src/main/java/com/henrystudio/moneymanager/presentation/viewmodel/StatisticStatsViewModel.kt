@@ -3,6 +3,7 @@ package com.henrystudio.moneymanager.presentation.viewmodel
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
@@ -15,9 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
-import java.util.Locale
 import javax.inject.Inject
 
 data class StatisticStatsUiState(
@@ -65,16 +64,11 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
         type: TransactionType
     ): List<Transaction> {
         val isIncome = type == TransactionType.INCOME
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
         
         return transactions.filter { tx ->
             if (tx.isIncome != isIncome) return@filter false
             
-            val txDate = try {
-                LocalDate.parse(tx.date, formatter)
-            } catch (e: Exception) {
-                return@filter false
-            }
+            val txDate = Helper.epochMillisToLocalDate(tx.date)
 
             when (option.type) {
                 FilterPeriodStatistic.Monthly -> {
@@ -107,9 +101,9 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
             android.graphics.Color.parseColor("#26A69A")
         )
 
-        val grouped = transactions.groupBy { it.categoryParentName }
+        val grouped = transactions.groupBy { it.categoryParentId }
         return grouped.entries.mapIndexed { index, entry ->
-            val name = entry.key
+            val name = entry.key.toString()
             val list = entry.value
             val amount = list.sumOf { it.amount }
             CategoryStat(

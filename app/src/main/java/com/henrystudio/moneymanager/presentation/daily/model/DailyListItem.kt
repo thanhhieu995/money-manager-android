@@ -5,7 +5,7 @@ import com.henrystudio.moneymanager.data.model.Transaction
 sealed class DailyListItem {
     data class Header(
         val id: Int,
-        val date: String,
+        val date: Long,
         val income: Double,
         val expense: Double
     ) : DailyListItem()

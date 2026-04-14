@@ -128,7 +128,7 @@ class StatisticListActivity : AppCompatActivity() {
             }
         }
 
-        sharedViewModel.setCurrentFilterDate(Helper.formatDateFromFilterOptionToDateDaily(filterOption.date.toString()))
+        sharedViewModel.setCurrentFilterDate(Helper.localDateToStartOfDayEpochMillis(filterOption.date))
 
         imgBack.setOnClickListener {
             viewModel.getFilterOption()?.let { opt ->

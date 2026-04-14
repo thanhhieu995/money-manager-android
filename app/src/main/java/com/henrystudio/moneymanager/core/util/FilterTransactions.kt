@@ -5,7 +5,9 @@ import androidx.annotation.RequiresApi
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 
@@ -16,21 +18,22 @@ class FilterTransactions {
             transactions: List<TransactionGroup>,
             localDate: LocalDate
         ): List<TransactionGroup> {
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
             val startOfWeek = localDate.with(DayOfWeek.MONDAY)
             val selectedWeek = startOfWeek.get(weekFields.weekOfWeekBasedYear())
             val selectedYear = startOfWeek.get(weekFields.weekBasedYear())
             return transactions.filter { group ->
-                val cleanedDate = group.date.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val date = Instant.ofEpochMilli(group.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
                 val startOfWeekDate = date.with(DayOfWeek.MONDAY)
                 val week = startOfWeekDate.get(weekFields.weekOfWeekBasedYear())
                 val year = startOfWeekDate.get(weekFields.weekBasedYear())
                 week == selectedWeek && year == selectedYear
             }.sortedByDescending {
-                val cleanedDate = it.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
+                Instant.ofEpochMilli(it.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
             }
         }
 
@@ -39,14 +42,15 @@ class FilterTransactions {
             transactions: List<TransactionGroup>,
             selectedMonth: LocalDate,
         ): List<TransactionGroup> {
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             return transactions.filter { group ->
-                val cleanedDate = group.date.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val date = Instant.ofEpochMilli(group.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
                 date.monthValue == selectedMonth.monthValue && date.year == selectedMonth.year
             }.sortedByDescending {
-                val cleanedDate = it.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
+                Instant.ofEpochMilli(it.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
             }
         }
 
@@ -55,14 +59,15 @@ class FilterTransactions {
             transactions: List<TransactionGroup>,
             selectedYear: LocalDate
         ): List<TransactionGroup> {
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             return transactions.filter { group ->
-                val cleanedDate = group.date.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val date = Instant.ofEpochMilli(group.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
                 date.year == selectedYear.year
             }.sortedByDescending {
-                val cleanedDate = it.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
+                Instant.ofEpochMilli(it.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
             }
         }
 
@@ -71,14 +76,13 @@ class FilterTransactions {
             transactions: List<Transaction>,
             selectedMonth: LocalDate
         ): List<Transaction> {
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             return transactions.filter { tx ->
-                val cleanedDate = tx.date.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val date = Instant.ofEpochMilli(tx.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
                 date.monthValue == selectedMonth.monthValue && date.year == selectedMonth.year
             }.sortedByDescending {
-                val cleanedDate = it.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
+                it.date
             }
         }
 
@@ -87,20 +91,19 @@ class FilterTransactions {
             transactions: List<Transaction>,
             selectedDate: LocalDate
         ): List<Transaction> {
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             val weekFields = WeekFields.of(DayOfWeek.MONDAY, 1)
             val selectedWeek = selectedDate.get(weekFields.weekOfWeekBasedYear())
             val selectedYear = selectedDate.get(weekFields.weekBasedYear())
 
             return transactions.filter { tx ->
-                val cleanedDate = tx.date.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val date = Instant.ofEpochMilli(tx.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
                 val week = date.get(weekFields.weekOfWeekBasedYear())
                 val year = date.get(weekFields.weekBasedYear())
                 week == selectedWeek && year == selectedYear
             }.sortedByDescending {
-                val cleanedDate = it.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
+                it.date
             }
         }
 
@@ -109,16 +112,15 @@ class FilterTransactions {
             transactions: List<Transaction>,
             selectedDate: LocalDate
         ): List<Transaction> {
-            val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             val selectedYear = selectedDate.year
 
             return transactions.filter { tx ->
-                val cleanedDate = tx.date.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val date = Instant.ofEpochMilli(tx.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
                 date.year == selectedYear
             }.sortedByDescending {
-                val cleanedDate = it.date.substringBefore(" ")
-                LocalDate.parse(cleanedDate, inputFormatter)
+                it.date
             }
         }
 
@@ -127,10 +129,8 @@ class FilterTransactions {
             allTransactions: List<Transaction>,
             categoryName: String
         ) : List<Transaction> {
-            return allTransactions.filter { tx ->
-                Helper.normalizeCategoryLabel(tx.categoryParentName)
-                    .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
-            }
+            // legacy filter by label; without categories map, cannot resolve IDs here
+            return emptyList()
         }
 
         fun filterTransactionsByNoteName(

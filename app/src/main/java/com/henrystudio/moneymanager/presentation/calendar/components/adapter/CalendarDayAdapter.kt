@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.calendar.model.CalendarDayItem
 
@@ -16,6 +17,7 @@ class CalendarDayAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var items: List<CalendarDayItem> = emptyList()
+    private var categoriesById: Map<Int, Category> = emptyMap()
 
     companion object {
         const val TYPE_HEADER = 0
@@ -84,9 +86,11 @@ class CalendarDayAdapter(
             val tx = item.transaction
             noteText.text = item.transaction.note
             amountText.text = Helper.formatCurrency(item.transaction.amount)
-            childCategory.text = item.transaction.categorySubName
+            val (parentLabel, childLabel) =
+                Helper.resolveTransactionCategoryLabels(item.transaction, categoriesById)
+            childCategory.text = childLabel
             account.text = item.transaction.account
-            category.text = item.transaction.categoryParentName
+            category.text = parentLabel
 
             itemView.setOnClickListener {
                 onClick(tx)
@@ -99,5 +103,10 @@ class CalendarDayAdapter(
                     ContextCompat.getColor(itemView.context, R.color.red)
             )
         }
+    }
+
+    fun setCategories(categories: List<Category>) {
+        categoriesById = categories.associateBy { it.id }
+        notifyDataSetChanged()
     }
 }

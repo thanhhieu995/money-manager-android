@@ -173,29 +173,28 @@ class StatisticCategoryViewModel @Inject constructor(
         keyFilter: KeyFilter,
         locale: Locale
     ): List<LineChartPoint> {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
         val filtered = transactions.filter { tx ->
-            val txDate = try { LocalDate.parse(tx.date, formatter) } catch(e: Exception) { null }
-            if (txDate == null || tx.isIncome != isIncome) return@filter false
+            val txDate = Helper.epochMillisToLocalDate(tx.date)
+            if (tx.isIncome != isIncome) return@filter false
             when (keyFilter) {
-                KeyFilter.CategoryParent -> Helper.normalizeCategoryLabel(tx.categoryParentName)
-                    .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
-                KeyFilter.CategorySub -> Helper.normalizeCategoryLabel(tx.categorySubName)
-                    .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
+                KeyFilter.CategoryParent -> tx.categoryParentId.toString() == categoryName
+                KeyFilter.CategorySub -> (tx.categoryChildId?.toString() ?: "") == categoryName
                 KeyFilter.Note -> tx.note.trim().equals(categoryName.trim(), ignoreCase = true)
                 KeyFilter.Account -> tx.account.trim().equals(categoryName.trim(), ignoreCase = true)
                 else -> true
             }
         }
         val grouped = when (filterOption.type) {
-            FilterPeriodStatistic.Weekly -> filtered.filter { try { LocalDate.parse(it.date, formatter).year == filterOption.date.year } catch(e: Exception) { false } }
-                .groupBy { LocalDate.parse(it.date, formatter).with(DayOfWeek.MONDAY).format(DateTimeFormatter.ofPattern("dd/MM")) }
-            FilterPeriodStatistic.Monthly -> filtered.filter { try { LocalDate.parse(it.date, formatter).year == filterOption.date.year } catch(e: Exception) { false } }
-                .groupBy { LocalDate.parse(it.date, formatter).monthValue.toString() }
-            else -> filtered.groupBy { try { LocalDate.parse(it.date, formatter).year.toString() } catch(e: Exception) { "" } }
+            FilterPeriodStatistic.Weekly -> filtered
+                .filter { Helper.epochMillisToLocalDate(it.date).year == filterOption.date.year }
+                .groupBy { Helper.epochMillisToLocalDate(it.date).with(DayOfWeek.MONDAY).format(DateTimeFormatter.ofPattern("dd/MM")) }
+            FilterPeriodStatistic.Monthly -> filtered
+                .filter { Helper.epochMillisToLocalDate(it.date).year == filterOption.date.year }
+                .groupBy { Helper.epochMillisToLocalDate(it.date).monthValue.toString() }
+            else -> filtered.groupBy { Helper.epochMillisToLocalDate(it.date).year.toString() }
         }
         return grouped.map { (label, group) ->
-            val lastTxDate = try { LocalDate.parse(group.last().date, formatter) } catch(e: Exception) { LocalDate.now() }
+            val lastTxDate = Helper.epochMillisToLocalDate(group.last().date)
             val pointDate = if (filterOption.type == FilterPeriodStatistic.Weekly) lastTxDate.with(DayOfWeek.MONDAY) else lastTxDate
             LineChartPoint(label = label, amount = group.sumOf { it.amount }, date = pointDate)
         }.sortedBy { it.date }

@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.time.Instant
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.time.ZoneId
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -26,17 +26,12 @@ class CalendarUpdateViewModel @Inject constructor() : ViewModel() {
 
     fun updateData(groups: List<TransactionGroup>, currentDate: LocalDate) {
         groupedTransactions = groups
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
         val month = currentDate.month
         val year = currentDate.year
         val monthGroups = groups.mapNotNull { group ->
-            val dateStr = group.date.substringBefore(" ")
-            val localDate = try {
-                LocalDate.parse(dateStr, formatter)
-            } catch (e: Exception) {
-                null
-            }
-            if (localDate != null && localDate.month == month && localDate.year == year) {
+            val localDate =
+                Instant.ofEpochMilli(group.date).atZone(ZoneId.systemDefault()).toLocalDate()
+            if (localDate.month == month && localDate.year == year) {
                 localDate to group
             } else null
         }.toMap()
@@ -45,9 +40,9 @@ class CalendarUpdateViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun getGroupsForDate(dateString: String): List<TransactionGroup> {
+    fun getGroupsForDate(dateEpochMillis: Long): List<TransactionGroup> {
         return groupedTransactions.filter { group ->
-            group.date.substringBefore(" ") == dateString
+            group.date == dateEpochMillis
         }
     }
 }

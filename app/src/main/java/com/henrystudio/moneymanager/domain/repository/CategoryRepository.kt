@@ -22,4 +22,7 @@ interface CategoryRepository {
 
     suspend fun update(category: Category)
 
+    suspend fun increaseUsageCount(categoryId: Int)
+
+    suspend fun getById(id: Int): Category?
 }

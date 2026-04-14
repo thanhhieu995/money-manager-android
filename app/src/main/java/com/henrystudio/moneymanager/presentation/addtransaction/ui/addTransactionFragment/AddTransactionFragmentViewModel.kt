@@ -5,8 +5,12 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.core.util.Helper.Companion.parseDisplayDateToLocalDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.epochMillisToLocalDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.toDisplayLabel
+import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDisplayDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.localDateToStartOfDayEpochMillis
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
 import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
@@ -19,22 +23,28 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
 class AddTransactionFragmentViewModel @Inject constructor(
-    private val transactionUseCases: TransactionUseCases
+    private val transactionUseCases: TransactionUseCases,
+    private val categoryUseCases: CategoryUseCases
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(AddTransactionUiState())
     val uiState: StateFlow<AddTransactionUiState> = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<AddTransactionEvent>()
     val event = _event.asSharedFlow()
 
+    private var lastSelectedCategory : CategoryItem? = null
+    private var categoriesById: Map<Int, com.henrystudio.moneymanager.data.model.Category> = emptyMap()
     init {
+        viewModelScope.launch {
+            categoryUseCases.getAllCategories()
+                .collect { categories ->
+                    categoriesById = categories.associateBy { it.id }
+                }
+        }
         viewModelScope.launch {
             transactionUseCases.getTransactionsUseCase()
                 .map { list -> list.map { it.note }.distinct() }
@@ -64,40 +74,51 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
 
         val amount = params.amount.replace("[^\\d]".toRegex(), "").toDoubleOrNull() ?: 0.0
-        val localDate = parseDisplayDateToLocalDate(params.date) ?: LocalDate.now()
-        val englishFormatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
-        val dateForDb = localDate.format(englishFormatter)
+        val localDate = Helper.epochMillisToLocalDate(params.date)
+        val dateForDb = localDateToStartOfDayEpochMillis(localDate)
 
         viewModelScope.launch {
             try {
                 if (params.existing != null) {
+                    val ids = resolveCategoryIdsForSave(existing = params.existing)
                     val updated = params.existing.copy(
-                        categoryParentName = params.categoryParent,
-                        categorySubName = params.categoryChild,
+                        categoryParentId = ids.first,
+                        categoryChildId = ids.second,
                         note = params.note.trim(),
                         account = params.account,
                         amount = amount,
                         isIncome = params.isIncome,
-                        date = dateForDb
+                        date = dateForDb,
+                        createdAt = params.existing.createdAt,
+                        updatedAt = System.currentTimeMillis()
                     )
                     transactionUseCases.updateTransactionsUseCase(updated)
                 } else {
+                    val ids = resolveCategoryIdsForSave(existing = null)
                     val newTransaction = Transaction(
                         title = "",
-                        categoryParentName = params.categoryParent,
-                        categorySubName = params.categoryChild,
+                        categoryParentId = ids.first,
+                        categoryChildId = ids.second,
                         note = params.note.trim(),
                         account = params.account,
                         amount = amount,
                         isIncome = params.isIncome,
-                        date = dateForDb
+                        date = dateForDb,
+                        createdAt = System.currentTimeMillis(),
+                        updatedAt = null
                     )
                     transactionUseCases.addTransactionUseCase(newTransaction)
                 }
+
+                // 🚀 chạy nền, không chờ
+                launch {
+                    bumpCategoryUsage(params)
+                }
+
                 // ✅ emit 1 event duy nhất
                 _event.emit(
                     AddTransactionEvent.SaveCompleted(
-                        date = params.date,
+                        dateEpochMillis = dateForDb,
                         localDate = localDate,
                         closeAfterSave = params.closeAfterSave
                     )
@@ -108,6 +129,33 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private suspend fun bumpCategoryUsage(params: SaveTransactionParams) {
+        val ids = resolveCategoryIdsForSave(existing = params.existing)
+        if (ids.first > 0) {
+            categoryUseCases.increaseCategoryUsage(ids.first)
+        }
+        ids.second?.let { childId ->
+            if (childId > 0) categoryUseCases.increaseCategoryUsage(childId)
+        }
+    }
+
+    private fun resolveCategoryIdsForSave(existing: Transaction?): Pair<Int, Int?> {
+        // ưu tiên item user vừa chọn
+        lastSelectedCategory?.let { item ->
+            val parentId = item.parentId ?: item.id
+            val childId = if (item.parentId != null) item.id else null
+            return parentId to childId
+        }
+
+        // edit mode: user không chọn lại -> dùng ID sẵn có
+        if (existing != null) {
+            return existing.categoryParentId to existing.categoryChildId
+        }
+
+        // fallback an toàn (không nên xảy ra vì params.categoryParent required)
+        return 0 to null
     }
 
     fun deleteTransaction(transaction: Transaction) {
@@ -160,7 +208,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
-    fun onDateChanged(date: String) {
+    fun onDateChanged(date: LocalDate) {
         _uiState.update {
             it.copy(date = date)
         }
@@ -219,7 +267,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
             categoryChild = state.category.child.text,
             account = state.account.text,
             note = state.note.text,
-            date = state.date,
+            date = localDateToStartOfDayEpochMillis(state.date),
             isIncome = state.isIncome,
             existing = state.existingTransaction,
             closeAfterSave = closeAfterSave
@@ -228,21 +276,24 @@ class AddTransactionFragmentViewModel @Inject constructor(
         saveTransaction(params)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun initTransaction(transaction: Transaction?) {
         if (isInitialized) return
         isInitialized = true
         if (transaction != null) {
+            val parentLabel = categoriesById[transaction.categoryParentId]?.toDisplayLabel().orEmpty()
+            val childLabel = transaction.categoryChildId?.let { categoriesById[it]?.toDisplayLabel() }.orEmpty()
             _uiState.update {
                 it.copy(
                     amountRaw = FieldUiState(transaction.amount.toLong().toString(), FieldState.VALID),
                     amountFormatted = Helper.formatCurrency(transaction.amount),
                     category = CategorySelectionUiState(
-                        parent = FieldUiState(transaction.categoryParentName, FieldState.VALID),
-                        child = FieldUiState(transaction.categorySubName, FieldState.VALID)
+                        parent = FieldUiState(parentLabel, FieldState.VALID),
+                        child = FieldUiState(childLabel, FieldState.VALID)
                     ),
                     account = FieldUiState(transaction.account, FieldState.VALID),
                     note = FieldUiState(transaction.note, FieldState.VALID),
-                    date = transaction.date,
+                    date = epochMillisToLocalDate(transaction.date),
                     isIncome = transaction.isIncome,
                     isEditMode = true,
                     isContinueVisible = false,
@@ -254,7 +305,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 it.copy(
                     isEditMode = false,
                     isContinueVisible = true,
-                    date = Helper.getFormattedDateToday(),
+                    date = epochMillisToLocalDate(transaction?.date ?: System.currentTimeMillis()),
                     isIncome = false
                 )
             }
@@ -301,17 +352,20 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onCopyClicked() {
         val current = _uiState.value.existingTransaction ?: return
 
+        val parentLabel = categoriesById[current.categoryParentId]?.toDisplayLabel().orEmpty()
+        val childLabel = current.categoryChildId?.let { categoriesById[it]?.toDisplayLabel() }.orEmpty()
         _uiState.update {
             it.copy(
                 // giữ data cũ
                 amountRaw = FieldUiState(current.amount.toLong().toString(), FieldState.VALID),
                 amountFormatted = Helper.formatCurrency(current.amount),
                 category = CategorySelectionUiState(
-                    parent = FieldUiState(current.categoryParentName, FieldState.VALID),
-                    child = FieldUiState(current.categorySubName, FieldState.VALID)
+                    parent = FieldUiState(parentLabel, FieldState.VALID),
+                    child = FieldUiState(childLabel, FieldState.VALID)
                 ),
                 account = FieldUiState(current.account, FieldState.VALID),
                 note = FieldUiState(current.note, FieldState.VALID),
@@ -322,7 +376,11 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 isEditMode = false,
 
                 // chỉ đổi ngày
-                date = Helper.getFormattedDateToday()
+                date = epochMillisToLocalDate(current.date).let { date ->
+                    if (date.isBefore(LocalDate.now())) {
+                        LocalDate.now()
+                    } else date
+                }
             )
         }
 
@@ -445,6 +503,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         val current = _uiState.value.category
 
         categoryJustSelected = true
+        lastSelectedCategory = categoryItem
 
         val parentName = categoryItem.parentName ?: categoryItem.name
         val parentEmoji = categoryItem.parentEmoji ?: categoryItem.emoji

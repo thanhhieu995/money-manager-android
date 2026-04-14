@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.core.util.FilterTransactions
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyData
 import com.henrystudio.moneymanager.presentation.views.weekly.WeeklyUiState
@@ -36,14 +37,11 @@ class WeeklyViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun groupTransactionsByWeek(transactions: List<TransactionGroup>): List<WeeklyData> {
-        val inputFormatter = DateTimeFormatter.ofPattern("dd/MM/yy")
         val outputFormatter = DateTimeFormatter.ofPattern("dd-MM")
 
         return transactions
             .groupBy {
-                val rawDate = it.date
-                val cleanedDate = rawDate.substringBefore(" ")
-                val date = LocalDate.parse(cleanedDate, inputFormatter)
+                val date = Helper.epochMillisToLocalDate(it.date)
                 date.with(DayOfWeek.MONDAY)
             }
             .toSortedMap(compareByDescending { it })

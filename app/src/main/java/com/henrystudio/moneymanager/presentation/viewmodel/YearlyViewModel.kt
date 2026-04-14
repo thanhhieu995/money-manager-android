@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -53,11 +52,10 @@ class YearlyViewModel @Inject constructor(
     }
 
     private fun mapTransactionsToYearlyData(transactions: List<Transaction>): List<YearlyData> {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", Locale.ENGLISH)
         val outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
         return transactions
-            .groupBy { LocalDate.parse(it.date, formatter).year }
+            .groupBy { Helper.epochMillisToLocalDate(it.date).year }
             .map { (year, yearTransactions) ->
                 val income = yearTransactions.filter { it.isIncome }.sumOf { it.amount }
                 val expense = yearTransactions.filter { !it.isIncome }.sumOf { it.amount }

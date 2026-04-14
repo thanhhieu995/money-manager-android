@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.daily.model.DailyListItem
 import java.time.format.DateTimeFormatter
@@ -22,6 +23,7 @@ class DailyAdapter(
 ): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var items: List<DailyListItem> = emptyList()
+    private var categoriesById: Map<Int, Category> = emptyMap()
     companion object {
         private const val TYPE_HEADER = 0
         private const val TYPE_TRANSACTION = 1
@@ -83,7 +85,7 @@ class DailyAdapter(
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(item: DailyListItem.Header) {
-            date.text = Helper.parseStringToLocalDate(item.date).format(headerFormatter)
+            date.text = Helper.epochMillisToLocalDate(item.date).format(headerFormatter)
             income.text = Helper.formatCurrency(item.income)
             expense.text = Helper.formatCurrency(item.expense)
         }
@@ -99,9 +101,11 @@ class DailyAdapter(
         fun bind(item: DailyListItem.TransactionItem) {
             noteText.text = item.transaction.note
             amountText.text = Helper.formatCurrency(item.transaction.amount)
-            childCategory.text = item.transaction.categorySubName
+            val (parentLabel, childLabel) =
+                Helper.resolveTransactionCategoryLabels(item.transaction, categoriesById)
+            childCategory.text = childLabel
             account.text = item.transaction.account
-            category.text = item.transaction.categoryParentName
+            category.text = parentLabel
             itemView.isSelected = item.isSelected
 
             itemView.setOnClickListener {
@@ -137,6 +141,11 @@ class DailyAdapter(
         val diff = DiffUtil.calculateDiff(DailyDiffCallback(items, newList))
         items = newList
         diff.dispatchUpdatesTo(this)
+    }
+
+    fun setCategories(categories: List<Category>) {
+        categoriesById = categories.associateBy { it.id }
+        notifyDataSetChanged()
     }
 
     override fun getItemViewType(position: Int): Int {

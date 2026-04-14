@@ -36,4 +36,10 @@ interface CategoryDao {
 
     @Query("SELECT * FROM categories")
     suspend fun getAllOnce(): List<Category>
+
+    @Query("SELECT * FROM categories WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Int): Category?
+
+    @Query("UPDATE categories SET usageCount = usageCount + 1, lastUsed = :timestamp WHERE id = :categoryId")
+    suspend fun increaseUsageCount(categoryId: Int, timestamp: Long)
 }

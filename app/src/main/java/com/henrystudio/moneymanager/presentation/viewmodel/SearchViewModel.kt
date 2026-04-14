@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.update
 import java.text.Normalizer
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.regex.Pattern
 import javax.inject.Inject
 
@@ -58,7 +56,6 @@ class SearchViewModel @Inject constructor() : ViewModel() {
     private fun applyFilter() {
         val queryRaw = _uiState.value.searchQuery.lowercase().trim()
         val period = _uiState.value.filterPeriod
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault())
         val currentDate = LocalDate.now()
         val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
         val endOfWeek = startOfWeek.plusDays(6)
@@ -69,11 +66,7 @@ class SearchViewModel @Inject constructor() : ViewModel() {
             when (period) {
                 FilterPeriodSearch.All -> allTransactions
                 else -> allTransactions.filter { tx ->
-                    val txDate = try {
-                        LocalDate.parse(tx.date.substringBefore(" "), formatter)
-                    } catch (e: Exception) {
-                        return@filter true
-                    }
+                    val txDate = Helper.epochMillisToLocalDate(tx.date)
                     when (period) {
                         FilterPeriodSearch.Weekly ->
                             !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
@@ -87,13 +80,9 @@ class SearchViewModel @Inject constructor() : ViewModel() {
         } else {
             val query = queryRaw.removeVietnameseDiacritics()
             allTransactions.filter { tx ->
-                val txDate = try {
-                    LocalDate.parse(tx.date.substringBefore(" "), formatter)
-                } catch (e: Exception) {
-                    return@filter false
-                }
+                val txDate = Helper.epochMillisToLocalDate(tx.date)
                 val note = tx.note.lowercase().removeVietnameseDiacritics()
-                val dateStr = tx.date.lowercase().removeVietnameseDiacritics()
+                val dateStr = Helper.formatEpochMillisToDisplayDate(tx.date).lowercase().removeVietnameseDiacritics()
                 val amount = Helper.formatCurrency(tx.amount).lowercase()
                 val matchQuery = note.contains(query) || dateStr.contains(query) || amount.contains(query)
                 val matchPeriod = when (period) {

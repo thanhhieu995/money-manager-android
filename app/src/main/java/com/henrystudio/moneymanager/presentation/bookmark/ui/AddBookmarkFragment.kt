@@ -52,6 +52,11 @@ class AddBookmarkFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    sharedViewModel.categoriesState.collect { categories ->
+                        transactionAdapter.setCategories(categories)
+                    }
+                }
                 sharedViewModel.allTransactionsState.collect { state ->
                     when (state) {
                         is UiState.Loading -> {

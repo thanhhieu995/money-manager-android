@@ -74,7 +74,7 @@ class MonthlyFragment : Fragment() {
                                     adapter.notifyItemChanged(index)
                                 } else if (activity is StatisticListActivity) {
                                     SharedTransactionHolder.currentFilterDate =
-                                        Helper.formatDateFromFilterOptionToDateDaily(month.monthStart.toString())
+                                        Helper.localDateToStartOfDayEpochMillis(month.monthStart)
                                     SharedTransactionHolder.filterOption =
                                         FilterOption(FilterPeriodStatistic.Monthly, month.monthStart)
                                     activity.onBackAnimation()

@@ -194,7 +194,7 @@ class DailyViewModel @Inject constructor(
 
             // 🔥 SORT transaction mới nhất lên trên
             val sortedTransactions = group.transactions
-                .sortedByDescending { it.id } // 👈 QUAN TRỌNG
+                .sortedByDescending { it.updatedAt ?: it.createdAt} // 👈 QUAN TRỌNG
             // 🔥 Transaction items
             sortedTransactions.forEach { tx ->
                 result.add(
@@ -211,11 +211,9 @@ class DailyViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun findPositionForDate(items: List<DailyListItem>, date: LocalDate): Int {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
         return items.indexOfFirst { item ->
             if (item is DailyListItem.Header) {
-                val cleanedDate = item.date.substringBefore(" ")
-                val txDate = LocalDate.parse(cleanedDate, formatter)
+                val txDate = Helper.epochMillisToLocalDate(item.date)
                 txDate == date
             } else {
                 false
@@ -239,8 +237,8 @@ class DailyViewModel @Inject constructor(
         }
     }
 
-    fun onParseStringToLocaleDate(dateString: String) : LocalDate {
-        return Helper.parseStringToLocalDate(dateString)
+    fun onParseEpochMillisToLocalDate(epochMillis: Long) : LocalDate {
+        return Helper.epochMillisToLocalDate(epochMillis)
     }
 
     fun onFormatCurrency(amount: Double): String {
@@ -300,7 +298,7 @@ class DailyViewModel @Inject constructor(
     }
 
     fun mapHeader(item: DailyListItem.Header): DailyHeaderUi {
-        val localDate = Helper.parseStringToLocalDate(item.date)
+        val localDate = Helper.epochMillisToLocalDate(item.date)
         val formatter = DateTimeFormatter.ofPattern("dd EEE")
 
         return DailyHeaderUi(

@@ -166,6 +166,11 @@ class SearchActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    sharedViewModel.categoriesState.collect { categories ->
+                        transactionAdapter.setCategories(categories)
+                    }
+                }
                 viewModel.uiState.collect { state ->
                     transactionAdapter.updateList(state.filteredTransactions)
                     incomeCount.text = state.incomeTotal
@@ -227,6 +232,7 @@ class SearchActivity : AppCompatActivity() {
         tvNoData = findViewById(R.id.search_no_data)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun searchArrange() {
         val bottomSheetDialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.item_search_arrange, null)
@@ -246,6 +252,7 @@ class SearchActivity : AppCompatActivity() {
             FilterPeriodSearch.Yearly to R.id.optionYearlyLayout,
         )
 
+        @RequiresApi(Build.VERSION_CODES.O)
         fun updateCheckMarks(selected: FilterPeriodSearch) {
             viewModel.updateFilterPeriod(selected)
             checkViews.forEach { (option, imageView) ->

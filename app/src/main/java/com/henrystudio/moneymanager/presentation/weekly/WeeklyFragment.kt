@@ -55,7 +55,7 @@ class WeeklyFragment : Fragment() {
             emptyList(),
             onWeekClick = { data ->
                 SharedTransactionHolder.currentFilterDate =
-                    Helper.formatDateFromFilterOptionToDateDaily(data.weekStart.toString())
+                    Helper.localDateToStartOfDayEpochMillis(data.weekStart)
                 SharedTransactionHolder.filterOption =
                     FilterOption(FilterPeriodStatistic.Weekly, data.weekStart)
                 (requireActivity() as StatisticListActivity).onBackAnimation()

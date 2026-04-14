@@ -28,13 +28,39 @@ import com.henrystudio.moneymanager.presentation.model.TransactionType
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
 
 class Helper {
     companion object {
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun epochMillisToLocalDate(epochMillis: Long, zoneId: ZoneId = ZoneId.systemDefault()): LocalDate {
+            return Instant.ofEpochMilli(epochMillis).atZone(zoneId).toLocalDate()
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun localDateToStartOfDayEpochMillis(localDate: LocalDate, zoneId: ZoneId = ZoneId.systemDefault()): Long {
+            return localDate.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun formatEpochMillisToDisplayDate(epochMillis: Long): String {
+            val locale = getAppLocale()
+            val date = epochMillisToLocalDate(epochMillis)
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yy (EEE)", locale)
+            return date.format(formatter)
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun formatEpochMillisToDateKey(epochMillis: Long): String {
+            val date = epochMillisToLocalDate(epochMillis)
+            return date.format(DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault()))
+        }
+
         fun openTransactionDetail(context: Context, transaction: Transaction) {
             val intent = Intent(context, AddTransactionActivity::class.java).apply {
                 putExtra("transaction", transaction)
@@ -92,6 +118,19 @@ class Helper {
             )
         }
 
+        fun Category.toDisplayLabel(): String {
+            return listOf(emoji, name).filter { it.isNotBlank() }.joinToString(" ").trim()
+        }
+
+        fun resolveTransactionCategoryLabels(
+            transaction: Transaction,
+            categoriesById: Map<Int, Category>
+        ): Pair<String, String> {
+            val parent = categoriesById[transaction.categoryParentId]?.toDisplayLabel().orEmpty()
+            val child = transaction.categoryChildId?.let { categoriesById[it]?.toDisplayLabel() }.orEmpty()
+            return parent to child
+        }
+
         fun convertToCategoryStats(
             categories: List<Category>,
             transactions: List<Transaction>,
@@ -105,8 +144,10 @@ class Helper {
 
             return categories.mapIndexedNotNull { index, category ->
                 val categoryTransactions = filteredTransactions.filter {
-                   normalizeCategoryLabel(it.categorySubName)
-                       .equals(category.name.trim(), ignoreCase = true)
+                    val label = it.categoryChildId?.let { id ->
+                        categories.firstOrNull { c -> c.id == id }?.name
+                    }.orEmpty()
+                    label.trim().equals(category.name.trim(), ignoreCase = true)
                 }
                 val categoryAmount = categoryTransactions.sumOf { it.amount }
                 if (categoryAmount > 0) {
@@ -245,6 +286,7 @@ class Helper {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun parseStringToLocalDate(date: String): LocalDate {
+            // kept for legacy; prefer epochMillisToLocalDate()
             val cleanedDate = date.substringBefore(" ")
             val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
             return LocalDate.parse(cleanedDate, formatter)
@@ -268,6 +310,12 @@ class Helper {
             calendar.set(year, month, day)
             val dateFormat = SimpleDateFormat("dd/MM/yy (EEE)", Helper.getAppLocale())
             return dateFormat.format(calendar.time)
+        }
+
+        fun formatPickedDateToLocalDate(year: Int, month: Int, day: Int): LocalDate {
+            val calendar = Calendar.getInstance()
+            calendar.set(year, month, day)
+            return calendar.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
         }
 
         @RequiresApi(Build.VERSION_CODES.O)

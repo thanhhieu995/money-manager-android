@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 
 class TransactionAdapter(
@@ -17,6 +18,7 @@ class TransactionAdapter(
     private val clickListener: ((Transaction) -> Boolean)? = null,
     private val longClickListener: ((Transaction) -> Boolean)? = null
 ) : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionDailyDiffCallback) {
+    private var categoriesById: Map<Int, Category> = emptyMap()
 
     inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val noteText: TextView = itemView.findViewById(R.id.item_transaction_content)
@@ -41,8 +43,9 @@ class TransactionAdapter(
 
         holder.noteText.text = tx.note
         holder.amountText.text = Helper.formatCurrency(tx.amount)
-        holder.category.text = tx.categoryParentName
-        holder.childCategory.text = tx.categorySubName
+        val (parentLabel, childLabel) = Helper.resolveTransactionCategoryLabels(tx, categoriesById)
+        holder.category.text = parentLabel
+        holder.childCategory.text = childLabel
         holder.account.text = tx.account.trim()
 
         holder.amountText.setTextColor(
@@ -78,5 +81,10 @@ class TransactionAdapter(
         if (index != -1) {
             notifyItemChanged(index)
         }
+    }
+
+    fun setCategories(categories: List<Category>) {
+        categoriesById = categories.associateBy { it.id }
+        notifyDataSetChanged()
     }
 }

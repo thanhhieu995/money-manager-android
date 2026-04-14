@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDisplayDate
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.viewmodel.CalendarUpdateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
@@ -40,7 +41,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -163,11 +163,12 @@ class CalendarUpdateFragment : Fragment() {
                 Helper.openTransactionDetail(requireContext(), tx)
             },
         )
+        adapter.setCategories(sharedViewModel.categoriesState.value)
         val dialogView = layoutInflater.inflate(R.layout.item_calendar_day_detail, null)
         val bottomSheet = BottomSheetDialog(requireContext())
         bottomSheet.setContentView(dialogView)
 
-        val dateString = date.format(DateTimeFormatter.ofPattern("dd/MM/yy", Locale.getDefault()))
+        val dateEpochMillis = Helper.localDateToStartOfDayEpochMillis(date)
 
         val dayListTransaction = dialogView.findViewById<RecyclerView>(R.id.item_day_calendar_list)
         dayListTransaction.layoutManager = LinearLayoutManager(requireContext())
@@ -175,7 +176,7 @@ class CalendarUpdateFragment : Fragment() {
 
         val noDataText = dialogView.findViewById<TextView>(R.id.item_day_calendar_noData)
 
-        val groupTransaction = viewModel.getGroupsForDate(dateString)
+        val groupTransaction = viewModel.getGroupsForDate(dateEpochMillis)
 
         val group = groupTransaction.firstOrNull()
 
@@ -184,7 +185,7 @@ class CalendarUpdateFragment : Fragment() {
                 // Header
                 add(
                     CalendarDayItem.Header(
-                        date = group.date,
+                        date = formatEpochMillisToDisplayDate(group.date),
                         income = group.income,
                         expense = group.expense
                     )

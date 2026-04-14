@@ -43,7 +43,8 @@ object UseCaseModule {
             getParentCategories = GetParentCategoriesUseCase(repository),
             getChildCategories = GetChildCategoriesUseCase(repository),
             getAllCategories = GetAllCategoriesUseCase(repository),
-            getCategoriesByType = GetCategoriesByTypeUseCase(repository)
+            getCategoriesByType = GetCategoriesByTypeUseCase(repository),
+            increaseCategoryUsage = IncreaseCategoryUsageUseCase(repository)
         )
     }
 

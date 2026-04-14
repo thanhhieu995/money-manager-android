@@ -13,10 +13,7 @@ data class Category(
     val emoji: String,
     val name: String,
     val type: TransactionType,
-    val parentId: Int? = null // null: danh mục cha, != null: danh mục con
+    val parentId: Int? = null, // null: danh mục cha, != null: danh mục con
+    val usageCount: Int = 0,
+    val lastUsed: Long = 0L
 ) : Parcelable
-
-//@Parcelize
-//enum class TransactionType : Parcelable {
-//    INCOME , EXPENSE
-//}

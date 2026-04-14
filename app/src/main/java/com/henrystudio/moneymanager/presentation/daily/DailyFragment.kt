@@ -104,6 +104,11 @@ class DailyFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
+                    sharedViewModel.categoriesState.collect { categories ->
+                        adapter.setCategories(categories)
+                    }
+                }
+                launch {
                     viewModel.uiState.collect { uiState ->
                         renderUi(uiState)
                     }
@@ -137,7 +142,7 @@ class DailyFragment : Fragment() {
                     if (firstPos != RecyclerView.NO_POSITION) {
                         val item = adapter.getItemAt(firstPos)
                         if (item is DailyListItem.TransactionItem) {
-                            val date = viewModel.onParseStringToLocaleDate(item.transaction.date)
+                            val date = viewModel.onParseEpochMillisToLocalDate(item.transaction.date)
                             viewModel.onAction(DailyAction.OnScrollStopped(date))
                         }
                     }

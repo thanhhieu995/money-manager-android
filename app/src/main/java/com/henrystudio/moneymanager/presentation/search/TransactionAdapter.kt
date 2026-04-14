@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionDiffCallback
 import java.text.Normalizer
@@ -25,6 +26,7 @@ import java.util.regex.Pattern
 class TransactionAdapter(
     var transactions: List<Transaction>,
 ) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>(), Filterable {
+    private var categoriesById: Map<Int, Category> = emptyMap()
 
     private var filterResultListener: OnFilterResultListener? = null
     var filterPeriod: FilterPeriodSearch = FilterPeriodSearch.All
@@ -71,7 +73,8 @@ class TransactionAdapter(
         holder.amountText.text = Helper.formatCurrency(tx.amount)
         holder.childCategory.text = ""
         holder.account.text = tx.account
-        holder.category.text = tx.categoryParentName
+        val (parentLabel, _) = Helper.resolveTransactionCategoryLabels(tx, categoriesById)
+        holder.category.text = parentLabel
 
         holder.amountText.setTextColor(
             if (tx.isIncome)
@@ -104,6 +107,11 @@ class TransactionAdapter(
         updateFilteredList(newList)
     }
 
+    fun setCategories(categories: List<Category>) {
+        categoriesById = categories.associateBy { it.id }
+        notifyDataSetChanged()
+    }
+
     private fun updateFilteredList(newFiltered: List<Transaction>) {
         val diffCallback = TransactionDiffCallback(this.filteredTransactions, newFiltered)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
@@ -122,7 +130,7 @@ class TransactionAdapter(
                         FilterPeriodSearch.All -> transactions
                         else -> transactions.filter { tx ->
                             val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-                            val txDate = LocalDate.parse(tx.date.substringBefore(" "), formatter)
+                            val txDate = Helper.epochMillisToLocalDate(tx.date)
                             when (filterPeriod) {
                                 FilterPeriodSearch.Weekly -> {
                                     val now = LocalDate.now()
@@ -154,10 +162,10 @@ class TransactionAdapter(
                 val currentYear = currentDate.year
 
                 val filtered = transactions.filter { tx ->
-                    val txDate = LocalDate.parse(tx.date.substringBefore(" "), formatter)
+                    val txDate = Helper.epochMillisToLocalDate(tx.date)
 
                     val note = tx.note.lowercase().removeVietnameseDiacritics()
-                    val date = tx.date.lowercase().removeVietnameseDiacritics()
+                    val date = Helper.formatEpochMillisToDisplayDate(tx.date).lowercase().removeVietnameseDiacritics()
                     val amount = Helper.formatCurrency(tx.amount).lowercase()
 
                     val matchQuery = query.isNullOrEmpty()

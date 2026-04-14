@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionDiffCallback
 
@@ -19,6 +20,7 @@ class BookmarkAdapter(
 
     var isEditMode = false
     var clickListener: OnBookmarkLickListener? = null
+    private var categoriesById: Map<Int, Category> = emptyMap()
 
     interface OnBookmarkLickListener {
         fun onBookmarkClick(transaction: Transaction)
@@ -45,8 +47,9 @@ class BookmarkAdapter(
         private val amount: TextView = view.findViewById(R.id.item_bookmark_amount)
 
         fun bind(item: Transaction) {
-            date.text = item.date
-            category.text = item.categoryParentName
+            date.text = item.date.toString()
+            val (parentLabel, _) = Helper.resolveTransactionCategoryLabels(item, categoriesById)
+            category.text = parentLabel
             content.text = item.title
             account.text = item.account
             amount.text = Helper.formatCurrency(item.amount)
@@ -72,5 +75,10 @@ class BookmarkAdapter(
 
     override fun onBindViewHolder(holder: BookmarkViewHolder, position: Int) {
         holder.bind(items[position])
+    }
+
+    fun setCategories(categories: List<Category>) {
+        categoriesById = categories.associateBy { it.id }
+        notifyDataSetChanged()
     }
 }

@@ -63,6 +63,11 @@ class BookmarkListFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    sharedViewModel.categoriesState.collect { categories ->
+                        adapter.setCategories(categories)
+                    }
+                }
                 sharedViewModel.getBookmarkedTransactions().collect { list ->
                     viewModel.updateBookmarks(list)
                 }
@@ -92,6 +97,7 @@ class BookmarkListFragment : Fragment() {
     private val swipeCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
         override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, tgt: RecyclerView.ViewHolder) = false
 
+        @RequiresApi(Build.VERSION_CODES.O)
         override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {
             val item = adapter.items[vh.adapterPosition]
             sharedViewModel.update(item.copy(isBookmarked = false))

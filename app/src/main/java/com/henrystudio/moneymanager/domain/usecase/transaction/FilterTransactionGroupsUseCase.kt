@@ -58,14 +58,13 @@ class FilterTransactionGroupsUseCase @Inject constructor() {
             val filteredTransactions = when (keyFilter) {
                 KeyFilter.CategoryParent -> {
                     group.transactions.filter {
-                        Helper.normalizeCategoryLabel(it.categoryParentName)
-                            .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
+                        // categoryName filter by label is not supported after switching to IDs
+                        false
                     }
                 }
                 KeyFilter.CategorySub -> {
                     group.transactions.filter {
-                        Helper.normalizeCategoryLabel(it.categorySubName)
-                            .equals(Helper.normalizeCategoryLabel(categoryName), ignoreCase = true)
+                        false
                     }
                 }
                 KeyFilter.Note -> {
