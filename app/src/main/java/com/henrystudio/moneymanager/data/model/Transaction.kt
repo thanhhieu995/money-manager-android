@@ -1,9 +1,11 @@
 package com.henrystudio.moneymanager.data.model
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.io.Serializable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(tableName = "transactions")
 data class Transaction(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -18,4 +20,4 @@ data class Transaction(
     val isBookmarked: Boolean = false,
     val createdAt: Long,
     val updatedAt: Long?
-) : Serializable
+) : Parcelable

@@ -43,6 +43,8 @@
     <string name="Sun">Sun</string>
     // month picker
     <string name="date">Date</string>
+    <string name="date_today">Today</string>
+    <string name="date_yesterday">Yesterday</string>
     <string name="current_month">Current Month</string>
     //
     <string name="delete">Delete</string>

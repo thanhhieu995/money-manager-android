@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -40,12 +39,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDisplayDate
-import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDate
+import com.henrystudio.moneymanager.core.util.Helper.Companion.formatLocalDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatPickedDateToLocalDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.getFormattedDateToday
 import com.henrystudio.moneymanager.core.util.Helper.Companion.setTextIfDifferent
-import com.henrystudio.moneymanager.data.model.Account
+import com.henrystudio.moneymanager.core.util.IntentKeys
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.databinding.FragmentAddTransactionBinding
 import com.henrystudio.moneymanager.data.model.Transaction
@@ -55,7 +53,6 @@ import com.henrystudio.moneymanager.presentation.addtransaction.components.adapt
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
-import com.henrystudio.moneymanager.presentation.addtransaction.model.CategoryItem
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
@@ -66,11 +63,8 @@ import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.*
 
 @AndroidEntryPoint
@@ -119,33 +113,6 @@ class AddTransactionFragment : Fragment() {
 
         init()
         initDefaultTints()
-
-        listOf(
-            edtAmount,
-            edtNote,
-            edtAccount,
-            edtCategory
-        ).forEach { v ->
-            v.setOnClickListener {
-                viewModel.onUserStartEditing()
-            }
-
-            v.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
-                    viewModel.onUserStartEditing()
-                }
-            }
-        }
-
-        edtCategory.setOnTouchListener { _, _ ->
-            viewModel.onUserStartEditing()
-            false
-        }
-
-        edtAccount.setOnTouchListener { _, _ ->
-            viewModel.onUserStartEditing()
-            false
-        }
 
         formattedDate = getFormattedDateToday()
 
@@ -281,11 +248,16 @@ class AddTransactionFragment : Fragment() {
                         expenseButton.isChecked = !isIncome
                     }
                     state.date.let { date ->
-                        dateTextView.text = date.toString()
+                        val today = LocalDate.now()
+                        dateTextView.text = when (date) {
+                            today -> getString(R.string.date_today)
+                            today.minusDays(1) -> getString(R.string.date_yesterday)
+                            else -> formatLocalDate(date)
+                        }
                     }
-                    state.isEditMode.let { isEdit ->
-                        layoutSave.visibility = if (isEdit) View.GONE else View.VISIBLE
-                        layoutEdit.visibility = if (isEdit) View.VISIBLE else View.GONE
+                    state.isDirty.let { isEdit ->
+                        layoutSave.visibility = if (isEdit) View.VISIBLE else View.GONE
+                        layoutEdit.visibility = if (isEdit) View.GONE else View.VISIBLE
                     }
                     state.isContinueVisible.let { isVisible ->
                         continueButton.visibility = if (isVisible) View.VISIBLE else View.GONE
@@ -410,6 +382,7 @@ class AddTransactionFragment : Fragment() {
         bookMarkButton = binding.fragmentAddTransactionBtnBookmark
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun showAccountBottomDialog(
         title: String,
         targetEditText: EditText,
@@ -511,8 +484,9 @@ class AddTransactionFragment : Fragment() {
         bottomSheetDialog.show()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleToAddTransaction() {
-        val transaction = arguments?.getSerializable("transaction") as? Transaction
+        val transaction = arguments?.getParcelable(IntentKeys.TRANSACTION) as? Transaction
         viewModel.initTransaction(transaction)
         if (transaction == null && !hasRequestedInitialAmountFocus) {
             hasRequestedInitialAmountFocus = true
@@ -525,6 +499,7 @@ class AddTransactionFragment : Fragment() {
 
     private fun amountTextChangeListener() {
         edtAmount.addTextChangedListener(object : TextWatcher {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun afterTextChanged(s: Editable?) {
                 viewModel.onAmountChanged(s.toString())
             }
@@ -550,6 +525,7 @@ class AddTransactionFragment : Fragment() {
                 p3: Int
             ) {}
 
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun afterTextChanged(s: Editable?) {
                 viewModel.onNoteChanged(s.toString())
             }
@@ -563,6 +539,7 @@ class AddTransactionFragment : Fragment() {
         _binding = null
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun showCategoryBottomDialog(
         title: String,
         targetEditText: EditText,

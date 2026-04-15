@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
@@ -19,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.appbar.MaterialToolbar
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.util.IntentKeys
 import com.henrystudio.moneymanager.data.model.Account
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
@@ -83,13 +83,13 @@ class AddTransactionActivity : AppCompatActivity() {
             overridePendingTransition(R.anim.no_animation, R.anim.slide_out_right)
         }
 
-        val transaction = intent.getSerializableExtra("transaction") as? Transaction
+        val transaction = intent.getParcelableExtra(IntentKeys.TRANSACTION) as? Transaction
         addTransactionActivityViewModel.init(transaction)
 
         if (savedInstanceState == null) {
             val fragment = AddTransactionFragment().apply {
                 arguments = Bundle().apply {
-                    putSerializable("transaction", transaction)
+                    putParcelable(IntentKeys.TRANSACTION, transaction)
                 }
             }
 

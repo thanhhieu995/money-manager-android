@@ -2,7 +2,6 @@ package com.henrystudio.moneymanager.presentation.addtransaction.ui.addTransacti
 
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldUiState
-import com.henrystudio.moneymanager.presentation.addtransaction.model.SaveResult
 import java.time.LocalDate
 
 data class AddTransactionUiState(
@@ -13,7 +12,7 @@ data class AddTransactionUiState(
     val note: FieldUiState = FieldUiState(),
     val date: LocalDate = LocalDate.now(),
     val isIncome: Boolean = false,
-    val isEditMode: Boolean = false,
+    val isDirty: Boolean = false,
     val isContinueVisible: Boolean = true,
     val noteSuggestions: List<String> = emptyList(),
     val existingTransaction: Transaction? = null

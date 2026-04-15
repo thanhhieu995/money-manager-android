@@ -43,6 +43,8 @@
     <string name="Sun">So</string>
     //
     <string name="date">Datum</string>
+    <string name="date_today">Heute</string>
+    <string name="date_yesterday">Gestern</string>
     <string name="current_month">Aktueller Monat</string>
     <string name="delete">Löschen</string>
     <string name="copy">Kopieren</string>
@@ -68,5 +70,10 @@
     <string name="no">Nein</string>
     <string name="transaction_delete">Transaktion gelöscht</string>
     <string name="bookmarked">Lesezeichen gesetzt</string>
+    <string name="saved">Gespeichert</string>
+    <string name="tutorial_add_title">Erste Transaktion hinzufügen</string>
+    <string name="tutorial_add_message">Tippen Sie auf Hinzufügen, um Ihre erste Einnahme oder Ausgabe zu erfassen und MoneyManager zu nutzen.</string>
+    <string name="tutorial_got_it">Verstanden</string>
+    <string name="tutorial_add_action">Erste Transaktion hinzufügen</string>
 
 </resources>

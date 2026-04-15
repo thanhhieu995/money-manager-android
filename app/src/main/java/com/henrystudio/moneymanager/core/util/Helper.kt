@@ -37,6 +37,11 @@ import java.util.*
 
 class Helper {
     companion object {
+        fun formatLocalDate(date: LocalDate): String {
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            return date.format(formatter)
+        }
+
         @RequiresApi(Build.VERSION_CODES.O)
         fun epochMillisToLocalDate(epochMillis: Long, zoneId: ZoneId = ZoneId.systemDefault()): LocalDate {
             return Instant.ofEpochMilli(epochMillis).atZone(zoneId).toLocalDate()
@@ -63,7 +68,7 @@ class Helper {
 
         fun openTransactionDetail(context: Context, transaction: Transaction) {
             val intent = Intent(context, AddTransactionActivity::class.java).apply {
-                putExtra("transaction", transaction)
+                putExtra(IntentKeys.TRANSACTION, transaction)
             }
             context.startActivity(intent)
             if (context is Activity) {

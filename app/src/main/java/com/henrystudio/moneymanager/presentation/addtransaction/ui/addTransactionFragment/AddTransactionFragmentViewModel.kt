@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.epochMillisToLocalDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.toDisplayLabel
-import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDisplayDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.localDateToStartOfDayEpochMillis
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
@@ -38,11 +37,29 @@ class AddTransactionFragmentViewModel @Inject constructor(
 
     private var lastSelectedCategory : CategoryItem? = null
     private var categoriesById: Map<Int, com.henrystudio.moneymanager.data.model.Category> = emptyMap()
+    private var originalTransaction: Transaction? = null
+    private var newFormBaseline: NewFormBaseline? = null
+    private var draftCategoryIdsForNew: Pair<Int, Int?>? = null
+
+    private data class NewFormBaseline(
+        val amountRaw: String,
+        val categoryParent: String,
+        val categoryChild: String,
+        val account: String,
+        val note: String,
+        val date: LocalDate,
+        val isIncome: Boolean
+    )
     init {
         viewModelScope.launch {
             categoryUseCases.getAllCategories()
                 .collect { categories ->
                     categoriesById = categories.associateBy { it.id }
+                    // 🔥 FIX: nếu đang edit thì re-bind category
+                    val existing = _uiState.value.existingTransaction
+                    if (existing != null) {
+                        updateCategoryFromExisting(existing)
+                    }
                 }
         }
         viewModelScope.launch {
@@ -74,7 +91,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
 
         val amount = params.amount.replace("[^\\d]".toRegex(), "").toDoubleOrNull() ?: 0.0
-        val localDate = Helper.epochMillisToLocalDate(params.date)
+        val localDate = epochMillisToLocalDate(params.date)
         val dateForDb = localDateToStartOfDayEpochMillis(localDate)
 
         viewModelScope.launch {
@@ -154,6 +171,9 @@ class AddTransactionFragmentViewModel @Inject constructor(
             return existing.categoryParentId to existing.categoryChildId
         }
 
+        // create/copy mode: giữ lại ID category đã có sẵn (ví dụ từ Copy)
+        draftCategoryIdsForNew?.let { return it }
+
         // fallback an toàn (không nên xảy ra vì params.categoryParent required)
         return 0 to null
     }
@@ -170,12 +190,17 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onTransactionTypeChanged(isIncome: Boolean) {
         val current = _uiState.value
         val amountState = validateAmount(current.amountRaw.text)
 
+        // Đổi type => category chọn trước đó không còn hợp lệ
+        lastSelectedCategory = null
+        draftCategoryIdsForNew = null
+
         _uiState.update {
-            it.copy(
+            val next = it.copy(
                 isIncome = isIncome,
 
                 amountRaw = current.amountRaw.copy(
@@ -187,6 +212,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
                     state = FieldState.IDLE
                 )
             )
+            next.copy(isDirty = computeIsDirty(next))
         }
 
         // lấy field trống đầu tiên
@@ -197,20 +223,24 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onNoteChanged(value: String) {
         _uiState.update {
-            it.copy(
+            val next = it.copy(
                 note = it.note.copy(
                 text = value,
                 state = FieldState.IDLE
                 )
             )
+            next.copy(isDirty = computeIsDirty(next))
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onDateChanged(date: LocalDate) {
         _uiState.update {
-            it.copy(date = date)
+            val next = it.copy(date = date)
+            next.copy(isDirty = computeIsDirty(next))
         }
     }
 
@@ -278,9 +308,12 @@ class AddTransactionFragmentViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun initTransaction(transaction: Transaction?) {
+        originalTransaction = transaction
         if (isInitialized) return
         isInitialized = true
         if (transaction != null) {
+            newFormBaseline = null
+            draftCategoryIdsForNew = null
             val parentLabel = categoriesById[transaction.categoryParentId]?.toDisplayLabel().orEmpty()
             val childLabel = transaction.categoryChildId?.let { categoriesById[it]?.toDisplayLabel() }.orEmpty()
             _uiState.update {
@@ -295,26 +328,36 @@ class AddTransactionFragmentViewModel @Inject constructor(
                     note = FieldUiState(transaction.note, FieldState.VALID),
                     date = epochMillisToLocalDate(transaction.date),
                     isIncome = transaction.isIncome,
-                    isEditMode = true,
+                    // Edit mode: ban đầu chưa đổi gì -> chưa dirty
+                    isDirty = false,
                     isContinueVisible = false,
                     existingTransaction = transaction
                 )
             }
         } else {
+            lastSelectedCategory = null
+            draftCategoryIdsForNew = null
             _uiState.update {
-                it.copy(
-                    isEditMode = false,
+                val next = it.copy(
                     isContinueVisible = true,
                     date = epochMillisToLocalDate(transaction?.date ?: System.currentTimeMillis()),
                     isIncome = false
                 )
+                next.copy(isDirty = computeIsDirty(next))
             }
+            newFormBaseline = buildNewBaseline(_uiState.value)
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun resetForm() {
+        lastSelectedCategory = null
+        draftCategoryIdsForNew = null
+        if (_uiState.value.existingTransaction == null) {
+            originalTransaction = null
+        }
         _uiState.update {
-            it.copy(
+            val next = it.copy(
                 amountRaw = FieldUiState("", FieldState.IDLE),
                 amountFormatted = "",
                 category = CategorySelectionUiState(
@@ -325,6 +368,10 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 note = FieldUiState("", FieldState.IDLE),
                 date = _uiState.value.date,
             )
+            next.copy(isDirty = computeIsDirty(next))
+        }
+        if (_uiState.value.existingTransaction == null) {
+            newFormBaseline = buildNewBaseline(_uiState.value)
         }
     }
 
@@ -344,22 +391,18 @@ class AddTransactionFragmentViewModel @Inject constructor(
         emitEvent(AddTransactionEvent.FocusField(nextField))
     }
 
-    fun onUserStartEditing() {
-        if(_uiState.value.isEditMode) {
-            _uiState.update {
-                it.copy(isEditMode = false)
-            }
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     fun onCopyClicked() {
         val current = _uiState.value.existingTransaction ?: return
 
         val parentLabel = categoriesById[current.categoryParentId]?.toDisplayLabel().orEmpty()
         val childLabel = current.categoryChildId?.let { categoriesById[it]?.toDisplayLabel() }.orEmpty()
+        // chuyển sang mode tạo mới -> không so với original nữa
+        originalTransaction = null
+        lastSelectedCategory = null
+        draftCategoryIdsForNew = current.categoryParentId to current.categoryChildId
         _uiState.update {
-            it.copy(
+            val next = it.copy(
                 // giữ data cũ
                 amountRaw = FieldUiState(current.amount.toLong().toString(), FieldState.VALID),
                 amountFormatted = Helper.formatCurrency(current.amount),
@@ -373,15 +416,15 @@ class AddTransactionFragmentViewModel @Inject constructor(
 
                 // 🔥 QUAN TRỌNG
                 existingTransaction = null, // → chuyển sang mode tạo mới
-                isEditMode = false,
 
                 // chỉ đổi ngày
                 date = epochMillisToLocalDate(current.date).let { date ->
                     if (date.isBefore(LocalDate.now())) {
                         LocalDate.now()
                     } else date
-                }
+                },
             )
+            next.copy(isDirty = computeIsDirty(next))
         }
 
         // focus lại amount cho UX đẹp
@@ -441,6 +484,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onAmountChanged(input: String) {
         val clean = input.replace("[^\\d]".toRegex(), "")
 
@@ -456,13 +500,14 @@ class AddTransactionFragmentViewModel @Inject constructor(
         } else FieldState.IDLE
 
         _uiState.update {
-            it.copy(
+            val next = it.copy(
                 amountRaw = current.copy(
                     text = clean,
                     state = newState
                 ),
-                amountFormatted = formatted
+                amountFormatted = formatted,
             )
+            next.copy(isDirty = computeIsDirty(next))
         }
     }
 
@@ -499,11 +544,14 @@ class AddTransactionFragmentViewModel @Inject constructor(
         emitEvent(AddTransactionEvent.OpenAccountPicker)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onCategorySelected(categoryItem: CategoryItem) {
         val current = _uiState.value.category
 
         categoryJustSelected = true
         lastSelectedCategory = categoryItem
+        // đã chọn lại category => lấy theo lựa chọn mới
+        draftCategoryIdsForNew = null
 
         val parentName = categoryItem.parentName ?: categoryItem.name
         val parentEmoji = categoryItem.parentEmoji ?: categoryItem.emoji
@@ -518,7 +566,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
             .joinToString(" ")
 
         _uiState.update {
-            it.copy(
+            val next = it.copy(
                 category = current.copy(
                     parent = current.parent.copy(
                         text = parentDisplay,
@@ -532,18 +580,20 @@ class AddTransactionFragmentViewModel @Inject constructor(
                         isFocused = false,
                         state = if (childDisplay.isEmpty()) FieldState.IDLE else FieldState.VALID
                     )
-                )
+                ),
             )
+            next.copy(isDirty = computeIsDirty(next))
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onAccountSelected(text: String) {
         val current = _uiState.value.account
 
         accountJustSelected = true
 
         _uiState.update {
-            it.copy(
+            val next = it.copy(
                 account = current.copy(
                     text = text,
                     isTouched = true,
@@ -551,6 +601,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
                     state = FieldState.VALID
                 )
             )
+            next.copy(isDirty = computeIsDirty(next))
         }
     }
 
@@ -641,5 +692,60 @@ class AddTransactionFragmentViewModel @Inject constructor(
                 )
             )
         }
+    }
+
+    private fun updateCategoryFromExisting(transaction: Transaction) {
+        val parentLabel = categoriesById[transaction.categoryParentId]
+            ?.toDisplayLabel().orEmpty()
+
+        val childLabel = transaction.categoryChildId
+            ?.let { categoriesById[it]?.toDisplayLabel() }
+            .orEmpty()
+
+        _uiState.update {
+            it.copy(
+                category = CategorySelectionUiState(
+                    parent = FieldUiState(parentLabel, FieldState.VALID),
+                    child = FieldUiState(childLabel, FieldState.VALID)
+                )
+            )
+        }
+    }
+
+    private fun buildNewBaseline(state: AddTransactionUiState): NewFormBaseline {
+        return NewFormBaseline(
+            amountRaw = state.amountRaw.text,
+            categoryParent = state.category.parent.text,
+            categoryChild = state.category.child.text,
+            account = state.account.text,
+            note = state.note.text,
+            date = state.date,
+            isIncome = state.isIncome
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun computeIsDirty(state: AddTransactionUiState): Boolean {
+        // Edit mode: so với transaction gốc
+        originalTransaction?.let { original ->
+            val currentAmount = state.amountRaw.text.toDoubleOrNull() ?: 0.0
+
+            val currentParentId = lastSelectedCategory?.parentId
+                ?: original.categoryParentId
+
+            val currentChildId = lastSelectedCategory?.id
+                ?: original.categoryChildId
+
+            return currentAmount != original.amount ||
+                    state.account.text != original.account ||
+                    state.note.text != original.note ||
+                    state.isIncome != original.isIncome ||
+                    currentParentId != original.categoryParentId ||
+                    currentChildId != original.categoryChildId ||
+                    state.date != epochMillisToLocalDate(original.date)
+        }
+
+        // Create mode (tạo mới / sau copy): luôn hiện layoutSave theo UI đang dùng
+        return true
     }
 }

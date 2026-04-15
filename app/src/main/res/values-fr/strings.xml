@@ -43,6 +43,8 @@
     <string name="Sun">Dim</string>
     //
     <string name="date">Date</string>
+    <string name="date_today">Aujourd\'hui</string>
+    <string name="date_yesterday">Hier</string>
     <string name="current_month">Mois en cours</string>
     <string name="delete">Supprimer</string>
     <string name="copy">Copier</string>
@@ -68,5 +70,10 @@
     <string name="no">Non</string>
     <string name="transaction_delete">Transaction supprimée</string>
     <string name="bookmarked">Ajouté aux favoris</string>
+    <string name="saved">Enregistré</string>
+    <string name="tutorial_add_title">Ajoutez votre première transaction</string>
+    <string name="tutorial_add_message">Appuyez sur Ajouter pour enregistrer votre premier revenu ou dépense et commencer à utiliser MoneyManager.</string>
+    <string name="tutorial_got_it">Compris</string>
+    <string name="tutorial_add_action">Ajouter la première transaction</string>
 
 </resources>

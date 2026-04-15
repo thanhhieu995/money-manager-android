@@ -43,6 +43,8 @@
     <string name="Sun">日</string>
     //
     <string name="date">日期</string>
+    <string name="date_today">今天</string>
+    <string name="date_yesterday">昨天</string>
     <string name="current_month">当前月份</string>
     <string name="delete">删除</string>
     <string name="copy">复制</string>
@@ -68,5 +70,10 @@
     <string name="no">否</string>
     <string name="transaction_delete">交易已删除</string>
     <string name="bookmarked">已收藏</string>
+    <string name="saved">已保存</string>
+    <string name="tutorial_add_title">添加您的第一笔交易</string>
+    <string name="tutorial_add_message">点击“添加”按钮记录您的第一笔收入或支出，开始使用 MoneyManager。</string>
+    <string name="tutorial_got_it">知道了</string>
+    <string name="tutorial_add_action">添加第一笔交易</string>
 
 </resources>
