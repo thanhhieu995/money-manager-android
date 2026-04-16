@@ -16,7 +16,7 @@ import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionDiffCallback
+import com.henrystudio.moneymanager.presentation.bookmark.model.TransactionUI
 import java.text.Normalizer
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -33,6 +33,24 @@ class TransactionAdapter(
     var isSelected: ((Transaction) -> Boolean)? = null
 
     private var filteredTransactions: List<Transaction> = transactions
+    private var displayedItems: List<TransactionUI> = buildUiList(filteredTransactions)
+
+    private class TransactionUiDiffCallback(
+        private val oldList: List<TransactionUI>,
+        private val newList: List<TransactionUI>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize(): Int = oldList.size
+        override fun getNewListSize(): Int = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].transaction.id == newList[newItemPosition].transaction.id
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition] == newList[newItemPosition]
+        }
+    }
+
     interface OnFilterResultListener {
         fun onFilterResult(filteredList: List<Transaction>)
     }
@@ -67,14 +85,14 @@ class TransactionAdapter(
     }
 
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
-        val tx = filteredTransactions[position]
+        val item = displayedItems[position]
+        val tx = item.transaction
 
         holder.noteText.text = tx.note
         holder.amountText.text = Helper.formatCurrency(tx.amount)
         holder.childCategory.text = ""
         holder.account.text = tx.account
-        val (parentLabel, _) = Helper.resolveTransactionCategoryLabels(tx, categoriesById)
-        holder.category.text = parentLabel
+        holder.category.text = item.categoryLabel
 
         holder.amountText.setTextColor(
             if (tx.isIncome)
@@ -109,14 +127,24 @@ class TransactionAdapter(
 
     fun setCategories(categories: List<Category>) {
         categoriesById = categories.associateBy { it.id }
-        notifyDataSetChanged()
+        // categories changed => rebuild displayedItems so DiffUtil can trigger rebinds
+        updateFilteredList(filteredTransactions)
     }
 
     private fun updateFilteredList(newFiltered: List<Transaction>) {
-        val diffCallback = TransactionDiffCallback(this.filteredTransactions, newFiltered)
+        val newDisplayed = buildUiList(newFiltered)
+        val diffCallback = TransactionUiDiffCallback(this.displayedItems, newDisplayed)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
         this.filteredTransactions = newFiltered
+        this.displayedItems = newDisplayed
         diffResult.dispatchUpdatesTo(this)
+    }
+
+    private fun buildUiList(list: List<Transaction>): List<TransactionUI> {
+        return list.map { tx ->
+            val (parentLabel, _) = Helper.resolveTransactionCategoryLabels(tx, categoriesById)
+            TransactionUI(tx, parentLabel)
+        }
     }
 
     override fun getFilter(): Filter {

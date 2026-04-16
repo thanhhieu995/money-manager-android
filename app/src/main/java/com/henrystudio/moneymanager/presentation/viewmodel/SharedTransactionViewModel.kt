@@ -240,6 +240,8 @@ class SharedTransactionViewModel @Inject constructor(
             is TransactionAction.OnTransactionClick -> {
                onTransactionClick(action.transaction)
             }
+
+            else -> {}
         }
     }
 

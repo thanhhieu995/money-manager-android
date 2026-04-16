@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class BookmarkListFragment : Fragment() {
-    private val sharedViewModel: SharedTransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
     private val viewModel: BookmarkListViewModel by viewModels()
     private lateinit var adapter: BookmarkAdapter
     private lateinit var tvNoData: TextView

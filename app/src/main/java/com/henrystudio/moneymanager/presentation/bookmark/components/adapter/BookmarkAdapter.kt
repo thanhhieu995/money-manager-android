@@ -1,14 +1,18 @@
 package com.henrystudio.moneymanager.presentation.bookmark.components.adapter
 
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDateKey
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionDiffCallback
@@ -46,13 +50,16 @@ class BookmarkAdapter(
         private val account: TextView = view.findViewById(R.id.item_bookmark_account)
         private val amount: TextView = view.findViewById(R.id.item_bookmark_amount)
 
+        @RequiresApi(Build.VERSION_CODES.O)
         fun bind(item: Transaction) {
-            date.text = item.date.toString()
+            date.text = formatEpochMillisToDateKey(item.date)
             val (parentLabel, _) = Helper.resolveTransactionCategoryLabels(item, categoriesById)
             category.text = parentLabel
-            content.text = item.title
+            content.text = item.note
             account.text = item.account
             amount.text = Helper.formatCurrency(item.amount)
+            amount.setTextColor(if (item.isIncome) ContextCompat.getColor(itemView.context, R.color.income)
+            else ContextCompat.getColor(itemView.context, R.color.red))
 
             deleteIcon.visibility = if (isEditMode) View.VISIBLE else View.GONE
 

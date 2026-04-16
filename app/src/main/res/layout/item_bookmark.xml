@@ -39,6 +39,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="10/5/2025"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:textColor="#888888"
                 android:textSize="14sp" />
 
@@ -47,6 +49,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Hair Cut"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="16sp" />
         </LinearLayout>
@@ -62,6 +66,8 @@
                 android:id="@+id/item_bookmark_content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:text="Tuition fee" />
 
             <TextView
@@ -69,19 +75,29 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Cash"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:textColor="#888888"
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- Cột phải: Amount -->
-        <TextView
-            android:id="@+id/item_bookmark_amount"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:layout_weight="1"
-            android:gravity="center_horizontal"
-            android:text="40.000đ"
-            android:textColor="#FF3B30" />
-    </LinearLayout>
+            android:layout_gravity="center_vertical">
 
+            <TextView
+                android:id="@+id/item_bookmark_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:gravity="end"
+                android:text="40.000đ"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="#FF3B30" />
+        </LinearLayout>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,17 +16,20 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.bookmark.AddBookmarkViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.bookmark.model.TransactionUI
 import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AddBookmarkFragment : Fragment() {
-    private val sharedViewModel: SharedTransactionViewModel by viewModels()
+    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
     private val viewModel: AddBookmarkViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
     private lateinit var recyclerView: RecyclerView
@@ -52,31 +56,36 @@ class AddBookmarkFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    sharedViewModel.categoriesState.collect { categories ->
-                        transactionAdapter.setCategories(categories)
-                    }
-                }
-                sharedViewModel.allTransactionsState.collect { state ->
-                    when (state) {
-                        is UiState.Loading -> {
-                            viewModel.setLoading()
-                        }
-                        is UiState.Empty -> {
-                            viewModel.setEmpty()
-                        }
-                        is UiState.Success -> {
-                            viewModel.updateTransactions(state.data)
-                        }
-                        else -> {}
-                    }
+                combine(
+                    sharedViewModel.allTransactionsState,
+                    sharedViewModel.categoriesState
+                ) {txState, categories ->
+                    Pair(txState, categories)
+                }.collect { (txState, categories) ->
+                    viewModel.setState(txState)
+                    transactionAdapter.setCategories(categories)
                 }
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    transactionAdapter.updateList(state.transactions)
+                viewModel.uiState.collect { uiState ->
+                    when (val state = uiState.state) {
+                        is UiState.Loading -> {
+                            tvNoData.visibility = View.GONE
+                            recyclerView.visibility = View.GONE
+                        }
+                        is UiState.Empty -> {
+                            tvNoData.visibility = View.VISIBLE
+                            recyclerView.visibility = View.GONE
+                        }
+                        is UiState.Success -> {
+                            tvNoData.visibility = View.GONE
+                            recyclerView.visibility = View.VISIBLE
+                            transactionAdapter.updateList(state.data)
+                        }
+                        else -> {}
+                    }
                 }
             }
         }
