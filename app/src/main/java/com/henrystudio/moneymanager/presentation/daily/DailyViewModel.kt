@@ -10,7 +10,7 @@ import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.domain.usecase.appstate.PreferenceUseCases
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.presentation.daily.model.DailyAction
 import com.henrystudio.moneymanager.presentation.daily.model.DailyEvent
 import com.henrystudio.moneymanager.presentation.daily.model.DailyHeaderUi

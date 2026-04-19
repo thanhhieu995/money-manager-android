@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.bookmark.ui
+package com.henrystudio.moneymanager.presentation.bookmark.ui.bookmarkList
 
 import android.graphics.Canvas
 import android.graphics.Color
@@ -22,19 +22,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.core.util.Helper
-import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.bookmark.BookmarkViewModel
 import com.henrystudio.moneymanager.presentation.bookmark.components.adapter.BookmarkAdapter
-import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
+import com.henrystudio.moneymanager.presentation.bookmark.model.BookmarkItemUi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.henrystudio.moneymanager.presentation.extension.handle
 
 @AndroidEntryPoint
 class BookmarkListFragment : Fragment() {
-    private val sharedViewModel: SharedTransactionViewModel by activityViewModels()
+    private val bookmarkViewModel: BookmarkViewModel by activityViewModels()
     private val viewModel: BookmarkListViewModel by viewModels()
     private lateinit var adapter: BookmarkAdapter
     private lateinit var tvNoData: TextView
-    private var isEditMode = false
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,8 +53,8 @@ class BookmarkListFragment : Fragment() {
 
         adapter = BookmarkAdapter(
             items = emptyList(),
-            onDeleteClick = { transaction ->
-                sharedViewModel.update(transaction.copy(isBookmarked = false))
+            onDeleteClick = {  bookmarkItemUi->
+                viewModel.onAction(BookmarkListAction.DeleteBookmark(bookmarkItemUi.transaction))
             }
         )
 
@@ -65,34 +66,43 @@ class BookmarkListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.categoriesState.collect { categories ->
-                        adapter.setCategories(categories)
+                    viewModel.uiState.collect { state ->
+                        state.handle(
+                            onLoading = {
+                                tvNoData.visibility = View.GONE
+                                recyclerView.visibility = View.GONE
+                            },
+                            onEmpty = {
+                                tvNoData.visibility = View.VISIBLE
+                                recyclerView.visibility = View.GONE
+                            },
+                            onSuccess = { uiState ->
+                                tvNoData.visibility = View.GONE
+                                recyclerView.visibility = View.VISIBLE
+                                adapter.updateList(uiState.bookmarks)
+                            },
+                            onError = { message ->
+                                tvNoData.text = "Error: $message"
+                                tvNoData.visibility = View.VISIBLE
+                                recyclerView.visibility = View.GONE
+                            }
+                        )
                     }
                 }
-                sharedViewModel.getBookmarkedTransactions().collect { list ->
-                    viewModel.updateBookmarks(list)
-                }
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    adapter.updateList(state.bookmarks)
-                    tvNoData.visibility = if (state.isEmpty) View.VISIBLE else View.GONE
+
+                launch {
+                    bookmarkViewModel.isEditMode.collect { isEdit ->
+                        adapter.isEditMode = isEdit
+                    }
                 }
             }
         }
 
         adapter.clickListener = object : BookmarkAdapter.OnBookmarkLickListener {
-            override fun onBookmarkClick(transaction: Transaction) {
-                Helper.openTransactionDetail(requireActivity(), transaction)
+            override fun onBookmarkClick(bookmarkItemUi: BookmarkItemUi) {
+                Helper.openTransactionDetail(requireActivity(), bookmarkItemUi.transaction)
             }
         }
-    }
-
-    fun toggleEditMode() {
-        isEditMode = !isEditMode
-        adapter.toggleEditMode()
     }
 
     private val swipeCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
@@ -101,7 +111,7 @@ class BookmarkListFragment : Fragment() {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {
             val item = adapter.items[vh.adapterPosition]
-            sharedViewModel.update(item.copy(isBookmarked = false))
+            viewModel.onAction(BookmarkListAction.DeleteBookmark(item.transaction))
         }
 
         override fun getSwipeEscapeVelocity(defaultValue: Float): Float = 0.5f

@@ -22,7 +22,7 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
 import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.presentation.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.daily.DailyFragment
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel

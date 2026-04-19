@@ -14,7 +14,7 @@ import com.henrystudio.moneymanager.presentation.model.Event
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.TransactionType
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -154,10 +154,6 @@ class SharedTransactionViewModel @Inject constructor(
 
     fun update(transaction: Transaction) = viewModelScope.launch {
         transactionUseCases.updateTransactionsUseCase(transaction)
-    }
-
-    suspend fun getBookmarkedTransactions(): Flow<List<Transaction>> {
-        return transactionUseCases.getBookmarkedTransactionsUseCase()
     }
 
     fun setCurrentFilterDate(dateEpochMillis: Long) {

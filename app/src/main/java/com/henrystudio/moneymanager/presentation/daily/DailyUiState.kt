@@ -1,7 +1,7 @@
 package com.henrystudio.moneymanager.presentation.daily
 
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.presentation.daily.model.DailyListItem
 import java.time.LocalDate
 

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
-import com.henrystudio.moneymanager.presentation.addtransaction.model.toUiState
+import com.henrystudio.moneymanager.presentation.model.UiState
+import com.henrystudio.moneymanager.presentation.model.toUiState
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

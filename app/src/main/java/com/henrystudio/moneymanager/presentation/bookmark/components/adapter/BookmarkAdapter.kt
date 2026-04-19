@@ -15,31 +15,30 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDateKey
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionDiffCallback
+import com.henrystudio.moneymanager.presentation.bookmark.components.diffutil.BookmarkItemUiDiffCallback
+import com.henrystudio.moneymanager.presentation.bookmark.model.BookmarkItemUi
 
 class BookmarkAdapter(
-    var items: List<Transaction>,
-    private val onDeleteClick: (Transaction) -> Unit
+    var items: List<BookmarkItemUi>,
+    private val onDeleteClick: (BookmarkItemUi) -> Unit
 ) : RecyclerView.Adapter<BookmarkAdapter.BookmarkViewHolder>() {
 
     var isEditMode = false
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
     var clickListener: OnBookmarkLickListener? = null
-    private var categoriesById: Map<Int, Category> = emptyMap()
 
     interface OnBookmarkLickListener {
-        fun onBookmarkClick(transaction: Transaction)
+        fun onBookmarkClick(bookmarkItemUi: BookmarkItemUi)
     }
 
-    fun updateList(newList: List<Transaction>) {
-        val diffCallback = TransactionDiffCallback(items, newList)
+    fun updateList(newList: List<BookmarkItemUi>) {
+        val diffCallback = BookmarkItemUiDiffCallback(items, newList)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
         items = newList
         diffResult.dispatchUpdatesTo(this)
-    }
-
-    fun toggleEditMode() {
-        isEditMode = !isEditMode
-       notifyDataSetChanged()
     }
 
     inner class BookmarkViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -51,13 +50,12 @@ class BookmarkAdapter(
         private val amount: TextView = view.findViewById(R.id.item_bookmark_amount)
 
         @RequiresApi(Build.VERSION_CODES.O)
-        fun bind(item: Transaction) {
-            date.text = formatEpochMillisToDateKey(item.date)
-            val (parentLabel, _) = Helper.resolveTransactionCategoryLabels(item, categoriesById)
-            category.text = parentLabel
-            content.text = item.note
+        fun bind(item: BookmarkItemUi) {
+            date.text = item.date
+            category.text = item.category
+            content.text = item.content
             account.text = item.account
-            amount.text = Helper.formatCurrency(item.amount)
+            amount.text = item.amount
             amount.setTextColor(if (item.isIncome) ContextCompat.getColor(itemView.context, R.color.income)
             else ContextCompat.getColor(itemView.context, R.color.red))
 
@@ -80,12 +78,8 @@ class BookmarkAdapter(
 
     override fun getItemCount() = items.size
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: BookmarkViewHolder, position: Int) {
         holder.bind(items[position])
-    }
-
-    fun setCategories(categories: List<Category>) {
-        categoriesById = categories.associateBy { it.id }
-        notifyDataSetChanged()
     }
 }

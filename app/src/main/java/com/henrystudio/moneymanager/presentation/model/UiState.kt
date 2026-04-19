@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.addtransaction.model
+package com.henrystudio.moneymanager.presentation.model
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch

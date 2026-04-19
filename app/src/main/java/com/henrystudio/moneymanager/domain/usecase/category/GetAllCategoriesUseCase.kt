@@ -11,5 +11,4 @@ class GetAllCategoriesUseCase(
     operator fun invoke(): Flow<List<Category>> {
         return repository.getAll()
     }
-
 }

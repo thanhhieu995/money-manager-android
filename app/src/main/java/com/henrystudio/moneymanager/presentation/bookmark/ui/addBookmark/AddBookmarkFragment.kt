@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.bookmark.ui
+package com.henrystudio.moneymanager.presentation.bookmark.ui.addBookmark
 
 import android.os.Build
 import android.os.Bundle
@@ -16,13 +16,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.bookmark.AddBookmarkViewModel
+import com.henrystudio.moneymanager.presentation.extension.handle
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
-import com.henrystudio.moneymanager.presentation.bookmark.model.TransactionUI
-import com.henrystudio.moneymanager.presentation.views.search.TransactionAdapter
+import com.henrystudio.moneymanager.presentation.model.UiState
+import com.henrystudio.moneymanager.presentation.search.TransactionAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -70,21 +68,38 @@ class AddBookmarkFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { uiState ->
-                    when (val state = uiState.state) {
-                        is UiState.Loading -> {
+                    uiState.state.handle(
+                        onLoading = {
                             tvNoData.visibility = View.GONE
                             recyclerView.visibility = View.GONE
-                        }
-                        is UiState.Empty -> {
+                        },
+                        onEmpty = {
                             tvNoData.visibility = View.VISIBLE
                             recyclerView.visibility = View.GONE
-                        }
-                        is UiState.Success -> {
+                        },
+                        onError = { message ->
+                            tvNoData.visibility = View.VISIBLE
+                            recyclerView.visibility = View.GONE
+                            tvNoData.text = message
+                        },
+                        onSuccess = { transactions ->
                             tvNoData.visibility = View.GONE
                             recyclerView.visibility = View.VISIBLE
-                            transactionAdapter.updateList(state.data)
+                            transactionAdapter.updateList(transactions)
                         }
-                        else -> {}
+                    )
+                }
+
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.event.collect { event ->
+                    when (event) {
+                        is AddBookmarkEvent.NavigationBack -> {
+                            requireActivity().supportFragmentManager.popBackStack()
+                        }
                     }
                 }
             }
@@ -92,9 +107,7 @@ class AddBookmarkFragment : Fragment() {
 
         transactionAdapter.clickListener = object : TransactionAdapter.OnTransactionClickListener{
             override fun onTransactionClick(transaction: Transaction): Boolean {
-                val updated = transaction.copy(isBookmarked = true)
-                sharedViewModel.update(updated)
-                requireActivity().supportFragmentManager.popBackStack()
+                viewModel.onAction(AddBookmarkAction.BookmarkClicked(transaction))
                 return true
             }
         }

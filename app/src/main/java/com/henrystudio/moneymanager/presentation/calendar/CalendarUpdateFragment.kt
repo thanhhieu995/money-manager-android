@@ -27,9 +27,8 @@ import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillis
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.viewmodel.CalendarUpdateViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.presentation.calendar.components.adapter.CalendarDayAdapter
-import com.henrystudio.moneymanager.presentation.calendar.components.adapter.TransactionAdapter
 import com.henrystudio.moneymanager.presentation.calendar.model.CalendarDayItem
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
@@ -41,7 +40,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.util.Locale
 
 @AndroidEntryPoint
 class CalendarUpdateFragment : Fragment() {

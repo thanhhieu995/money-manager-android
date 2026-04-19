@@ -55,7 +55,7 @@ import com.henrystudio.moneymanager.presentation.addtransaction.model.AddItemAct
 import com.henrystudio.moneymanager.presentation.addtransaction.model.AddTransactionEvent
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldState
 import com.henrystudio.moneymanager.presentation.addtransaction.model.FieldType
-import com.henrystudio.moneymanager.presentation.addtransaction.model.UiState
+import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel

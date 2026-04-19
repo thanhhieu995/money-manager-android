@@ -9,22 +9,25 @@ import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import androidx.activity.addCallback
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.presentation.bookmark.ui.AddBookmarkFragment
-import com.henrystudio.moneymanager.presentation.bookmark.ui.BookmarkListFragment
+import com.henrystudio.moneymanager.presentation.bookmark.ui.addBookmark.AddBookmarkFragment
+import com.henrystudio.moneymanager.presentation.bookmark.ui.bookmarkList.BookmarkListFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class BookmarkActivity : AppCompatActivity() {
     private lateinit var toolbar: Toolbar
 
-    private var isEditMode = false
     private var shouldAnimateExit = false
-    private lateinit var bookmarkListFragment: BookmarkListFragment
-    private lateinit var addBookmarkFragment: AddBookmarkFragment
     private lateinit var bookmarkTitleView: TextView
+    private lateinit var bookmarkListFragment: BookmarkListFragment
+    private val viewModel: BookmarkViewModel by viewModels()
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,6 +81,17 @@ class BookmarkActivity : AppCompatActivity() {
             }
             invalidateOptionsMenu()
         }
+
+        lifecycleScope.launch {
+            viewModel.isEditMode.collect { isEdit ->
+                if (isEdit) {
+                    toolbar.setNavigationIcon(R.drawable.ic_baseline_close_black)
+                } else {
+                    toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
+                }
+                invalidateOptionsMenu()
+            }
+        }
     }
 
     override fun onPause() {
@@ -98,7 +112,7 @@ class BookmarkActivity : AppCompatActivity() {
         val isAddBookmark = currentFragment is AddBookmarkFragment
 
         // Ẩn hiện menu tùy theo fragment
-        menu.findItem(R.id.menu_bookmark_edit)?.isVisible = !isAddBookmark && !isEditMode
+        menu.findItem(R.id.menu_bookmark_edit)?.isVisible = !isAddBookmark
         menu.findItem(R.id.menu_bookmark_add)?.isVisible = !isAddBookmark
         return super.onPrepareOptionsMenu(menu)
     }
@@ -106,7 +120,7 @@ class BookmarkActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_bookmark_edit -> {
-                toggleEditMode()
+                viewModel.toggleEditMode()
                 true
             }
             R.id.menu_bookmark_add -> {
@@ -118,7 +132,7 @@ class BookmarkActivity : AppCompatActivity() {
                         R.anim.slide_in_left,  // vào lại khi popBackStack
                         R.anim.slide_out_right // ra khi popBackStack
                     )
-                    .replace(R.id.fragment_container_bookmark, addBookmarkFragment)
+                    .replace(R.id.fragment_container_bookmark, AddBookmarkFragment())
                     .addToBackStack(null)
                     .commit()
                 toolbar.post {
@@ -130,23 +144,9 @@ class BookmarkActivity : AppCompatActivity() {
         }
     }
 
-    private fun toggleEditMode() {
-        isEditMode = !isEditMode
-        bookmarkListFragment.toggleEditMode()
-        invalidateOptionsMenu()
-
-        // Cập nhật icon và tiêu đề toolbar
-        if (isEditMode) {
-            toolbar.setNavigationIcon(R.drawable.ic_baseline_close_black)
-        } else {
-            toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
-        }
-    }
-
     private fun init() {
-        bookmarkListFragment = BookmarkListFragment()
-        addBookmarkFragment = AddBookmarkFragment()
         toolbar = findViewById(R.id.bookmark_toolbar)
+        bookmarkListFragment = BookmarkListFragment()
     }
 
     private fun animateTitleToLeftOfIcon() {
@@ -175,14 +175,13 @@ class BookmarkActivity : AppCompatActivity() {
     private fun setUpToolBarBookmarkListFragment() {
         toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
         toolbar.setNavigationOnClickListener {
-            if (isEditMode) {
-                toggleEditMode()
+            if (viewModel.isEditMode.value) {
+                viewModel.toggleEditMode()
             } else {
                 shouldAnimateExit = true
                 finish()
             }
         }
-        isEditMode = false
         animateTitleToCenter()
     }
 }
