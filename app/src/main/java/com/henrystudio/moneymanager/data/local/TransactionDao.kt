@@ -12,7 +12,7 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC")
     fun getAll(): Flow<List<Transaction>>
 
-    @Query("SELECT * FROM transactions WHERE isBookmarked = 1 ORDER BY date DESC")
+    @Query("SELECT * FROM transactions WHERE isBookmarked = 1 ORDER BY bookmarkedAt IS NULL, bookmarkedAt DESC")
     fun getBookmarkedTransactions(): Flow<List<Transaction>>
 
     @Delete

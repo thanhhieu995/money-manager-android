@@ -18,6 +18,7 @@ data class Transaction(
     val isIncome: Boolean,
     val date: Long,
     val isBookmarked: Boolean = false,
+    val bookmarkedAt: Long? = null,
     val createdAt: Long,
     val updatedAt: Long?
 ) : Parcelable

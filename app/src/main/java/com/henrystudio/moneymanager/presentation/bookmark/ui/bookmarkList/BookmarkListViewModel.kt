@@ -29,7 +29,7 @@ class BookmarkListViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     val uiState =
         combine(
-            transactionUseCases.getTransactionsUseCase(),
+            transactionUseCases.getBookmarkedTransactionsUseCase(),
             categoryUseCases.getAllCategories()
         ) { transactions, categories ->
             val map = categories.associateBy { it.id }
@@ -69,7 +69,7 @@ class BookmarkListViewModel @Inject constructor(
                 // This is where you would add logic to remove the transaction from bookmarks
                 viewModelScope.launch {
                     transactionUseCases.updateTransactionsUseCase(
-                        action.transaction.copy(isBookmarked = false)
+                        action.transaction.copy(isBookmarked = false, bookmarkedAt = null)
                     )
                 }
             }

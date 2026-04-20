@@ -29,7 +29,6 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
     val event = _event.asSharedFlow()
     var currentAction: AddItemAction? = null
     var currentItemType: ItemType? = null
-    private var isIncome: Boolean = false
     private val _transactionType = MutableStateFlow(TransactionType.EXPENSE)
     var transactionType: StateFlow<TransactionType> = _transactionType
     private val toolbarStack = ArrayDeque<ToolbarStateStack>()
@@ -41,19 +40,8 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             ToolbarTitle.EXPENSE
         }
 
-        toolbarStack.clear()
-        toolbarStack.add(
-            ToolbarStateStack(
-                title = root,
-                config = toolbarConfig(showBookmark = true)
-            )
-        )
-
-        _toolbarState.value = AddTransactionToolbarState(
-            title = root,
-            animation = TitleAnimation.None,
-            config = toolbarConfig(showBookmark = true)
-        )
+        val rootConfig = toolbarConfig(showBookmark = true)
+        setRootToolbarState(root, rootConfig)
     }
 
     fun onAddItemClicked(
@@ -76,14 +64,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             addItemType = itemType
         )
 
-        toolbarStack.addLast(
-            ToolbarStateStack(
-                title = newTitle,
-                config = newConfig
-            )
-        )
-
-        _toolbarState.value = AddTransactionToolbarState(
+        pushToolbarState(
             title = newTitle,
             animation = TitleAnimation.SlideFromRight,
             config = newConfig
@@ -108,23 +89,15 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             is AddItemAction.FromCategoryDetail -> ToolbarTitle.CATEGORY
         }
 
-        toolbarStack.addLast(
-            ToolbarStateStack(
-                title = newTitle,
-                config = toolbarConfig(showAdd = true).copy(
-                    addAction = action,
-                    addItemType = itemType
-                )
-            )
+        val newConfig = toolbarConfig(showAdd = true).copy(
+            addAction = action,
+            addItemType = itemType
         )
 
-        _toolbarState.value = AddTransactionToolbarState(
+        pushToolbarState(
             title = newTitle,
             animation = TitleAnimation.SlideFromRight,
-            config = toolbarConfig(showAdd = true).copy(
-                addAction = action,
-                addItemType = itemType
-            )
+            config = newConfig
         )
 
         viewModelScope.launch {
@@ -176,14 +149,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             addItemType = itemType
         )
 
-        toolbarStack.addLast(
-            ToolbarStateStack(
-                title = newTitle,
-                config = newConfig
-            )
-        )
-
-        _toolbarState.value = AddTransactionToolbarState(
+        pushToolbarState(
             title = newTitle,
             animation = TitleAnimation.SlideFromRight,
             config = newConfig
@@ -218,23 +184,12 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             TransactionType.EXPENSE -> ToolbarTitle.EXPENSE
         }
 
-        // 🔥 reset stack
-        toolbarStack.clear()
-        toolbarStack.addLast(
-            ToolbarStateStack(
-                title = newRoot,
-                config = toolbarConfig(showAdd = true)
-            )
+        val rootConfig = toolbarConfig(
+            showAdd = false,
+            showBookmark = true
         )
 
-        _toolbarState.value = AddTransactionToolbarState(
-            title = newRoot,
-            animation = TitleAnimation.None,
-            config = toolbarConfig(
-                showAdd = false,
-                showBookmark = true
-            )
-        )
+        setRootToolbarState(newRoot, rootConfig)
     }
 
     fun onBackClicked() {
@@ -282,14 +237,7 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
             addItemType = ItemType.CATEGORY
         )
 
-        toolbarStack.addLast(
-            ToolbarStateStack(
-                title = newTitle,
-                config = newConfig
-            )
-        )
-
-        _toolbarState.value = AddTransactionToolbarState(
+        pushToolbarState(
             title = newTitle,
             animation = TitleAnimation.SlideFromRight,
             config = newConfig
@@ -300,25 +248,41 @@ class AddTransactionActivityViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun onChildCategoryClicked(item: CategoryItem) {
-        val title = item.name
-        val newTitle = ToolbarTitle.Custom(title)
+    private fun setRootToolbarState(
+        title: ToolbarTitle,
+        config: ToolbarConfig
+    ) {
+        toolbarStack.clear()
         toolbarStack.addLast(
             ToolbarStateStack(
-                title = newTitle,
-                config = toolbarConfig(showAdd = true)
+                title = title,
+                config = config
             )
         )
 
         _toolbarState.value = AddTransactionToolbarState(
-            title = newTitle,
-            animation = TitleAnimation.SlideFromRight,
-            config = toolbarConfig(showAdd = true)
+            title = title,
+            animation = TitleAnimation.None,
+            config = config
+        )
+    }
+
+    private fun pushToolbarState(
+        title: ToolbarTitle,
+        animation: TitleAnimation,
+        config: ToolbarConfig
+    ) {
+        toolbarStack.addLast(
+            ToolbarStateStack(
+                title = title,
+                config = config
+            )
         )
 
-        viewModelScope.launch {
-            _event.emit(AddTransactionEvent.NavigateToCategoryDetailWithTitle(EditItem.Category(item), AddItemAction.FromCategoryDetail
-            , title))
-        }
+        _toolbarState.value = AddTransactionToolbarState(
+            title = title,
+            animation = animation,
+            config = config
+        )
     }
 }

@@ -441,7 +441,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
 
     fun onBookmarkClicked() {
         val transaction = _uiState.value.existingTransaction ?: return
-        val update = transaction.copy(isBookmarked = true)
+        val update = transaction.copy(isBookmarked = true, bookmarkedAt = System.currentTimeMillis())
         updateTransaction(update)
 
         emitEvent(AddTransactionEvent.ShowToast("transaction_bookmark"))

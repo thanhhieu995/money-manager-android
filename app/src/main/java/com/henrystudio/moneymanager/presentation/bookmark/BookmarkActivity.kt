@@ -68,27 +68,33 @@ class BookmarkActivity : AppCompatActivity() {
 
         supportFragmentManager.addOnBackStackChangedListener {
             val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_bookmark)
-            if (currentFragment is AddBookmarkFragment) {
-                toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_ios_24)
+            val isAddFragment = currentFragment is AddBookmarkFragment
+            val isEdit = viewModel.isEditMode.value
+
+            renderNavigationIcon(isAddFragment, isEdit)
+
+            if (isAddFragment) {
                 toolbar.setNavigationOnClickListener {
                     supportFragmentManager.popBackStack()
                 }
+
                 toolbar.post {
                     animateTitleToLeftOfIcon()
                 }
             } else {
-               setUpToolBarBookmarkListFragment()
+                setUpToolBarBookmarkListFragment()
             }
+
             invalidateOptionsMenu()
         }
 
         lifecycleScope.launch {
             viewModel.isEditMode.collect { isEdit ->
-                if (isEdit) {
-                    toolbar.setNavigationIcon(R.drawable.ic_baseline_close_black)
-                } else {
-                    toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
-                }
+                val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container_bookmark)
+                val isAddFragment = currentFragment is AddBookmarkFragment
+
+                renderNavigationIcon(isAddFragment, isEdit)
+
                 invalidateOptionsMenu()
             }
         }
@@ -173,7 +179,6 @@ class BookmarkActivity : AppCompatActivity() {
     }
 
     private fun setUpToolBarBookmarkListFragment() {
-        toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
         toolbar.setNavigationOnClickListener {
             if (viewModel.isEditMode.value) {
                 viewModel.toggleEditMode()
@@ -183,5 +188,19 @@ class BookmarkActivity : AppCompatActivity() {
             }
         }
         animateTitleToCenter()
+    }
+
+    private fun renderNavigationIcon(isAddFragment: Boolean, isEdit: Boolean) {
+        when {
+            isAddFragment -> {
+                toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_ios_24)
+            }
+            isEdit -> {
+                toolbar.setNavigationIcon(R.drawable.ic_baseline_close_black)
+            }
+            else -> {
+                toolbar.setNavigationIcon(R.drawable.ic_baseline_close_24)
+            }
+        }
     }
 }

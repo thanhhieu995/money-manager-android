@@ -56,7 +56,7 @@ class AddBookmarkViewModel @Inject constructor(
         // This could involve updating a database or shared preferences
        viewModelScope.launch{
            transactionUseCases.updateTransactionsUseCase(
-               transaction.copy(isBookmarked = true)
+               transaction.copy(isBookmarked = true, bookmarkedAt = System.currentTimeMillis())
            )
        }
     }
