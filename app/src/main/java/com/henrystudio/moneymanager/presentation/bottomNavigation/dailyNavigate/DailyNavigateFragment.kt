@@ -18,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.application.PrefsManager
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.core.util.MonthPickerDialogFragment
 import com.henrystudio.moneymanager.databinding.FragmentDailyNavigateBinding
@@ -26,7 +27,6 @@ import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.presentation.bookmark.BookmarkActivity
 import com.henrystudio.moneymanager.presentation.daily.DailyFragment
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager
 import com.henrystudio.moneymanager.presentation.views.main.ViewPagerAdapter
 import com.henrystudio.moneymanager.presentation.views.search.SearchActivity
 import dagger.hilt.android.AndroidEntryPoint

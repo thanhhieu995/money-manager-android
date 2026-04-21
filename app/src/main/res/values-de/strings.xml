@@ -75,5 +75,14 @@
     <string name="tutorial_add_message">Tippen Sie auf Hinzufügen, um Ihre erste Einnahme oder Ausgabe zu erfassen und MoneyManager zu nutzen.</string>
     <string name="tutorial_got_it">Verstanden</string>
     <string name="tutorial_add_action">Erste Transaktion hinzufügen</string>
+    <string name="feedback_email_body">
+Gerät: %1$s
+Android: %2$s
+App-Version: %3$s
 
+Ihr Problem:
+</string>
+    <string name="feedback_popup_title">Finden Sie die App nützlich?</string>
+    <string name="feedback_positive">👍 Ja</string>
+    <string name="feedback_negative">👎 Nein</string>
 </resources>

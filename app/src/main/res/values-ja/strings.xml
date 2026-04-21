@@ -73,5 +73,14 @@
     <string name="tutorial_add_message">追加ボタンをタップして最初の収入または支出を記録し、MoneyManagerを使い始めましょう。</string>
     <string name="tutorial_got_it">了解</string>
     <string name="tutorial_add_action">最初の取引を追加</string>
+    <string name="feedback_email_body">
+デバイス: %1$s
+Android: %2$s
+アプリのバージョン: %3$s
 
+問題の内容:
+</string>
+    <string name="feedback_popup_title">このアプリは役に立っていますか？</string>
+    <string name="feedback_positive">👍 はい</string>
+    <string name="feedback_negative">👎 いいえ</string>
 </resources>

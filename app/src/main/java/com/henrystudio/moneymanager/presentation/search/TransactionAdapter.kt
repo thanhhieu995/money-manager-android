@@ -17,7 +17,6 @@ import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.bookmark.model.TransactionUI
-import com.henrystudio.moneymanager.presentation.views.search.FilterPeriodSearch
 import java.text.Normalizer
 import java.time.DayOfWeek
 import java.time.LocalDate

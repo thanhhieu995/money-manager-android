@@ -28,7 +28,7 @@ import com.henrystudio.moneymanager.presentation.daily.model.DailyListItem
 import com.henrystudio.moneymanager.presentation.model.KeyFilter
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.TransactionAction
-import com.henrystudio.moneymanager.presentation.views.main.MainActivity
+import com.henrystudio.moneymanager.presentation.main.MainActivity
 import com.henrystudio.moneymanager.presentation.views.main.StickyHeaderItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.combine

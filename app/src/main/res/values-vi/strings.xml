@@ -79,5 +79,14 @@
     <string name="tutorial_add_message">Chạm nút Thêm để ghi lại thu nhập hoặc chi tiêu đầu tiên và bắt đầu dùng MoneyManager.</string>
     <string name="tutorial_got_it">Đã hiểu</string>
     <string name="tutorial_add_action">Thêm giao dịch đầu tiên</string>
+    <string name="feedback_email_body">
+Thiết bị: %1$s
+Android: %2$s
+App version: %3$s
 
+Vấn đề của bạn:
+</string>
+    <string name="feedback_popup_title">Bạn thấy app có hữu ích không?</string>
+    <string name="feedback_positive">👍 Có</string>
+    <string name="feedback_negative">👎 Không</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.setting
+package com.henrystudio.moneymanager.presentation.setting
 
 import android.content.Context
 import android.content.Intent
@@ -17,9 +17,9 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.core.application.LocaleHelper
+import com.henrystudio.moneymanager.core.application.PrefsManager
 import com.henrystudio.moneymanager.databinding.FragmentSettingBinding
-import com.henrystudio.moneymanager.presentation.views.main.MainActivity
+import com.henrystudio.moneymanager.presentation.main.MainActivity
 import java.util.*
 
 class SettingFragment : Fragment() {
@@ -27,7 +27,6 @@ class SettingFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var languageText: TextView
     private var selectLanguage = ""
-    private lateinit var sharedPref: SharedPreferences
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -46,7 +45,6 @@ class SettingFragment : Fragment() {
         languageText.setOnClickListener {
             showDialogOption()
         }
-        sharedPref = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
     }
 
     private fun init() {
@@ -101,7 +99,7 @@ class SettingFragment : Fragment() {
                 updateCheckMarks(optionName)
 
                 // 1. Lưu ngôn ngữ mới để dùng cho lần khởi động app tiếp theo
-                LocaleHelper.saveLanguage(requireContext(), langCode)
+                PrefsManager.saveLanguage(requireContext(), langCode)
 
                 // 2. Yêu cầu hệ thống áp dụng ngôn ngữ mới ngay lập tức
                 val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(langCode)

@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.google.android.gms.ads.MobileAds
+import com.henrystudio.moneymanager.core.application.PrefsManager.getLanguage
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -14,7 +15,7 @@ class MoneyManagerApplication: Application() {
         MobileAds.initialize(this) {}
 
         // 1. Lấy ngôn ngữ đã lưu
-        val lang = LocaleHelper.getLanguage(this)
+        val lang = getLanguage(this)
 
         // 2. Set lại cho AppCompatDelegate
         val appLocale = LocaleListCompat.forLanguageTags(lang)

@@ -60,7 +60,7 @@ import com.henrystudio.moneymanager.presentation.model.ItemType
 import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.AccountViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.CategoryViewModel
-import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager.saveLastDate
+import com.henrystudio.moneymanager.core.application.PrefsManager.saveLastDate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch

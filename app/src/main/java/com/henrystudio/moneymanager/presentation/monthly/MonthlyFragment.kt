@@ -22,7 +22,7 @@ import com.henrystudio.moneymanager.presentation.viewmodel.MonthlyViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticListActivity
 import com.henrystudio.moneymanager.presentation.model.UiState
-import com.henrystudio.moneymanager.presentation.views.main.MainActivity
+import com.henrystudio.moneymanager.presentation.main.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 

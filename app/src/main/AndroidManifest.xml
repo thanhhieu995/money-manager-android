@@ -74,7 +74,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".presentation.views.main.MainActivity"
+            android:name=".presentation.main.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.MoneyManager">
 

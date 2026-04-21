@@ -34,7 +34,7 @@ import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.model.stringRes
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticViewPagerViewModel
-import com.henrystudio.moneymanager.presentation.views.bottomNavigation.dailyNavigate.PrefsManager
+import com.henrystudio.moneymanager.core.application.PrefsManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.LocalDate

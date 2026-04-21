@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.search
+package com.henrystudio.moneymanager.presentation.search
 
 import com.henrystudio.moneymanager.R
 

@@ -1,11 +1,10 @@
-package com.henrystudio.moneymanager.presentation.viewmodel
+package com.henrystudio.moneymanager.presentation.search
 
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.Transaction
-import com.henrystudio.moneymanager.presentation.views.search.FilterPeriodSearch
 import com.henrystudio.moneymanager.presentation.views.search.SearchUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

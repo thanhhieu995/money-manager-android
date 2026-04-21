@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import com.henrystudio.moneymanager.R
-import com.henrystudio.moneymanager.presentation.views.main.MainActivity
+import com.henrystudio.moneymanager.presentation.main.MainActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

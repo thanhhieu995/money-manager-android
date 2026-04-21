@@ -1,6 +1,7 @@
 package com.henrystudio.moneymanager.presentation.views.search
 
 import com.henrystudio.moneymanager.data.model.Transaction
+import com.henrystudio.moneymanager.presentation.search.FilterPeriodSearch
 
 data class SearchUiState(
     val filteredTransactions: List<Transaction> = emptyList(),

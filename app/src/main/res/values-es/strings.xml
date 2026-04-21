@@ -75,5 +75,14 @@
     <string name="tutorial_add_message">Toca Añadir para registrar tu primer ingreso o gasto y empezar a usar MoneyManager.</string>
     <string name="tutorial_got_it">Entendido</string>
     <string name="tutorial_add_action">Añadir primera transacción</string>
+    <string name="feedback_email_body">
+Dispositivo: %1$s
+Android: %2$s
+Versión de la app: %3$s
 
+Tu problema:
+</string>
+    <string name="feedback_popup_title">¿Te resulta útil la aplicación?</string>
+    <string name="feedback_positive">👍 Sí</string>
+    <string name="feedback_negative">👎 No</string>
 </resources>

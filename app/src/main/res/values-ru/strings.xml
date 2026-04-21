@@ -75,5 +75,14 @@
     <string name="tutorial_add_message">Нажмите «Добавить», чтобы записать первый доход или расход и начать пользоваться MoneyManager.</string>
     <string name="tutorial_got_it">Понятно</string>
     <string name="tutorial_add_action">Добавить первую транзакцию</string>
+    <string name="feedback_email_body">
+Устройство: %1$s
+Android: %2$s
+Версия приложения: %3$s
 
+Ваша проблема:
+</string>
+    <string name="feedback_popup_title">Считаете ли вы это приложение полезным?</string>
+    <string name="feedback_positive">👍 Да</string>
+    <string name="feedback_negative">👎 Нет</string>
 </resources>

@@ -6,14 +6,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.views.main.MainActivity">
+    tools:context=".presentation.main.MainActivity">
 
     <FrameLayout
         android:id="@+id/main_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        app:layout_constraintBottom_toTopOf="@+id/main_bottomBar"
+        app:layout_constraintBottom_toTopOf="@+id/adView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,9 +21,10 @@
         android:id="@+id/adView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         ads:adSize="BANNER"
         ads:adUnitId="ca-app-pub-8536795401427760/2052264213"
-        app:layout_constraintBottom_toBottomOf="@+id/main_fragment_container"
+        app:layout_constraintBottom_toTopOf="@+id/main_bottomBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
