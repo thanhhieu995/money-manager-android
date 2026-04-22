@@ -4,6 +4,7 @@ plugins {
     id 'com.google.dagger.hilt.android'
     id 'kotlin-kapt'
     id("kotlin-parcelize")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -12,12 +13,16 @@ android {
 
     defaultConfig {
         applicationId "com.henrystudio.moneymanager"
-        minSdk 21
+        minSdk 23
         targetSdk 34
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    kapt {
+        correctErrorTypes = true
     }
 
     buildTypes {
@@ -41,6 +46,10 @@ android {
 }
 
 dependencies {
+    def room_version = "2.6.1"
+    def coroutines_version = "1.8.1"
+    def ads_version = "22.6.0"
+    def firebase_bom_version = "33.1.2"
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
@@ -50,8 +59,6 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
     //room database
-    def room_version = "2.6.1"
-
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
     //Optional - Kotlin Extensions and Coroutines support
@@ -64,15 +71,18 @@ dependencies {
     //calendar new update
     implementation "com.kizitonwose.calendar:view:2.0.4"
     // ad mob
-    implementation 'com.google.android.gms:play-services-ads:23.1.0'
+    implementation "com.google.android.gms:play-services-ads:$ads_version"
 
-    implementation "com.google.dagger:hilt-android:2.50"
+    implementation "com.google.dagger:hilt-android:2.52"
 
-    kapt "com.google.dagger:hilt-compiler:2.50"
+    kapt "com.google.dagger:hilt-compiler:2.52"
 
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
     // review google ch play
     implementation "com.google.android.play:review:2.0.1"
     implementation "com.google.android.play:review-ktx:2.0.1"
+    // firebase analytics
+    implementation(platform("com.google.firebase:firebase-bom:$firebase_bom_version"))
+    implementation("com.google.firebase:firebase-analytics")
 }
