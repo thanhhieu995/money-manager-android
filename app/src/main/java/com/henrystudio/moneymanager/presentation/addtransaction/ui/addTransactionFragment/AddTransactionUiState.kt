@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 data class AddTransactionUiState(
     val amountRaw: FieldUiState = FieldUiState(),
-    val amountFormatted: String = "",
+    val amountFormatted: Long = 0L,
     val category: CategorySelectionUiState = CategorySelectionUiState(),
     val account: FieldUiState = FieldUiState(),
     val note: FieldUiState = FieldUiState(),

@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.weekly
+package com.henrystudio.moneymanager.presentation.weekly
 
 import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyData
 

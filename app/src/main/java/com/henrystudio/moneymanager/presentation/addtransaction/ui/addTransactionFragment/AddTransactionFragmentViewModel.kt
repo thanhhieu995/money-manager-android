@@ -90,7 +90,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
             return
         }
 
-        val amount = params.amount.replace("[^\\d]".toRegex(), "").toDoubleOrNull() ?: 0.0
+        val amount = params.amount.replace("[^\\d]".toRegex(), "").toLongOrNull() ?: 0L
         val localDate = epochMillisToLocalDate(params.date)
         val dateForDb = localDateToStartOfDayEpochMillis(localDate)
 
@@ -318,8 +318,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
             val childLabel = transaction.categoryChildId?.let { categoriesById[it]?.toDisplayLabel() }.orEmpty()
             _uiState.update {
                 it.copy(
-                    amountRaw = FieldUiState(transaction.amount.toLong().toString(), FieldState.VALID),
-                    amountFormatted = Helper.formatCurrency(transaction.amount),
+                    amountRaw = FieldUiState(transaction.amount.toString(), FieldState.VALID),
+                    amountFormatted = transaction.amount,
                     category = CategorySelectionUiState(
                         parent = FieldUiState(parentLabel, FieldState.VALID),
                         child = FieldUiState(childLabel, FieldState.VALID)
@@ -359,7 +359,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
         _uiState.update {
             val next = it.copy(
                 amountRaw = FieldUiState("", FieldState.IDLE),
-                amountFormatted = "",
+                amountFormatted = 0L,
                 category = CategorySelectionUiState(
                     parent = FieldUiState("", FieldState.IDLE),
                     child = FieldUiState("", FieldState.IDLE)
@@ -404,8 +404,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
         _uiState.update {
             val next = it.copy(
                 // giữ data cũ
-                amountRaw = FieldUiState(current.amount.toLong().toString(), FieldState.VALID),
-                amountFormatted = Helper.formatCurrency(current.amount),
+                amountRaw = FieldUiState(current.amount.toString(), FieldState.VALID),
+                amountFormatted = current.amount,
                 category = CategorySelectionUiState(
                     parent = FieldUiState(parentLabel, FieldState.VALID),
                     child = FieldUiState(childLabel, FieldState.VALID)
@@ -490,8 +490,8 @@ class AddTransactionFragmentViewModel @Inject constructor(
 
         val formatted = if (clean.isNotEmpty()) {
             val number = clean.toLongOrNull() ?: 0L
-            Helper.formatCurrency(number.toDouble())
-        } else ""
+            number
+        } else 0L
 
         val current = _uiState.value.amountRaw
 
@@ -728,7 +728,7 @@ class AddTransactionFragmentViewModel @Inject constructor(
     private fun computeIsDirty(state: AddTransactionUiState): Boolean {
         // Edit mode: so với transaction gốc
         originalTransaction?.let { original ->
-            val currentAmount = state.amountRaw.text.toDoubleOrNull() ?: 0.0
+            val currentAmount = state.amountRaw.text.toLongOrNull() ?: 0L
 
             val currentParentId = lastSelectedCategory?.parentId
                 ?: original.categoryParentId

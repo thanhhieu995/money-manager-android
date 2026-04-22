@@ -116,9 +116,9 @@ class CalendarUpdateFragment : Fragment() {
 
                     val event = eventsMap[day.date]
                     if (event != null) {
-                        container.incomeText.text = "↑${Helper.formatCurrency(event.income)}"
-                        container.expenseText.text = "↓${Helper.formatCurrency(event.expense)}"
-                        container.totalText.text = Helper.formatCurrency(event.income - event.expense)
+                        container.incomeText.text = "↑${Helper.formatCurrency(requireContext(), event.income)}"
+                        container.expenseText.text = "↓${Helper.formatCurrency(requireContext(), event.expense)}"
+                        container.totalText.text = Helper.formatCurrency(requireContext(),event.income - event.expense)
                     } else {
                         container.incomeText.text = ""
                         container.expenseText.text = ""

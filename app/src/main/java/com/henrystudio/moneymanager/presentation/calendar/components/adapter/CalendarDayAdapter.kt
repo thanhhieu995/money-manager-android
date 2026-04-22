@@ -70,8 +70,8 @@ class CalendarDayAdapter(
 
         fun bind(item: CalendarDayItem.Header) {
             date.text = item.date
-            income.text = Helper.formatCurrency(item.income)
-            expense.text = Helper.formatCurrency(item.expense)
+            income.text = Helper.formatCurrency(itemView.context , item.income)
+            expense.text = Helper.formatCurrency(itemView.context, item.expense)
         }
     }
 
@@ -85,7 +85,7 @@ class CalendarDayAdapter(
         fun bind(item: CalendarDayItem.TransactionItem) {
             val tx = item.transaction
             noteText.text = item.transaction.note
-            amountText.text = Helper.formatCurrency(item.transaction.amount)
+            amountText.text = Helper.formatCurrency(itemView.context, item.transaction.amount)
             val (parentLabel, childLabel) =
                 Helper.resolveTransactionCategoryLabels(item.transaction, categoriesById)
             childCategory.text = childLabel

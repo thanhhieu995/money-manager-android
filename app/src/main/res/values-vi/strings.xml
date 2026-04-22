@@ -89,4 +89,10 @@ Vấn đề của bạn:
     <string name="feedback_popup_title">Bạn thấy app có hữu ích không?</string>
     <string name="feedback_positive">👍 Có</string>
     <string name="feedback_negative">👎 Không</string>
+    <string name="vnd">VND</string>
+    <string name="usd">USD</string>
+    <string name="eur">EUR</string>
+    <string name="jpy">JPY</string>
+    <string name="general">Cài đặt chung</string>
+    <string name="currency">Tiền tệ</string>
 </resources>

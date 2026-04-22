@@ -241,10 +241,6 @@ class DailyViewModel @Inject constructor(
         return Helper.epochMillisToLocalDate(epochMillis)
     }
 
-    fun onFormatCurrency(amount: Double): String {
-        return Helper.formatCurrency(amount)
-    }
-
     fun onOpenTransactionDetail(context: Context, transaction: Transaction) {
         Helper.openTransactionDetail(context, transaction)
     }
@@ -303,8 +299,8 @@ class DailyViewModel @Inject constructor(
 
         return DailyHeaderUi(
             dateText = localDate.format(formatter),
-            incomeText = Helper.formatCurrency(item.income),
-            expenseText = Helper.formatCurrency(item.expense)
+            incomeText = item.income,
+            expenseText = item.expense
         )
     }
 

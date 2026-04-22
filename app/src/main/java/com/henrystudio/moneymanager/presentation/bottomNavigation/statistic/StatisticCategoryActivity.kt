@@ -98,7 +98,7 @@ class StatisticCategoryActivity : AppCompatActivity() {
                         if (it.isIncome) it.amount else -it.amount
                     }
                     selectedTotal.text =
-                        "${getString(R.string.Total)} : ${Helper.formatCurrency(totalAmount)}"
+                        "${getString(R.string.Total)} : ${Helper.formatCurrency(this@StatisticCategoryActivity ,totalAmount)}"
                 }
             }
         }

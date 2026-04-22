@@ -132,8 +132,8 @@ class StatisticViewPagerFragment : Fragment() {
                         toggleGroupButton.check(
                             if (state.transactionType == TransactionType.INCOME) incomeBtn.id else expenseBtn.id
                         )
-                        incomeBtn.text = getString(R.string.Income) + " " + Helper.formatCurrency(state.totalIncome)
-                        expenseBtn.text = getString(R.string.exp) + " " + Helper.formatCurrency(state.totalExpense)
+                        incomeBtn.text = getString(R.string.Income) + " " + Helper.formatCurrency(requireContext() ,state.totalIncome)
+                        expenseBtn.text = getString(R.string.exp) + " " + Helper.formatCurrency(requireContext(), state.totalExpense)
                         viewPager.currentItem = state.currentTabPosition
                     }
                 }

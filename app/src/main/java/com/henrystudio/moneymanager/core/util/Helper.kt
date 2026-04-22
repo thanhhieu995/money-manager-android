@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.core.application.PrefsManager
 import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.addtransaction.AddTransactionActivity
@@ -25,6 +26,7 @@ import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.model.TransactionType
+import com.henrystudio.moneymanager.presentation.setting.AppCurrency
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
@@ -76,9 +78,18 @@ class Helper {
             }
         }
 
-        fun formatCurrency(amount: Double): String {
-            val format = NumberFormat.getNumberInstance(Locale("vi", "VN"))
-            return format.format(amount) + "đ"
+        fun formatCurrency(context: Context, amount: Long): String {
+            val currency = PrefsManager.getCurrency(context)
+
+            val format = NumberFormat.getCurrencyInstance(currency.locale)
+            format.currency = Currency.getInstance(currency.code)
+
+            val finalAmount = when (currency) {
+                AppCurrency.VND -> amount
+                else -> amount / 100.0
+            }
+
+            return format.format(finalAmount)
         }
 
         fun buildCategoryTree(categories: List<Category>): List<CategoryItem> {
@@ -158,7 +169,7 @@ class Helper {
                 if (categoryAmount > 0) {
                     CategoryStat(
                         name = category.name,
-                        amount = categoryAmount.toFloat(),
+                        amount = categoryAmount,
                         percent = (categoryAmount / totalAmount).toFloat() * 100f,
                         color = colorList[index % colorList.size]
                     )

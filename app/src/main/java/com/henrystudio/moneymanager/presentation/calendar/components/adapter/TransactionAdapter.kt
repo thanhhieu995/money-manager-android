@@ -42,7 +42,7 @@ class TransactionAdapter(
         val tx = getItem(position)
 
         holder.noteText.text = tx.note
-        holder.amountText.text = Helper.formatCurrency(tx.amount)
+        holder.amountText.text = Helper.formatCurrency(holder.itemView.context, tx.amount)
         val (parentLabel, childLabel) = Helper.resolveTransactionCategoryLabels(tx, categoriesById)
         holder.category.text = parentLabel
         holder.childCategory.text = childLabel

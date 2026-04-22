@@ -10,7 +10,7 @@ import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCas
 import com.henrystudio.moneymanager.presentation.model.FilterOption
 import com.henrystudio.moneymanager.presentation.model.FilterPeriodStatistic
 import com.henrystudio.moneymanager.presentation.views.yearly.YearlyData
-import com.henrystudio.moneymanager.presentation.views.yearly.YearlyUiState
+import com.henrystudio.moneymanager.presentation.yearly.YearlyUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

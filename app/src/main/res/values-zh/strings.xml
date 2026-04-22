@@ -85,4 +85,10 @@ Android: %2$s
     <string name="feedback_popup_title">您觉得这个应用有用吗？</string>
     <string name="feedback_positive">👍 是</string>
     <string name="feedback_negative">👎 否</string>
+    <string name="vnd">VND</string>
+    <string name="usd">USD</string>
+    <string name="eur">EUR</string>
+    <string name="jpy">JPY</string>
+    <string name="general">通用</string>
+    <string name="currency">货币</string>
 </resources>

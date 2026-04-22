@@ -127,7 +127,7 @@ class SearchActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     tvSelectedEdit.text = "${state.selectedCount} selected"
-                    tvTotalAmountEdit.text = state.selectedTotal
+                    tvTotalAmountEdit.text = "${R.string.Total}: ${Helper.formatCurrency(this@SearchActivity, state.selectedTotal)}"
                 }
             }
         }
@@ -176,8 +176,8 @@ class SearchActivity : AppCompatActivity() {
                 }
                 viewModel.uiState.collect { state ->
                     transactionAdapter.updateList(state.filteredTransactions)
-                    incomeCount.text = state.incomeTotal
-                    expenseCount.text = state.expenseTotal
+                    incomeCount.text = Helper.formatCurrency(this@SearchActivity, state.incomeTotal)
+                    expenseCount.text = Helper.formatCurrency(this@SearchActivity, state.expenseTotal)
                     tvNoData.visibility = if (state.isEmpty) View.VISIBLE else View.GONE
                     val arrayAdapter = ArrayAdapter(
                         this@SearchActivity,

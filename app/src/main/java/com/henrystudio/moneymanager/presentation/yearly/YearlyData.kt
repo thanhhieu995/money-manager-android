@@ -6,7 +6,7 @@ data class YearlyData(
     val name: Int,
     val date: LocalDate,
     val arrange: String,
-    val income: Double,
-    val expense: Double,
-    val total: Double
+    val income: Long,
+    val expense: Long,
+    val total: Long
 )

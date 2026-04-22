@@ -85,4 +85,10 @@ Votre problème :
     <string name="feedback_popup_title">Trouvez-vous cette application utile ?</string>
     <string name="feedback_positive">👍 Oui</string>
     <string name="feedback_negative">👎 Non</string>
+    <string name="vnd">VND</string>
+    <string name="usd">USD</string>
+    <string name="eur">EUR</string>
+    <string name="jpy">JPY</string>
+    <string name="general">Général</string>
+    <string name="currency">Devise</string>
 </resources>

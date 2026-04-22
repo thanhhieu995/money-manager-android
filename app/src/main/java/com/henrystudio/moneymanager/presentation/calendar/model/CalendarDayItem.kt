@@ -5,8 +5,8 @@ import com.henrystudio.moneymanager.data.model.Transaction
 sealed class CalendarDayItem {
     data class Header(
         val date: String,
-        val income: Double,
-        val expense: Double
+        val income: Long,
+        val expense: Long
     ): CalendarDayItem()
 
     data class TransactionItem(

@@ -19,9 +19,9 @@ private var onClickYear: (YearlyData) -> Unit) : RecyclerView.Adapter<YearlyAdap
         fun bind(data: YearlyData) {
             name.text = data.name.toString()
             arrange.text = data.arrange
-            income.text = Helper.formatCurrency(data.income)
-            expense.text = Helper.formatCurrency(data.expense)
-            total.text = Helper.formatCurrency(data.total)
+            income.text = Helper.formatCurrency(itemView.context, data.income)
+            expense.text = Helper.formatCurrency(itemView.context, data.expense)
+            total.text = Helper.formatCurrency(itemView.context, data.total)
 
             itemView.setOnClickListener {
                 onClickYear.invoke(data)

@@ -29,7 +29,7 @@ data class StatisticCategoryUiState(
     val chartPoints: List<LineChartPoint> = emptyList(),
     val listChildCategoryStat: List<CategoryStat> = emptyList(),
     val currentMonthText: String = "",
-    val categorySumAmount: Double = 0.0,
+    val categorySumAmount: Long = 0L,
     val isDailyVisible: Boolean = false,
     val isChartVisible: Boolean = true,
     val currentIndex: Int = 0,

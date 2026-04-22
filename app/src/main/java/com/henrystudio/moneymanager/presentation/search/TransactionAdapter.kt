@@ -25,11 +25,9 @@ import java.util.regex.Pattern
 
 class TransactionAdapter(
     var transactions: List<Transaction>,
-) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>(), Filterable {
+) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
     private var categoriesById: Map<Int, Category> = emptyMap()
 
-    private var filterResultListener: OnFilterResultListener? = null
-    var filterPeriod: FilterPeriodSearch = FilterPeriodSearch.All
     var isSelected: ((Transaction) -> Boolean)? = null
 
     private var filteredTransactions: List<Transaction> = transactions
@@ -49,14 +47,6 @@ class TransactionAdapter(
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
             return oldList[oldItemPosition] == newList[newItemPosition]
         }
-    }
-
-    interface OnFilterResultListener {
-        fun onFilterResult(filteredList: List<Transaction>)
-    }
-
-    fun setOnFilterResultListener(listener: OnFilterResultListener) {
-        filterResultListener = listener
     }
 
     interface OnTransactionLongClickListener {
@@ -89,7 +79,7 @@ class TransactionAdapter(
         val tx = item.transaction
 
         holder.noteText.text = tx.note
-        holder.amountText.text = Helper.formatCurrency(tx.amount)
+        holder.amountText.text = Helper.formatCurrency(holder.itemView.context, tx.amount)
         holder.childCategory.text = ""
         holder.account.text = tx.account
         holder.category.text = item.categoryLabel
@@ -145,87 +135,5 @@ class TransactionAdapter(
             val (parentLabel, _) = Helper.resolveTransactionCategoryLabels(tx, categoriesById)
             TransactionUI(tx, parentLabel)
         }
-    }
-
-    override fun getFilter(): Filter {
-        return object : Filter() {
-            @RequiresApi(Build.VERSION_CODES.O)
-            override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val queryRaw = constraint?.toString()?.lowercase()?.trim()
-                if (queryRaw?.isEmpty() == true) {
-                    // Nếu người dùng không nhập gì (hoặc chỉ nhập khoảng trắng), trả về toàn bộ hoặc rỗng tùy ý
-                    val filtered = when (filterPeriod) {
-                        FilterPeriodSearch.All -> transactions
-                        else -> transactions.filter { tx ->
-                            val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-                            val txDate = Helper.epochMillisToLocalDate(tx.date)
-                            when (filterPeriod) {
-                                FilterPeriodSearch.Weekly -> {
-                                    val now = LocalDate.now()
-                                    val startOfWeek = now.with(DayOfWeek.MONDAY)
-                                    val endOfWeek = startOfWeek.plusDays(6)
-                                    !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
-                                }
-                                FilterPeriodSearch.Monthly -> {
-                                    val now = LocalDate.now()
-                                    txDate.monthValue == now.monthValue && txDate.year == now.year
-                                }
-                                FilterPeriodSearch.Yearly -> {
-                                    val now = LocalDate.now()
-                                    txDate.year == now.year
-                                }
-                                else -> true
-                            }
-                        }
-                    }
-
-                    return FilterResults().apply { values = filtered }
-                }
-                val query = queryRaw?.removeVietnameseDiacritics()
-                val formatter = DateTimeFormatter.ofPattern("dd/MM/yy")
-                val currentDate = LocalDate.now()
-                val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
-                val endOfWeek = startOfWeek.plusDays(6)
-                val currentMonth = currentDate.monthValue
-                val currentYear = currentDate.year
-
-                val filtered = transactions.filter { tx ->
-                    val txDate = Helper.epochMillisToLocalDate(tx.date)
-
-                    val note = tx.note.lowercase().removeVietnameseDiacritics()
-                    val date = Helper.formatEpochMillisToDisplayDate(tx.date).lowercase().removeVietnameseDiacritics()
-                    val amount = Helper.formatCurrency(tx.amount).lowercase()
-
-                    val matchQuery = query.isNullOrEmpty()
-                            || note.contains(query)
-                            || date.contains(query)
-                            || amount.contains(query)
-
-                    val matchPeriod = when (filterPeriod) {
-                        FilterPeriodSearch.All -> true
-                        FilterPeriodSearch.Weekly -> !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
-                        FilterPeriodSearch.Monthly -> txDate.monthValue == currentMonth && txDate.year == currentYear
-                        FilterPeriodSearch.Yearly -> txDate.year == currentYear
-                    }
-
-                    matchQuery && matchPeriod
-                }
-
-                return FilterResults().apply {
-                    values = filtered
-                }
-            }
-
-            override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                val newFiltered = results?.values as? List<Transaction> ?: listOf()
-                updateFilteredList(newFiltered)
-                filterResultListener?.onFilterResult(newFiltered)
-            }
-        }
-    }
-
-    fun String.removeVietnameseDiacritics(): String {
-        val normalized = Normalizer.normalize(this, Normalizer.Form.NFD)
-        return Pattern.compile("\\p{InCombiningDiacriticalMarks}+").matcher(normalized).replaceAll("")
     }
 }

@@ -24,19 +24,6 @@ class CalendarViewModel @Inject constructor() : ViewModel() {
 
     private var groupedTransactions: List<TransactionGroup> = emptyList()
 
-    fun updateGroupedTransactions(groups: List<TransactionGroup>) {
-        groupedTransactions = groups
-        val eventItems = groups.map { group ->
-            val dateKey = Helper.formatEpochMillisToDateKey(group.date)
-            CalendarEventItem(
-                dateKey = dateKey,
-                income = group.income,
-                expense = group.expense,
-                total = group.income - group.expense
-            )
-        }
-        _uiState.update { it.copy(eventItems = eventItems) }
-    }
 
     fun updateCurrentFilterDate(date: LocalDate) {
         _uiState.update { it.copy(currentFilterDate = date) }

@@ -21,9 +21,9 @@ data class StatisticListUiState(
     val transactionType: TransactionType = TransactionType.EXPENSE,
     val currentFilterPeriod: FilterPeriodStatistic? = null,
     val monthLabel: String = "",
-    val incomeSum: String = "0đ",
-    val expenseSum: String = "0đ",
-    val totalSum: String = "0đ",
+    val incomeSum: Long = 0L,
+    val expenseSum: Long = 0L,
+    val totalSum: Long = 0L,
     val showBack: Boolean = true,
     val showNext: Boolean = true,
     val showSummary: Boolean = true
@@ -75,9 +75,9 @@ class StatisticListViewModel @Inject constructor() : ViewModel() {
         val total = totalIncome - totalExpense
         
         _uiState.update { it.copy(
-            incomeSum = Helper.formatCurrency(totalIncome),
-            expenseSum = Helper.formatCurrency(totalExpense),
-            totalSum = Helper.formatCurrency(total)
+            incomeSum = totalIncome,
+            expenseSum = totalExpense,
+            totalSum = total
         ) }
     }
 

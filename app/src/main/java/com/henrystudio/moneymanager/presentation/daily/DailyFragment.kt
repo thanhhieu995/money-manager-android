@@ -19,6 +19,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
+import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.presentation.addtransaction.components.viewholder.SharedTransactionHolder
 import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.presentation.daily.components.adapter.DailyAdapter
@@ -93,8 +94,8 @@ class DailyFragment : Fragment() {
 
                         val headerUi = viewModel.mapHeader(item)
                         headerText.text = headerUi.dateText
-                        headerIncome.text = headerUi.incomeText
-                        headerExpense.text = headerUi.expenseText
+                        headerIncome.text = Helper.formatCurrency(requireContext(), headerUi.incomeText)
+                        headerExpense.text = Helper.formatCurrency(requireContext(), headerUi.expenseText)
                     }
                 }
             )

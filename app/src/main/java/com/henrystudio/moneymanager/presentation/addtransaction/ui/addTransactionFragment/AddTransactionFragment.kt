@@ -217,7 +217,7 @@ class AddTransactionFragment : Fragment() {
                         edtNote.setAdapter(adapterNote)
                     }
                     state.amountFormatted.let {
-                        edtAmount.setTextIfDifferent(it)
+                        edtAmount.setTextIfDifferent(Helper.formatCurrency(requireContext(), it))
                         edtAmount.backgroundTintList = when (state.amountRaw.state) {
                             FieldState.IDLE -> defaultTintMap[edtAmount]
                             FieldState.ERROR -> ContextCompat.getColorStateList(requireContext(), R.color.red)

@@ -51,11 +51,11 @@ class BookmarkAdapter(
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(item: BookmarkItemUi) {
-            date.text = item.date
+            date.text = Helper.formatLocalDate(item.date)
             category.text = item.category
             content.text = item.content
             account.text = item.account
-            amount.text = item.amount
+            amount.text = Helper.formatCurrency(itemView.context, item.amount)
             amount.setTextColor(if (item.isIncome) ContextCompat.getColor(itemView.context, R.color.income)
             else ContextCompat.getColor(itemView.context, R.color.red))
 

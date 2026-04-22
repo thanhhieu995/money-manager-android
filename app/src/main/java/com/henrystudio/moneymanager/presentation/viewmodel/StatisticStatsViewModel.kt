@@ -108,7 +108,7 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
             val amount = list.sumOf { it.amount }
             CategoryStat(
                 name = name,
-                amount = amount.toFloat(),
+                amount = amount,
                 percent = (amount / totalAmount * 100).toFloat(),
                 color = colors[index % colors.size]
             )

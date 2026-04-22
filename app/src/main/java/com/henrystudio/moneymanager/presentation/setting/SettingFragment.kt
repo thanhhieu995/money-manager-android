@@ -25,7 +25,11 @@ import java.util.*
 class SettingFragment : Fragment() {
     private var _binding: FragmentSettingBinding?= null
     private val binding get() = _binding!!
+    private lateinit var languageLayout: LinearLayout
+    private lateinit var currencyLayout: LinearLayout
     private lateinit var languageText: TextView
+    private lateinit var currencyText: TextView
+    private var selectedCurrency: AppCurrency = AppCurrency.VND
     private var selectLanguage = ""
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,13 +46,23 @@ class SettingFragment : Fragment() {
         init()
         languageText.text = getCurrentLanguageName(requireContext())
         selectLanguage = getCurrentLanguageName(requireContext())
-        languageText.setOnClickListener {
+        languageLayout.setOnClickListener {
             showDialogOption()
+        }
+
+        selectedCurrency = PrefsManager.getCurrency(requireContext())
+        currencyText.text = selectedCurrency.code
+
+        currencyLayout.setOnClickListener {
+            showCurrencyDialog()
         }
     }
 
     private fun init() {
-        languageText = binding.settingLanguageText
+        languageText = binding.settingSelectedLanguage
+        currencyText = binding.settingSelectedCurrency
+        languageLayout = binding.settingLanguage
+        currencyLayout = binding.settingCurrency
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -113,7 +127,6 @@ class SettingFragment : Fragment() {
 
                 // Kết thúc activity hiện tại để người dùng không thể back lại màn hình setting cũ
                 requireActivity().finish()
-
             }
         }
 
@@ -145,5 +158,57 @@ class SettingFragment : Fragment() {
             "zh" -> context.getString(R.string.lang_chinese)
             else -> context.getString(R.string.lang_english) // mặc định English
         }
+    }
+
+    private fun showCurrencyDialog() {
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.item_currency_dialog, null)
+        dialog.setContentView(view)
+
+        // Map currency -> check icon
+        val checkViews = mapOf(
+            AppCurrency.VND to view.findViewById<ImageView>(R.id.currency_vndCheck),
+            AppCurrency.USD to view.findViewById<ImageView>(R.id.currency_usdCheck),
+            AppCurrency.EUR to view.findViewById<ImageView>(R.id.currency_eurCheck),
+            AppCurrency.JPY to view.findViewById<ImageView>(R.id.currency_jpyCheck),
+        )
+
+        val options = listOf(
+            Pair(AppCurrency.VND, R.id.currencyVndLayout),
+            Pair(AppCurrency.USD, R.id.currencyUsdLayout),
+            Pair(AppCurrency.EUR, R.id.currencyEurLayout),
+            Pair(AppCurrency.JPY, R.id.currencyJpyLayout),
+        )
+
+        fun updateCheck(selected: AppCurrency) {
+            currencyText.text = selected.code
+
+            checkViews.forEach { (currency, imageView) ->
+                imageView.visibility =
+                    if (currency == selected) View.VISIBLE else View.GONE
+            }
+        }
+
+        // 👉 Hiển thị check ban đầu
+        updateCheck(selectedCurrency)
+
+        options.forEach { (currency, layoutId) ->
+            view.findViewById<LinearLayout>(layoutId).setOnClickListener {
+                selectedCurrency = currency
+                currencyText.text = currency.code
+
+                updateCheck(currency)
+
+                PrefsManager.saveCurrency(requireContext(), currency.code)
+
+                dialog.dismiss()
+            }
+        }
+
+        view.findViewById<TextView>(R.id.currency_optionCancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 }

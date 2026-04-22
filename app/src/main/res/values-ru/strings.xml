@@ -85,4 +85,10 @@ Android: %2$s
     <string name="feedback_popup_title">Считаете ли вы это приложение полезным?</string>
     <string name="feedback_positive">👍 Да</string>
     <string name="feedback_negative">👎 Нет</string>
+    <string name="vnd">VND</string>
+    <string name="usd">USD</string>
+    <string name="eur">EUR</string>
+    <string name="jpy">JPY</string>
+    <string name="general">Общие</string>
+    <string name="currency">Валюта</string>
 </resources>

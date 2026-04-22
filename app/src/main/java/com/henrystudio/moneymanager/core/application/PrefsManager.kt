@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.presentation.setting.AppCurrency
 import java.time.LocalDate
 
 object PrefsManager {
@@ -19,6 +20,7 @@ object PrefsManager {
     private const val MAIN_LAST_SELECTED_TAB = "main_last_selected_tab"
     private const val OPEN_COUNT = "open_count"
     private const val HAS_RATE = "has_rate"
+    private const val KEY_CURRENCY = "currency"
 
     fun saveTabPosition(context: Context, position: Int) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -112,5 +114,17 @@ object PrefsManager {
     fun getHasRate(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return prefs.getBoolean(HAS_RATE, false)
+    }
+
+    fun saveCurrency(context: Context, currencyCode: String) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_CURRENCY, currencyCode).apply()
+    }
+
+    fun getCurrency(context: Context): AppCurrency {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val code = prefs.getString(KEY_CURRENCY, "VND") ?: "VND"
+
+        return AppCurrency.values().find { it.code == code } ?: AppCurrency.VND
     }
 }

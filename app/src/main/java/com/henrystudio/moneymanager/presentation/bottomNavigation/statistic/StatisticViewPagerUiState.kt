@@ -11,7 +11,7 @@ data class StatisticViewPagerUiState(
         LocalDate.now()
     ),
     val transactionType: TransactionType = TransactionType.EXPENSE,
-    val totalIncome: Double = 0.0,
-    val totalExpense: Double = 0.0,
+    val totalIncome: Long = 0L,
+    val totalExpense: Long = 0L,
     val currentTabPosition: Int = 0
 )

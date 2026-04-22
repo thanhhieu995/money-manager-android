@@ -118,9 +118,9 @@ class StatisticListActivity : AppCompatActivity() {
                         layoutControl.visibility = if (period == FilterPeriodStatistic.Trend) View.GONE else View.VISIBLE
                     }
                     monthText.text = state.monthLabel
-                    incomeCountAll.text = state.incomeSum
-                    expenseCountAll.text = state.expenseSum
-                    totalCountAll.text = state.totalSum
+                    incomeCountAll.text = Helper.formatCurrency(this@StatisticListActivity, state.incomeSum)
+                    expenseCountAll.text = Helper.formatCurrency(this@StatisticListActivity, state.expenseSum)
+                    totalCountAll.text = Helper.formatCurrency(this@StatisticListActivity, state.totalSum)
                     imgBack.visibility = if (state.showBack) View.VISIBLE else View.GONE
                     imgNext.visibility = if (state.showNext) View.VISIBLE else View.GONE
                     layoutSummary.visibility = if (state.showSummary) View.VISIBLE else View.GONE

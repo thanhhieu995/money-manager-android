@@ -14,7 +14,7 @@ data class Transaction(
     val categoryChildId: Int?,
     val note: String,
     val account: String,
-    val amount: Double,
+    val amount: Long,
     val isIncome: Boolean,
     val date: Long,
     val isBookmarked: Boolean = false,

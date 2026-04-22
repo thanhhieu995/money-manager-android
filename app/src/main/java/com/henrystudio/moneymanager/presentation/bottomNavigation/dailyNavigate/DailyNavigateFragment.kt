@@ -257,15 +257,15 @@ class DailyNavigateFragment : Fragment() {
 
     private fun render(state: DailyNavigateUiState) {
         binding.fragmentDailyNavigateMonthText.text = state.monthLabel
-        binding.fragmentDailyNavigateIncomeCountAll.text = Helper.formatCurrency(state.incomeSum)
-        binding.fragmentDailyNavigateExpenseCountAll.text = Helper.formatCurrency(state.expenseSum)
-        binding.fragmentDailyNavigateTotalCount.text = Helper.formatCurrency(state.totalSum)
+        binding.fragmentDailyNavigateIncomeCountAll.text = Helper.formatCurrency(requireContext() ,state.incomeSum)
+        binding.fragmentDailyNavigateExpenseCountAll.text = Helper.formatCurrency(requireContext(), state.expenseSum)
+        binding.fragmentDailyNavigateTotalCount.text = Helper.formatCurrency(requireContext(), state.totalSum)
         binding.fragmentDailyNavigateLayoutEdit.visibility =
             if (state.selectionMode) View.VISIBLE else View.GONE
         binding.fragmentDailyNavigateLayoutEditLineTwoSelectedCount.text =
             "${state.selectedCount} ${getString(R.string.selected)}"
         binding.fragmentDailyNavigateLayoutEditLineTwoSelectedTotal.text =
-            "${getString(R.string.Total)} : ${Helper.formatCurrency(state.selectedTotal)}"
+            "${getString(R.string.Total)} : ${Helper.formatCurrency(requireContext(), state.selectedTotal)}"
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

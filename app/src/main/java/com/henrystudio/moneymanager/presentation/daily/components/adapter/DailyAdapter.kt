@@ -86,8 +86,8 @@ class DailyAdapter(
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(item: DailyListItem.Header) {
             date.text = Helper.epochMillisToLocalDate(item.date).format(headerFormatter)
-            income.text = Helper.formatCurrency(item.income)
-            expense.text = Helper.formatCurrency(item.expense)
+            income.text = Helper.formatCurrency(itemView.context , item.income)
+            expense.text = Helper.formatCurrency(itemView.context, item.expense)
         }
     }
 
@@ -100,7 +100,7 @@ class DailyAdapter(
 
         fun bind(item: DailyListItem.TransactionItem) {
             noteText.text = item.transaction.note
-            amountText.text = Helper.formatCurrency(item.transaction.amount)
+            amountText.text = Helper.formatCurrency(itemView.context, item.transaction.amount)
             val (parentLabel, childLabel) =
                 Helper.resolveTransactionCategoryLabels(item.transaction, categoriesById)
             childCategory.text = childLabel

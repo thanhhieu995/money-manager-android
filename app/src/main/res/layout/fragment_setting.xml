@@ -40,7 +40,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/language"
+                android:text="@string/general"
                 android:layout_marginTop="8dp"/>
 
             <com.google.android.material.divider.MaterialDivider
@@ -64,8 +64,41 @@
                     android:layout_weight="1"
                     android:text="@string/language"
                     android:textStyle="italic" />
+
+                <TextView
+                    android:id="@+id/setting_selected_language"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text=""
+                    android:textStyle="italic" />
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/setting_currency"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/setting_currency_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency"
+                    android:textStyle="italic" />
+
+                <TextView
+                    android:id="@+id/setting_selected_currency"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text=""
+                    android:textStyle="italic" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

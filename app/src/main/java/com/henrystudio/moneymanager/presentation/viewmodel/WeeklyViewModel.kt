@@ -7,7 +7,7 @@ import com.henrystudio.moneymanager.core.util.FilterTransactions
 import com.henrystudio.moneymanager.core.util.Helper
 import com.henrystudio.moneymanager.data.model.TransactionGroup
 import com.henrystudio.moneymanager.presentation.views.monthly.WeeklyData
-import com.henrystudio.moneymanager.presentation.views.weekly.WeeklyUiState
+import com.henrystudio.moneymanager.presentation.weekly.WeeklyUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.epochMillisToLocalDate
 import com.henrystudio.moneymanager.core.util.Helper.Companion.formatEpochMillisToDateKey
 import com.henrystudio.moneymanager.domain.usecase.category.CategoryUseCases
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
@@ -38,11 +39,11 @@ class BookmarkListViewModel @Inject constructor(
                     val (label, _) = Helper.resolveTransactionCategoryLabels(tx, map)
                     BookmarkItemUi(
                         transaction = tx,
-                        date = formatEpochMillisToDateKey(tx.date),
+                        date = epochMillisToLocalDate(tx.date),
                         category = label,
                         content = tx.note,
                         account = tx.account,
-                        amount = Helper.formatCurrency(tx.amount),
+                        amount = tx.amount,
                         isIncome = tx.isIncome
                     )
                 }

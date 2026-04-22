@@ -47,70 +47,98 @@ class SearchViewModel @Inject constructor() : ViewModel() {
         _uiState.update {
             it.copy(
                 selectedCount = count,
-                selectedTotal = "Total: ${Helper.formatCurrency(total)}"
+                selectedTotal = total
             )
         }
     }
 
     private fun applyFilter() {
-        val queryRaw = _uiState.value.searchQuery.lowercase().trim()
-        val period = _uiState.value.filterPeriod
-        val currentDate = LocalDate.now()
-        val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
-        val endOfWeek = startOfWeek.plusDays(6)
-        val currentMonth = currentDate.monthValue
-        val currentYear = currentDate.year
+        val state = uiState.value
+        val filterContext = createFilterContext(state)
 
-        val filtered = if (queryRaw.isEmpty()) {
-            when (period) {
-                FilterPeriodSearch.All -> allTransactions
-                else -> allTransactions.filter { tx ->
-                    val txDate = Helper.epochMillisToLocalDate(tx.date)
-                    when (period) {
-                        FilterPeriodSearch.Weekly ->
-                            !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
-                        FilterPeriodSearch.Monthly ->
-                            txDate.monthValue == currentMonth && txDate.year == currentYear
-                        FilterPeriodSearch.Yearly -> txDate.year == currentYear
-                        else -> true
-                    }
-                }
-            }
-        } else {
-            val query = queryRaw.removeVietnameseDiacritics()
-            allTransactions.filter { tx ->
-                val txDate = Helper.epochMillisToLocalDate(tx.date)
-                val note = tx.note.lowercase().removeVietnameseDiacritics()
-                val dateStr = Helper.formatEpochMillisToDisplayDate(tx.date).lowercase().removeVietnameseDiacritics()
-                val amount = Helper.formatCurrency(tx.amount).lowercase()
-                val matchQuery = note.contains(query) || dateStr.contains(query) || amount.contains(query)
-                val matchPeriod = when (period) {
-                    FilterPeriodSearch.All -> true
-                    FilterPeriodSearch.Weekly ->
-                        !txDate.isBefore(startOfWeek) && !txDate.isAfter(endOfWeek)
-                    FilterPeriodSearch.Monthly ->
-                        txDate.monthValue == currentMonth && txDate.year == currentYear
-                    FilterPeriodSearch.Yearly -> txDate.year == currentYear
-                    else -> true
-                }
-                matchQuery && matchPeriod
-            }
-        }
-
-        val incomeTotal = filtered.filter { it.isIncome }.sumOf { it.amount }
-        val expenseTotal = filtered.filter { !it.isIncome }.sumOf { it.amount }
-        val distinctNotes = allTransactions.map { it.note }.distinct()
+        val filteredTransactions = filterTransactions(filterContext)
+        val totals = calculateTotals(filteredTransactions)
+        val distinctNotes = extractDistinctNotes()
 
         _uiState.update {
             it.copy(
-                filteredTransactions = filtered,
-                incomeTotal = Helper.formatCurrency(incomeTotal),
-                expenseTotal = Helper.formatCurrency(expenseTotal),
+                filteredTransactions = filteredTransactions,
+                incomeTotal = totals.income,
+                expenseTotal = totals.expense,
                 distinctNotes = distinctNotes,
-                isEmpty = filtered.isEmpty()
+                isEmpty = filteredTransactions.isEmpty()
             )
         }
     }
+
+    private fun createFilterContext(state: SearchUiState): FilterContext {
+        val currentDate = LocalDate.now()
+        val startOfWeek = currentDate.with(DayOfWeek.MONDAY)
+
+        return FilterContext(
+            query = state.searchQuery.lowercase().trim().removeVietnameseDiacritics(),
+            period = state.filterPeriod,
+            startOfWeek = startOfWeek,
+            endOfWeek = startOfWeek.plusDays(6),
+            currentMonth = currentDate.monthValue,
+            currentYear = currentDate.year
+        )
+    }
+
+    private fun filterTransactions(context: FilterContext): List<Transaction> {
+        return allTransactions.filter { tx ->
+            matchesPeriod(tx, context) && matchesQuery(tx, context.query)
+        }
+    }
+
+    private fun matchesPeriod(tx: Transaction, context: FilterContext): Boolean {
+        val txDate = Helper.epochMillisToLocalDate(tx.date)
+        return when (context.period) {
+            FilterPeriodSearch.All -> true
+            FilterPeriodSearch.Weekly ->
+                !txDate.isBefore(context.startOfWeek) && !txDate.isAfter(context.endOfWeek)
+            FilterPeriodSearch.Monthly ->
+                txDate.monthValue == context.currentMonth && txDate.year == context.currentYear
+            FilterPeriodSearch.Yearly ->
+                txDate.year == context.currentYear
+        }
+    }
+
+    private fun matchesQuery(tx: Transaction, query: String): Boolean {
+        if (query.isEmpty()) return true
+
+        val note = tx.note.lowercase().removeVietnameseDiacritics()
+        val date = Helper.formatEpochMillisToDisplayDate(tx.date)
+            .lowercase()
+            .removeVietnameseDiacritics()
+        val amount = tx.amount.toString().lowercase().removeVietnameseDiacritics()
+
+        return note.contains(query) || date.contains(query) || amount.contains(query)
+    }
+
+    private fun calculateTotals(transactions: List<Transaction>): Totals {
+        val income = transactions.filter { it.isIncome }.sumOf { it.amount }
+        val expense = transactions.filter { !it.isIncome }.sumOf { it.amount }
+        return Totals(income, expense)
+    }
+
+    private fun extractDistinctNotes(): List<String> {
+        return allTransactions.map { it.note }.distinct()
+    }
+
+    private data class FilterContext(
+        val query: String,
+        val period: FilterPeriodSearch,
+        val startOfWeek: LocalDate,
+        val endOfWeek: LocalDate,
+        val currentMonth: Int,
+        val currentYear: Int
+    )
+
+    private data class Totals(
+        val income: Long,
+        val expense: Long
+    )
 
     private fun String.removeVietnameseDiacritics(): String {
         val normalized = Normalizer.normalize(this, Normalizer.Form.NFD)

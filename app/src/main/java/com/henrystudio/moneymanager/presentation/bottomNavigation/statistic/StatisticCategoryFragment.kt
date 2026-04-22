@@ -130,7 +130,7 @@ class StatisticCategoryFragment : Fragment() {
     private fun updateUi(state: com.henrystudio.moneymanager.presentation.viewmodel.StatisticCategoryUiState) {
         binding.fragmentStatisticCategoryLineChart.visibility = if (state.isChartVisible) View.VISIBLE else View.GONE
         binding.fragmentStatisticCategoryMonthText.text = state.currentMonthText
-        binding.fragmentStatisticCategoryLayoutCategorySumAmount.text = Helper.formatCurrency(state.categorySumAmount)
+        binding.fragmentStatisticCategoryLayoutCategorySumAmount.text = Helper.formatCurrency(requireContext() ,state.categorySumAmount)
         adapter.submitList(state.listChildCategoryStat)
 
         binding.fragmentStatisticCategoryDailyContainer.visibility = if (state.isDailyVisible) View.VISIBLE else View.GONE

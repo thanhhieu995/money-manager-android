@@ -5,12 +5,12 @@ import com.henrystudio.moneymanager.presentation.search.FilterPeriodSearch
 
 data class SearchUiState(
     val filteredTransactions: List<Transaction> = emptyList(),
-    val incomeTotal: String = "",
-    val expenseTotal: String = "",
+    val incomeTotal: Long = 0L,
+    val expenseTotal: Long = 0L,
     val distinctNotes: List<String> = emptyList(),
     val isEmpty: Boolean = true,
     val selectedCount: Int = 0,
-    val selectedTotal: String = "",
+    val selectedTotal: Long = 0L,
     val filterPeriod: FilterPeriodSearch = FilterPeriodSearch.All,
     val searchQuery: String = ""
 )

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface"
+    android:padding="16dp">
+
+    <!-- English -->
+    <LinearLayout
+        android:id="@+id/currencyVndLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/currencyVndText"
+            style="@style/LanguageDialogText"
+            android:text="@string/vnd" />
+
+        <ImageView
+            android:id="@+id/currency_vndCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- German -->
+    <LinearLayout
+        android:id="@+id/currencyUsdLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/currency_usdText"
+            style="@style/LanguageDialogText"
+            android:text="@string/usd" />
+
+        <ImageView
+            android:id="@+id/currency_usdCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Spanish -->
+    <LinearLayout
+        android:id="@+id/currencyEurLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/currencyEurText"
+            style="@style/LanguageDialogText"
+            android:text="@string/eur" />
+
+        <ImageView
+            android:id="@+id/currency_eurCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- French -->
+    <LinearLayout
+        android:id="@+id/currencyJpyLayout"
+        style="@style/LanguageDialogRow">
+
+        <TextView
+            android:id="@+id/currencyJpyText"
+            style="@style/LanguageDialogText"
+            android:text="@string/jpy" />
+
+        <ImageView
+            android:id="@+id/currency_jpyCheck"
+            style="@style/LanguageDialogCheck" />
+    </LinearLayout>
+
+    <!-- Cancel -->
+    <TextView
+        android:id="@+id/currency_optionCancel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/cancel"
+        android:padding="16dp"
+        android:gravity="center"
+        android:textStyle="bold" />
+</LinearLayout>

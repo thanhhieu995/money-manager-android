@@ -26,7 +26,7 @@ class NoteAdapter(private var notes: List<Note>): RecyclerView.Adapter<NoteAdapt
         val note = notes[position]
         holder.nameText.text = note.note
         holder.countText.text = note.count.toString()
-        holder.amountText.text = Helper.formatCurrency(note.amount)
+        holder.amountText.text = Helper.formatCurrency(holder.itemView.context, note.amount)
         holder.itemView.setOnClickListener {
             onClickListener?.invoke(note)
         }

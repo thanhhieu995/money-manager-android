@@ -83,4 +83,10 @@ Android: %2$s
     <string name="feedback_popup_title">이 앱이 유용하다고 생각하시나요?</string>
     <string name="feedback_positive">👍 예</string>
     <string name="feedback_negative">👎 아니요</string>
+    <string name="vnd">VND</string>
+    <string name="usd">USD</string>
+    <string name="eur">EUR</string>
+    <string name="jpy">JPY</string>
+    <string name="general">일반</string>
+    <string name="currency">통화</string>
 </resources>

@@ -33,7 +33,7 @@ class CategoryStatAdapter(private var items: List<CategoryStat>) : RecyclerView.
 
         holder.nameText.text = item.name
         holder.percentText.text = "${"%.1f".format(item.percent)}%"
-        holder.amountText.text = Helper.formatCurrency(item.amount.toDouble())
+        holder.amountText.text = Helper.formatCurrency(holder.itemView.context , item.amount)
 
         holder.itemView.setOnClickListener {
             onClickListener?.invoke(item)

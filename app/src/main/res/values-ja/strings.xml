@@ -83,4 +83,10 @@ Android: %2$s
     <string name="feedback_popup_title">このアプリは役に立っていますか？</string>
     <string name="feedback_positive">👍 はい</string>
     <string name="feedback_negative">👎 いいえ</string>
+    <string name="vnd">VND</string>
+    <string name="usd">USD</string>
+    <string name="eur">EUR</string>
+    <string name="jpy">JPY</string>
+    <string name="general">一般</string>
+    <string name="currency">通貨</string>
 </resources>

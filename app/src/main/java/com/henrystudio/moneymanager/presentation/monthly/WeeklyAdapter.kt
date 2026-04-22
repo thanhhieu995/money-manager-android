@@ -24,9 +24,9 @@ class WeeklyAdapter(
         @RequiresApi(Build.VERSION_CODES.M)
         fun bind(data: WeeklyData) {
             tvWeekRange.text = data.weekRange
-            tvIncome.text = Helper.formatCurrency(data.income)
-            tvExpense.text = Helper.formatCurrency(data.expense)
-            tvTotal.text = Helper.formatCurrency(data.total)
+            tvIncome.text = Helper.formatCurrency(itemView.context, data.income)
+            tvExpense.text = Helper.formatCurrency(itemView.context, data.expense)
+            tvTotal.text = Helper.formatCurrency(itemView.context, data.total)
 
             tvTotal.setTextColor(
                 when {

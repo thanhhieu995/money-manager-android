@@ -6,8 +6,8 @@ sealed class DailyListItem {
     data class Header(
         val id: Int,
         val date: Long,
-        val income: Double,
-        val expense: Double
+        val income: Long,
+        val expense: Long
     ) : DailyListItem()
 
     data class TransactionItem(

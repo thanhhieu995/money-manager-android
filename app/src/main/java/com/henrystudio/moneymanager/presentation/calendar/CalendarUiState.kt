@@ -3,10 +3,10 @@ package com.henrystudio.moneymanager.presentation.views.calendar
 import java.time.LocalDate
 
 data class CalendarEventItem(
-    val dateKey: String,
-    val income: Double,
-    val expense: Double,
-    val total: Double
+    val dateKey: LocalDate,
+    val income: Long,
+    val expense: Long,
+    val total: Long
 )
 
 data class CalendarUiState(
