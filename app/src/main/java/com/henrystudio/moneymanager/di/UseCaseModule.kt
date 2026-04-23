@@ -18,6 +18,7 @@ import com.henrystudio.moneymanager.domain.usecase.transaction.DeleteAllTransact
 import com.henrystudio.moneymanager.domain.usecase.transaction.DeleteTransactionUseCase
 import com.henrystudio.moneymanager.domain.usecase.transaction.FilterTransactionGroupsUseCase
 import com.henrystudio.moneymanager.domain.usecase.transaction.GetBookmarkedTransactionsUseCase
+import com.henrystudio.moneymanager.domain.usecase.transaction.GetStatisticTotalsUseCase
 import com.henrystudio.moneymanager.domain.usecase.transaction.GetTransactionsGroupUseCase
 import com.henrystudio.moneymanager.domain.usecase.transaction.GetTransactionsUseCase
 import com.henrystudio.moneymanager.domain.usecase.transaction.TransactionUseCases
@@ -60,7 +61,8 @@ object UseCaseModule {
             getTransactionsGroupUseCase = GetTransactionsGroupUseCase(repository),
             getBookmarkedTransactionsUseCase = GetBookmarkedTransactionsUseCase(repository),
             deleteAllTransactionsUseCase = DeleteAllTransactionsUseCase(repository),
-            filterTransactionGroupsUseCase =  FilterTransactionGroupsUseCase()
+            filterTransactionGroupsUseCase =  FilterTransactionGroupsUseCase(),
+            getStatisticTotalsUseCase = GetStatisticTotalsUseCase()
         )
     }
 

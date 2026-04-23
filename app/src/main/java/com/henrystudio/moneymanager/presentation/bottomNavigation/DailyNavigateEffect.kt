@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.bottomNavigation.dailyNavigate
+package com.henrystudio.moneymanager.presentation.bottomNavigation
 
 import com.henrystudio.moneymanager.data.model.Transaction
 import java.time.LocalDate

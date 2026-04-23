@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import androidx.activity.viewModels
@@ -20,12 +21,11 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.henrystudio.moneymanager.R
 import com.henrystudio.moneymanager.presentation.viewmodel.MainViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
-import com.henrystudio.moneymanager.presentation.bottomNavigation.dailyNavigate.DailyNavigateFragment
+import com.henrystudio.moneymanager.presentation.bottomNavigation.DailyNavigateFragment
 import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticViewPagerFragment
 import com.henrystudio.moneymanager.presentation.setting.SettingFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import androidx.core.content.edit
 import com.henrystudio.moneymanager.core.application.PrefsManager
 import com.henrystudio.moneymanager.core.application.PrefsManager.getHasRate
 import com.henrystudio.moneymanager.core.application.PrefsManager.getInstallTime
@@ -50,14 +50,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val lastTab = getMainSelectedTab(this)
-        setInstallTime(this)
-
         init()
         initAds()
 
+        setInstallTime(this)
+
         if (shouldShowReview()) {
             showFeedbackDialog()
+        }
+
+        val lastTab = getMainSelectedTab(this)
+        if (savedInstanceState == null) {
+            bottomNav.selectedItemId = lastTab.toItemId()
+            loadFragment(lastTab)
         }
 
         lifecycleScope.launch {
@@ -77,31 +82,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         bottomNav.setOnItemSelectedListener { item ->
-            saveMainSelectedTab(this, item.itemId)
-            when(item.itemId) {
-                R.id.nav_daily -> {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.main_fragment_container, DailyNavigateFragment())
-                        .commit()
-                    true
-                }
-                R.id.nav_stats -> {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.main_fragment_container, StatisticViewPagerFragment())
-                        .commit()
-                    true
-                }
-                R.id.nav_more -> {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.main_fragment_container, SettingFragment())
-                        .commit()
-                    true
-                }
-                else -> false
-            }
-        }
-        lifecycleScope.launch {
-            bottomNav.selectedItemId = lastTab
+            val tab = item.itemId.toMainTab()
+
+            saveMainSelectedTab(this, tab) // ✅ đúng kiểu
+            loadFragment(tab)              // ✅ không dùng itemId nữa
+
+            true
         }
     }
 
@@ -241,6 +227,46 @@ class MainActivity : AppCompatActivity() {
         }
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
+        }
+    }
+
+    private fun loadFragment(tab: MainTab) {
+        Log.d("MainActivity DEBUG", "loadFragment called with tab = ${tab.route}")
+
+        val fragment = when (tab) {
+            MainTab.Daily -> {
+                Log.d("MainActivity DEBUG", "Loading DailyFragment")
+                DailyNavigateFragment()
+            }
+            MainTab.Stats -> {
+                Log.d("MainActivity DEBUG", "Loading StatsFragment")
+                StatisticViewPagerFragment()
+            }
+            MainTab.More -> {
+                Log.d("MainActivity DEBUG", "Loading SettingFragment")
+                SettingFragment()
+            }
+        }
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.main_fragment_container, fragment)
+            .commit()
+    }
+
+    fun Int.toMainTab(): MainTab {
+        return when (this) {
+            R.id.nav_daily -> MainTab.Daily
+            R.id.nav_stats -> MainTab.Stats
+            R.id.nav_more -> MainTab.More
+            else -> MainTab.Daily
+        }
+    }
+
+    fun MainTab.toItemId(): Int {
+        return when (this) {
+            MainTab.Daily -> R.id.nav_daily
+            MainTab.Stats -> R.id.nav_stats
+            MainTab.More -> R.id.nav_more
         }
     }
 }

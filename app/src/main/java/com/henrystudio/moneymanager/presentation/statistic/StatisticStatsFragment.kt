@@ -1,4 +1,4 @@
-package com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic
+package com.henrystudio.moneymanager.presentation.statistic
 
 import android.content.Intent
 import android.graphics.Color
@@ -32,6 +32,8 @@ import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticStatsViewModel
 import com.henrystudio.moneymanager.presentation.model.UiState
+import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.CategoryStatAdapter
+import com.henrystudio.moneymanager.presentation.views.bottomNavigation.statistic.StatisticCategoryActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -81,6 +83,11 @@ class StatisticStatsFragment : Fragment() {
                 launch {
                     sharedViewModel.allTransactionsState.collect { state ->
                         viewModel.updateAllTransactions(if (state is UiState.Success) state.data else emptyList())
+                    }
+                }
+                launch {
+                    sharedViewModel.categoriesState.collect { categories ->
+                        viewModel.updateCategories(categories)
                     }
                 }
                 launch {

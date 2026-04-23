@@ -34,6 +34,7 @@ import com.henrystudio.moneymanager.presentation.model.TransactionType
 import com.henrystudio.moneymanager.presentation.model.stringRes
 import com.henrystudio.moneymanager.presentation.viewmodel.SharedTransactionViewModel
 import com.henrystudio.moneymanager.presentation.viewmodel.StatisticViewPagerViewModel
+import com.henrystudio.moneymanager.presentation.model.UiState
 import com.henrystudio.moneymanager.core.application.PrefsManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -104,8 +105,10 @@ class StatisticViewPagerFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    sharedViewModel.statisticListTransactionFilter.collect { list ->
-                        viewModel.updateFilteredTransactions(list)
+                    sharedViewModel.allTransactionsState.collect { state ->
+                        viewModel.updateAllTransactions(
+                            if (state is UiState.Success) state.data else emptyList()
+                        )
                     }
                 }
                 launch {

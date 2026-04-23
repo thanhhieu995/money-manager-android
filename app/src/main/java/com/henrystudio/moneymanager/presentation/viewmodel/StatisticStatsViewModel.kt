@@ -4,6 +4,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.henrystudio.moneymanager.core.util.Helper
+import com.henrystudio.moneymanager.core.util.Helper.Companion.resolveTransactionCategoryLabels
+import com.henrystudio.moneymanager.data.model.Category
 import com.henrystudio.moneymanager.data.model.Transaction
 import com.henrystudio.moneymanager.presentation.model.CategoryStat
 import com.henrystudio.moneymanager.presentation.model.FilterOption
@@ -23,7 +25,8 @@ data class StatisticStatsUiState(
     val stats: List<CategoryStat> = emptyList(),
     val transactionType: TransactionType = TransactionType.EXPENSE,
     val filterOption: FilterOption = FilterOption(FilterPeriodStatistic.Monthly, LocalDate.now()),
-    val allTransactions: List<Transaction> = emptyList()
+    val allTransactions: List<Transaction> = emptyList(),
+    val categories: List<Category> = emptyList()
 )
 
 @HiltViewModel
@@ -50,10 +53,16 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
+    fun updateCategories(categories: List<Category>) {
+        _uiState.update { it.copy(categories = categories) }
+        calculateStats()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateStats() {
         val state = _uiState.value
         val filtered = filterTransactions(state.allTransactions, state.filterOption, state.transactionType)
-        val stats = convertToCategoryStats(filtered, state.transactionType == TransactionType.INCOME)
+        val stats = convertToCategoryStats(filtered)
         _uiState.update { it.copy(stats = stats) }
     }
 
@@ -88,7 +97,8 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    private fun convertToCategoryStats(transactions: List<Transaction>, isIncome: Boolean): List<CategoryStat> {
+    private fun convertToCategoryStats(transactions: List<Transaction>): List<CategoryStat> {
+        val state = _uiState.value
         val totalAmount = transactions.sumOf { it.amount }
         if (totalAmount <= 0) return emptyList()
 
@@ -102,14 +112,22 @@ class StatisticStatsViewModel @Inject constructor() : ViewModel() {
         )
 
         val grouped = transactions.groupBy { it.categoryParentId }
+        val categoryMap = state.categories.associateBy { it.id }
+
         return grouped.entries.mapIndexed { index, entry ->
-            val name = entry.key.toString()
             val list = entry.value
+
+            val (parentName, _) = resolveTransactionCategoryLabels(
+                list.first(),
+                categoryMap
+            )
+
             val amount = list.sumOf { it.amount }
+
             CategoryStat(
-                name = name,
+                name = parentName.ifBlank { entry.key.toString() },
                 amount = amount,
-                percent = (amount / totalAmount * 100).toFloat(),
+                percent = (amount.toFloat() / totalAmount) * 100f,
                 color = colors[index % colors.size]
             )
         }.sortedByDescending { it.amount }

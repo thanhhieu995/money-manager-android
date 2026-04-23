@@ -1,8 +1,9 @@
-package com.henrystudio.moneymanager.presentation.bottomNavigation.dailyNavigate
+package com.henrystudio.moneymanager.presentation.bottomNavigation
 
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -63,6 +64,7 @@ class DailyNavigateFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Log.d("DailyNavigateFragment", "onViewCreated called")
         super.onViewCreated(view, savedInstanceState)
         setupViewPager()
         registerPageCallback()

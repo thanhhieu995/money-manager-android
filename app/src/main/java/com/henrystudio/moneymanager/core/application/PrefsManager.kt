@@ -3,7 +3,7 @@ package com.henrystudio.moneymanager.core.application
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.henrystudio.moneymanager.R
+import com.henrystudio.moneymanager.presentation.main.MainTab
 import com.henrystudio.moneymanager.presentation.setting.AppCurrency
 import java.time.LocalDate
 
@@ -17,7 +17,7 @@ object PrefsManager {
     private const val KEY_STATISTIC_TAB_POSITION = "tab_statistic_position"
     private const val INSTALL_TIME = "install_time"
     private const val KEY_LANG = "app_language"
-    private const val MAIN_LAST_SELECTED_TAB = "main_last_selected_tab"
+    private const val MAIN_LAST_TAB = "main_last_tab"
     private const val OPEN_COUNT = "open_count"
     private const val HAS_RATE = "has_rate"
     private const val KEY_CURRENCY = "currency"
@@ -86,14 +86,15 @@ object PrefsManager {
         prefs.edit().putString(KEY_LANG, lang).apply()
     }
 
-    fun saveMainSelectedTab(context: Context, tabId: Int) {
+    fun saveMainSelectedTab(context: Context, tab: MainTab) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putInt(MAIN_LAST_SELECTED_TAB, tabId).apply()
+        prefs.edit().putString(MAIN_LAST_TAB, tab.route).apply()
     }
 
-    fun getMainSelectedTab(context: Context): Int {
+    fun getMainSelectedTab(context: Context): MainTab {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.getInt(MAIN_LAST_SELECTED_TAB, R.id.nav_daily)
+        val route = prefs.getString(MAIN_LAST_TAB, MainTab.Daily.route) ?: MainTab.Daily.route
+        return MainTab.fromRoute(route)
     }
 
     fun saveOpenCount(context: Context, count: Int) {

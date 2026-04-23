@@ -2,6 +2,7 @@ package com.henrystudio.moneymanager.presentation.views.bottomNavigation.statist
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.henrystudio.moneymanager.presentation.statistic.StatisticStatsFragment
 
 class StatisticPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
     override fun getItemCount(): Int = 3
